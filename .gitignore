@@ -2,3 +2,4 @@
 **/*.xml
 coverage
 !**/wsmantesting/responses/**/*.xml
+.DS_Store
