@@ -14,7 +14,7 @@ type (
 	}
 )
 
-// OUTPUT
+// OUTPUT.
 type (
 	Response struct {
 		*client.Message
@@ -50,7 +50,7 @@ type (
 	}
 )
 
-// INPUT
+// INPUT.
 type (
 	SecIOServiceRequest struct {
 		XMLName           xml.Name `xml:"h:IPS_SecIOService,omitempty"`

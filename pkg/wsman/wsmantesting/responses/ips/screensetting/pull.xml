@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope"
+    xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+    xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
+    xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust"
+    xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+    xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd"
+    xmlns:g="http://schemas.xmlsoap.org/ws/2004/09/enumeration"
+    xmlns:h="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_ScreenSettingData"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <a:Header>
+        <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
+        <b:RelatesTo>1</b:RelatesTo>
+        <b:Action a:mustUnderstand="true">
+            http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action>
+        <b:MessageID>uuid:00000000-8086-8086-8086-0000000002A2</b:MessageID>
+        <c:ResourceURI>http://intel.com/wbem/wscim/1/ips-schema/1/IPS_ScreenSettingData</c:ResourceURI>
+    </a:Header>
+    <a:Body>
+        <g:PullResponse>
+            <g:Items>
+                <h:IPS_ScreenSettingData>
+                    <h:ElementName>test</h:ElementName>
+                    <h:InstanceID>Intel(r) Screen Settings</h:InstanceID>
+                    <h:IsActive>true</h:IsActive>
+                    <h:IsActive>true</h:IsActive>
+                    <h:IsActive>false</h:IsActive>
+                    <h:IsActive>false</h:IsActive>
+                    <h:PrimaryIndex>1</h:PrimaryIndex>
+                    <h:QuadraryIndex>4</h:QuadraryIndex>
+                    <h:ResolutionX>1920</h:ResolutionX>
+                    <h:ResolutionX>1920</h:ResolutionX>
+                    <h:ResolutionX>0</h:ResolutionX>
+                    <h:ResolutionX>0</h:ResolutionX>
+                    <h:ResolutionY>1080</h:ResolutionY>
+                    <h:ResolutionY>1080</h:ResolutionY>
+                    <h:ResolutionY>0</h:ResolutionY>
+                    <h:ResolutionY>0</h:ResolutionY>
+                    <h:SecondaryIndex>2</h:SecondaryIndex>
+                    <h:TertiaryIndex>3</h:TertiaryIndex>
+                    <h:UpperLeftX>0</h:UpperLeftX>
+                    <h:UpperLeftX>1920</h:UpperLeftX>
+                    <h:UpperLeftX>-1</h:UpperLeftX>
+                    <h:UpperLeftX>-1</h:UpperLeftX>
+                    <h:UpperLeftY>0</h:UpperLeftY>
+                    <h:UpperLeftY>0</h:UpperLeftY>
+                    <h:UpperLeftY>-1</h:UpperLeftY>
+                    <h:UpperLeftY>-1</h:UpperLeftY>
+                </h:IPS_ScreenSettingData>
+            </g:Items>
+            <g:EndOfSequence></g:EndOfSequence>
+        </g:PullResponse>
+    </a:Body>
+</a:Envelope>

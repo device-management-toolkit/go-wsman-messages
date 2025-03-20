@@ -1,4 +1,4 @@
-package secio
+package screensettings
 
 import (
 	"encoding/xml"
@@ -12,17 +12,17 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
-func TestPositiveIPS_SecIOService(t *testing.T) {
+func TestPositiveIPS_ScreenSettingData(t *testing.T) {
 	messageID := 0
 	resourceURIBase := wsmantesting.IPSResourceURIBase
 	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
 
 	client := wsmantesting.MockClient{
-		PackageUnderTest: "ips/secio/service",
+		PackageUnderTest: "ips/screensetting",
 	}
-	elementUnderTest := NewSecIOServiceWithClient(wsmanMessageCreator, &client)
+	elementUnderTest := NewScreenSettingDataWithClient(wsmanMessageCreator, &client)
 
-	t.Run("IPS_SecIOService Tests", func(t *testing.T) {
+	t.Run("IPS_ScreenSettingData Tests", func(t *testing.T) {
 		tests := []struct {
 			name             string
 			method           string
@@ -34,8 +34,8 @@ func TestPositiveIPS_SecIOService(t *testing.T) {
 		}{
 			// GET
 			{
-				"should create a valid IPS_SecIOService Get wsman message",
-				"IPS_SecIOService",
+				"should create a valid IPS_ScreenSettingData Get wsman message",
+				"IPS_ScreenSettingData",
 				wsmantesting.Get,
 				"",
 				"",
@@ -46,26 +46,26 @@ func TestPositiveIPS_SecIOService(t *testing.T) {
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
-					SecIOServiceResponse: SecIOServiceResponse{
-						XMLName:                 xml.Name{Space: fmt.Sprintf("%s%s", message.IPSSchema, IPSSecIOService), Local: IPSSecIOService},
-						CreationClassName:       "IPS_SecIOService",
-						SystemCreationClassName: "CIM_ComputerSystem",
-						SystemName:              "ManagedSystem",
-						Name:                    "SecIO",
-						Started:                 true,
-						Status:                  "OK",
-						EnabledState:            2,
-						Language:                1,
-						RequestedLanguage:       2,
-						Zoom:                    65535,
-						DefaultScreen:           1,
+					ScreenSettingDataResponse: ScreenSettingDataResponse{
+						XMLName:        xml.Name{Space: fmt.Sprintf("%s%s", message.IPSSchema, IPSScreenSettingData), Local: IPSScreenSettingData},
+						ElementName:    "test",
+						InstanceID:     "Intel(r) Screen Settings",
+						PrimaryIndex:   1,
+						SecondaryIndex: 2,
+						TertiaryIndex:  3,
+						QuadraryIndex:  4,
+						IsActive:       []bool{true, true, false, false},
+						UpperLeftX:     []int32{0, 1920, -1, -1},
+						UpperLeftY:     []int32{0, 0, -1, -1},
+						ResolutionX:    []uint32{1920, 1920, 0, 0},
+						ResolutionY:    []uint32{1080, 1080, 0, 0},
 					},
 				},
 			},
 			// ENUMERATE
 			{
-				"should create a valid IPS_SecIOService Enumerate wsman message",
-				"IPS_SecIOService",
+				"should create a valid IPS_ScreenSettingData Enumerate wsman message",
+				"IPS_ScreenSettingData",
 				wsmantesting.Enumerate,
 				wsmantesting.EnumerateBody,
 				"",
@@ -77,14 +77,14 @@ func TestPositiveIPS_SecIOService(t *testing.T) {
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					EnumerateResponse: common.EnumerateResponse{
-						EnumerationContext: "A2000000-0000-0000-0000-000000000000",
+						EnumerationContext: "A4000000-0000-0000-0000-000000000000",
 					},
 				},
 			},
 			// PULL
 			{
-				"should create a valid IPS_SecIOService Pull wsman message",
-				"IPS_SecIOService",
+				"should create a valid IPS_ScreenSettingData Pull wsman message",
+				"IPS_ScreenSettingData",
 				wsmantesting.Pull,
 				wsmantesting.PullBody,
 				"",
@@ -97,20 +97,20 @@ func TestPositiveIPS_SecIOService(t *testing.T) {
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					PullResponse: PullResponse{
 						XMLName: xml.Name{Space: message.XMLPullResponseSpace, Local: "PullResponse"},
-						SecIOServiceItems: []SecIOServiceResponse{
+						ScreenSettingDataItems: []ScreenSettingDataResponse{
 							{
-								XMLName:                 xml.Name{Space: fmt.Sprintf("%s%s", message.IPSSchema, IPSSecIOService), Local: IPSSecIOService},
-								CreationClassName:       "IPS_SecIOService",
-								SystemCreationClassName: "CIM_ComputerSystem",
-								SystemName:              "ManagedSystem",
-								Name:                    "SecIO",
-								Started:                 true,
-								Status:                  "OK",
-								EnabledState:            2,
-								Language:                1,
-								RequestedLanguage:       2,
-								Zoom:                    65535,
-								DefaultScreen:           1,
+								XMLName:        xml.Name{Space: fmt.Sprintf("%s%s", message.IPSSchema, IPSScreenSettingData), Local: IPSScreenSettingData},
+								ElementName:    "test",
+								InstanceID:     "Intel(r) Screen Settings",
+								PrimaryIndex:   1,
+								SecondaryIndex: 2,
+								TertiaryIndex:  3,
+								QuadraryIndex:  4,
+								IsActive:       []bool{true, true, false, false},
+								UpperLeftX:     []int32{0, 1920, -1, -1},
+								UpperLeftY:     []int32{0, 0, -1, -1},
+								ResolutionX:    []uint32{1920, 1920, 0, 0},
+								ResolutionY:    []uint32{1080, 1080, 0, 0},
 							},
 						},
 					},
