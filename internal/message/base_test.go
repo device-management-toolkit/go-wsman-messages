@@ -11,8 +11,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 type MockClient struct {

@@ -46,6 +46,7 @@ func TestPositiveAMT_GeneralSettings(t *testing.T) {
 	client := wsmantesting.MockClient{
 		PackageUnderTest: "amt/general",
 	}
+
 	elementUnderTest := NewGeneralSettingsWithClient(wsmanMessageCreator, &client)
 
 	t.Run("amt_* Tests", func(t *testing.T) {
