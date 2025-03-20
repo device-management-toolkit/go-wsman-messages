@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope"
+    xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+    xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
+    xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust"
+    xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+    xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd"
+    xmlns:g="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_SecIOService"
+    xmlns:h="http://schemas.dmtf.org/wbem/wscim/1/common"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <a:Header>
+        <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
+        <b:RelatesTo>0</b:RelatesTo>
+        <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/transfer/GetResponse</b:Action>
+        <b:MessageID>uuid:00000000-8086-8086-8086-00000000029D</b:MessageID>
+        <c:ResourceURI>http://intel.com/wbem/wscim/1/ips-schema/1/IPS_SecIOService</c:ResourceURI>
+    </a:Header>
+    <a:Body>
+        <g:IPS_SecIOService>
+            <g:CreationClassName>IPS_SecIOService</g:CreationClassName>
+            <g:DefaultScreen>1</g:DefaultScreen>
+            <g:EnabledState>2</g:EnabledState>
+            <g:Name>SecIO</g:Name>
+            <g:RequestedLanguage>2</g:RequestedLanguage>
+            <g:Started>true</g:Started>
+            <g:Status>OK</g:Status>
+            <g:SystemCreationClassName>CIM_ComputerSystem</g:SystemCreationClassName>
+            <g:SystemName>ManagedSystem</g:SystemName>
+            <g:language>1</g:language>
+            <g:zoom>65535</g:zoom>
+        </g:IPS_SecIOService>
+    </a:Body>
+</a:Envelope>
