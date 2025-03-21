@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPositiveIPS_SecIOService(t *testing.T) {
