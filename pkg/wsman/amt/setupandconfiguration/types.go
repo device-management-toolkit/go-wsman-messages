@@ -26,14 +26,15 @@ type (
 		Body    Body           `xml:"Body"`
 	}
 	Body struct {
-		XMLName                xml.Name `xml:"Body"`
-		GetResponse            SetupAndConfigurationServiceResponse
-		EnumerateResponse      common.EnumerateResponse
-		PullResponse           PullResponse
-		GetUuid_OUTPUT         GetUuid_OUTPUT         `xml:"GetUuid_OUTPUT"`
-		Unprovision_OUTPUT     Unprovision_OUTPUT     `xml:"Unprovision_OUTPUT"`
-		CommitChanges_OUTPUT   CommitChanges_OUTPUT   `xml:"CommitChanges_OUTPUT"`
-		SetMEBxPassword_OUTPUT SetMEBxPassword_OUTPUT `xml:"SetMEBxPassword_OUTPUT"`
+		XMLName                   xml.Name `xml:"Body"`
+		GetResponse               SetupAndConfigurationServiceResponse
+		EnumerateResponse         common.EnumerateResponse
+		PullResponse              PullResponse
+		GetUuid_OUTPUT            GetUuid_OUTPUT            `xml:"GetUuid_OUTPUT"`
+		Unprovision_OUTPUT        Unprovision_OUTPUT        `xml:"Unprovision_OUTPUT"`
+		PartialUnprovision_OUTPUT PartialUnprovision_OUTPUT `xml:"PartialUnprovision_OUTPUT"`
+		CommitChanges_OUTPUT      CommitChanges_OUTPUT      `xml:"CommitChanges_OUTPUT"`
+		SetMEBxPassword_OUTPUT    SetMEBxPassword_OUTPUT    `xml:"SetMEBxPassword_OUTPUT"`
 	}
 
 	SetupAndConfigurationServiceResponse struct {
@@ -72,7 +73,11 @@ type (
 		XMLName     xml.Name `xml:"Unprovision_OUTPUT"`
 		ReturnValue ReturnValue
 	}
-
+	// Values={PT_STATUS_SUCCESS, PT_STATUS_INTERNAL_ERROR, PT_STATUS_NOT_PERMITTED, PT_STATUS_BLOCKING_COMPONENT}.
+	PartialUnprovision_OUTPUT struct {
+		XMLName     xml.Name `xml:"PartialUnprovision_OUTPUT"`
+		ReturnValue ReturnValue
+	}
 	// ValueMap={0, 1, 38, 2057}
 	//
 	// Values={PT_STATUS_SUCCESS, PT_STATUS_INTERNAL_ERROR, PT_STATUS_FLASH_WRITE_LIMIT_EXCEEDED, PT_STATUS_DATA_MISSING}.

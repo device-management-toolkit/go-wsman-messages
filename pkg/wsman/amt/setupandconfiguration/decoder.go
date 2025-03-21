@@ -9,6 +9,7 @@ const (
 	AMTSetupAndConfigurationService string = "AMT_SetupAndConfigurationService"
 	CommitChanges                   string = "CommitChanges"
 	Unprovision                     string = "Unprovision"
+	PartialUnprovision              string = "PartialUnprovision"
 	SetMEBxPassword                 string = "SetMEBxPassword"
 	GetUUID                         string = "GetUuid"
 	ValueNotFound                   string = "Value not found in map"

@@ -275,6 +275,53 @@ func (s Service) SetMEBXPassword(password string) (response Response, err error)
 	return response, err
 }
 
+// PartialUnprovision Transfers Intel(R) AMT into a partially-unprovisioned state: Except for configuration settings required for the next provisioning: Admin ACL settings, TLS-PSK keys, Host & Domain name, and provisioning server IP and port number, settings will be restored to factory defaults. The device will need to be re-provisioned after this command.
+//
+// Product Specific Usage:
+// This command puts Intel AMT into a Partial Unprovision state.
+// The effect of this command is similar to calling the Unprovision() command (with ProvisioningMode set to "Enterprise").
+// The only difference is that the following settings remain unchanged:
+// - Admin ACL settings (name and password)
+// - TLS-PSK keys
+// - Host name
+// - Provisioning server IP and port number
+// - Domain name
+//
+// # In Client Control Mode, call will succeed even if auditor is blocking the operation
+//
+// Qualifiers:
+// -------------
+// ValueMap={0, 1, 16, 2076}
+// Values={PT_STATUS_SUCCESS, PT_STATUS_INTERNAL_ERROR, PT_STATUS_NOT_PERMITTED, PT_STATUS_BLOCKING_COMPONENT}.
+func (s Service) PartialUnprovision() (response Response, err error) {
+	header := s.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTSetupAndConfigurationService, PartialUnprovision), AMTSetupAndConfigurationService, nil, "", "")
+	body := s.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(PartialUnprovision), AMTSetupAndConfigurationService, nil)
+
+	response = Response{
+		Message: &client.Message{
+			XMLInput: s.base.WSManMessageCreator.CreateXML(header, body),
+		},
+	}
+
+	// send the message to AMT
+	err = s.base.Execute(response.Message)
+	if err != nil {
+		return response, err
+	}
+
+	// put the xml response into the go struct
+	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
+	if err != nil {
+		return response, err
+	}
+
+	if response.Body.PartialUnprovision_OUTPUT.ReturnValue != 0 {
+		err = errors.New("Status: Failed to partially deactivate. ReturnValue: " + fmt.Sprintf("%d", response.Body.PartialUnprovision_OUTPUT.ReturnValue))
+	}
+
+	return response, err
+}
+
 // Unprovision unconfigures and deactivates the Intel® AMT device. The device will need to be re-provisioned after this command before being able to use AMT features.
 //
 // In Client Control Mode, call will succeed even if auditor is blocking the operation.
