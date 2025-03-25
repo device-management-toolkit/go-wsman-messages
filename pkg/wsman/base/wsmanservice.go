@@ -108,6 +108,8 @@ func (s WSManService[T]) Put(request any) (T, error) {
 
 	msg := &client.Message{XMLInput: s.Base.Put(request, false, nil)}
 
+	injectMessage(&out, msg)
+
 	if err := s.Base.Execute(msg); err != nil {
 		return out, err
 	}
@@ -115,6 +117,8 @@ func (s WSManService[T]) Put(request any) (T, error) {
 	if err := xml.Unmarshal([]byte(msg.XMLOutput), &out); err != nil {
 		return out, err
 	}
+
+	injectMessage(&out, msg)
 
 	return out, nil
 }
