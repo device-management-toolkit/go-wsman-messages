@@ -1,4 +1,4 @@
-package screensettings
+package screensetting
 
 import (
 	"encoding/xml"

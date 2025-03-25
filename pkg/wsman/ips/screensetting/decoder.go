@@ -1,4 +1,4 @@
-package screensettings
+package screensetting
 
 const (
 	IPSScreenSettingData string = "IPS_ScreenSettingData"

@@ -10,7 +10,7 @@ import (
 
 // Package Types.
 type (
-	SettingsData struct {
+	SettingData struct {
 		base message.Base
 	}
 )
