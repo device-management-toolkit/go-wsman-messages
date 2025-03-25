@@ -14,10 +14,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Occurrence struct {
-	base message.Base
-}
-
 // OUTPUT
 // Response Types.
 type (
