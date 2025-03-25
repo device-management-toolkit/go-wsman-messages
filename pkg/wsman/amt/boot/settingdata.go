@@ -89,18 +89,14 @@ func (settingData SettingData) Pull(enumerationContext string) (response Respons
 	return
 }
 
-// Put will change properties of the selected instance.
 func (settingData SettingData) Put(bootSettingData BootSettingDataRequest) (response Response, err error) {
 	header := settingData.base.WSManMessageCreator.CreateHeader(message.BaseActionsPut, AMTBootSettingData, nil, "", "")
 	body := fmt.Sprintf(
-		`<Body><h:AMT_BootSettingData xmlns:h="%sAMT_BootSettingData"><h:BIOSLastStatus>%d</h:BIOSLastStatus><h:BIOSLastStatus>%d</h:BIOSLastStatus><h:BIOSPause>%t</h:BIOSPause><h:BIOSSetup>%t</h:BIOSSetup><h:BootMediaIndex>%d</h:BootMediaIndex><h:BootguardStatus>%d</h:BootguardStatus><h:ConfigurationDataReset>%t</h:ConfigurationDataReset><h:ElementName>%s</h:ElementName><h:EnforceSecureBoot>%t</h:EnforceSecureBoot><h:FirmwareVerbosity>%d</h:FirmwareVerbosity><h:ForcedProgressEvents>%t</h:ForcedProgressEvents><h:IDERBootDevice>%d</h:IDERBootDevice><h:InstanceID>%s</h:InstanceID><h:LockKeyboard>%t</h:LockKeyboard><h:LockPowerButton>%t</h:LockPowerButton><h:LockResetButton>%t</h:LockResetButton><h:LockSleepButton>%t</h:LockSleepButton><h:OptionsCleared>%t</h:OptionsCleared><h:OwningEntity>%s</h:OwningEntity><h:PlatformErase>%t</h:PlatformErase><h:RPEEnabled>%t</h:RPEEnabled><h:RSEPassword>%s</h:RSEPassword><h:ReflashBIOS>%t</h:ReflashBIOS><h:SecureBootControlEnabled>%t</h:SecureBootControlEnabled><h:SecureErase>%t</h:SecureErase><h:UEFIHTTPSBootEnabled>%t</h:UEFIHTTPSBootEnabled><h:UEFILocalPBABootEnabled>%t</h:UEFILocalPBABootEnabled><h:UefiBootNumberOfParams>%d</h:UefiBootNumberOfParams><h:UseIDER>%t</h:UseIDER><h:UseSOL>%t</h:UseSOL><h:UseSafeMode>%t</h:UseSafeMode><h:UserPasswordBypass>%t</h:UserPasswordBypass><h:WinREBootEnabled>%t</h:WinREBootEnabled></h:AMT_BootSettingData></Body>`,
+		`<Body><h:AMT_BootSettingData xmlns:h="%sAMT_BootSettingData"><h:BIOSPause>%t</h:BIOSPause><h:BIOSSetup>%t</h:BIOSSetup><h:BootMediaIndex>%d</h:BootMediaIndex><h:ConfigurationDataReset>%t</h:ConfigurationDataReset><h:ElementName>%s</h:ElementName><h:EnforceSecureBoot>%t</h:EnforceSecureBoot><h:FirmwareVerbosity>%d</h:FirmwareVerbosity><h:ForcedProgressEvents>%t</h:ForcedProgressEvents><h:IDERBootDevice>%d</h:IDERBootDevice><h:InstanceID>%s</h:InstanceID><h:LockKeyboard>%t</h:LockKeyboard><h:LockPowerButton>%t</h:LockPowerButton><h:LockResetButton>%t</h:LockResetButton><h:LockSleepButton>%t</h:LockSleepButton><h:OwningEntity>%s</h:OwningEntity><h:PlatformErase>%t</h:PlatformErase><h:RSEPassword>%s</h:RSEPassword><h:ReflashBIOS>%t</h:ReflashBIOS><h:SecureErase>%t</h:SecureErase><h:UefiBootParametersArray>%s</h:UefiBootParametersArray><h:UefiBootNumberOfParams>%d</h:UefiBootNumberOfParams><h:UseIDER>%t</h:UseIDER><h:UseSOL>%t</h:UseSOL><h:UseSafeMode>%t</h:UseSafeMode><h:UserPasswordBypass>%t</h:UserPasswordBypass></h:AMT_BootSettingData></Body>`,
 		settingData.base.WSManMessageCreator.ResourceURIBase,
-		bootSettingData.BIOSLastStatus[0],
-		bootSettingData.BIOSLastStatus[1],
 		bootSettingData.BIOSPause,
 		bootSettingData.BIOSSetup,
 		bootSettingData.BootMediaIndex,
-		bootSettingData.BootguardStatus,
 		bootSettingData.ConfigurationDataReset,
 		bootSettingData.ElementName,
 		bootSettingData.EnforceSecureBoot,
@@ -112,22 +108,17 @@ func (settingData SettingData) Put(bootSettingData BootSettingDataRequest) (resp
 		bootSettingData.LockPowerButton,
 		bootSettingData.LockResetButton,
 		bootSettingData.LockSleepButton,
-		bootSettingData.OptionsCleared,
 		bootSettingData.OwningEntity,
 		bootSettingData.PlatformErase,
-		bootSettingData.RPEEnabled,
 		bootSettingData.RSEPassword,
 		bootSettingData.ReflashBIOS,
-		bootSettingData.SecureBootControlEnabled,
 		bootSettingData.SecureErase,
-		bootSettingData.UEFIHTTPSBootEnabled,
-		bootSettingData.UEFILocalPBABootEnabled,
+		bootSettingData.UefiBootParametersArray,
 		bootSettingData.UefiBootNumberOfParams,
 		bootSettingData.UseIDER,
 		bootSettingData.UseSOL,
 		bootSettingData.UseSafeMode,
-		bootSettingData.UserPasswordBypass,
-		bootSettingData.WinREBootEnabled)
+		bootSettingData.UserPasswordBypass)
 
 	response = Response{
 		Message: &client.Message{

@@ -45,7 +45,7 @@ type (
 	}
 	BootSettingDataResponse struct {
 		XMLName                  xml.Name          `xml:"AMT_BootSettingData"`
-		BIOSLastStatus           []int             `xml:"BIOSLastStatus,omitempty"`           // Last boot status reported by BIOS. The first 16-bit word contains the general BIOS status (0 - Success, 1 - In Progress, 2 - Not Updated, 0xFFFF - Failed). The second word contains the detailed error status (0 - Success/In Progress, 1 - General Drive Failure, 2 - Drive Password/Authentication Failure, 3 - Feature is not supported). This property is read-only.
+		BIOSLastStatus           []uint16          `xml:"BIOSLastStatus,omitempty"`           // Last boot status reported by BIOS. The first 16-bit word contains the general BIOS status (0 - Success, 1 - In Progress, 2 - Not Updated, 0xFFFF - Failed). The second word contains the detailed error status (0 - Success/In Progress, 1 - General Drive Failure, 2 - Drive Password/Authentication Failure, 3 - Feature is not supported). This property is read-only.
 		BIOSPause                bool              `xml:"BIOSPause,omitempty"`                // When True, the BIOS pauses for user input on the next boot cycle. This property can be set to true only when a boot source isn't set (using CIM_BootConfigSetting.ChangeBootOrder method).
 		BIOSSetup                bool              `xml:"BIOSSetup,omitempty"`                // When True, the Intel® AMT firmware enters the CMOS Setup screen on the next boot cycle. This property can be set to true only when a boot source isn't set (using CIM_BootConfigSetting.ChangeBootOrder method).
 		BootMediaIndex           int               `xml:"BootMediaIndex,omitempty"`           // This property identifies the boot-media index for the managed client (when a boot source is set using the CIM_BootConfigSetting.ChangeBootOrder method). For Hard-Drive or CD/DVD boot - when the parameter value is 0, the default boot-media is booted. When the parameter value is 1, the primary boot-media is booted; when the value is 2, the secondary boot-media is booted; and so on. For PXE or diagnostics boot this property must be 0.
@@ -70,7 +70,7 @@ type (
 		SecureBootControlEnabled bool              `xml:"SecureBootControlEnabled,omitempty"` // Determines whether Intel AMT is privileged by BIOS to disable secure boot for an AMT triggered boot option. If not, BIOSSecureBoot must be set to TRUE. This property is read only.
 		SecureErase              bool              `xml:"SecureErase,omitempty"`              // When True, the BIOS performs secure erase operation. Note: Customers are recommended to use Secure Remote Platform Erase which is newer and more advanced than this function.
 		UEFIHTTPSBootEnabled     bool              `xml:"UEFIHTTPSBootEnabled,omitempty"`     // Indicates whether ForceUEFIHTTPSBoot is enabled in BIOS. This property is read only.
-		UEFIBootParametersArray  []int             `xml:"UEFIBootParametersArray,omitempty"`  // TLV parameters array encoded with base64 for configuring boot parameters for One-Click Recovery and Secure Remote Platform Erase.
+		UEFIBootParametersArray  []uint8           `xml:"UEFIBootParametersArray,omitempty"`  // TLV parameters array encoded with base64 for configuring boot parameters for One-Click Recovery and Secure Remote Platform Erase.
 		UEFILocalPBABootEnabled  bool              `xml:"UEFILocalPBABootEnabled,omitempty"`  // Indicates whether ForceUEFILocalPBABoot is enabled in BIOS. This property is read only.
 		UefiBootNumberOfParams   int               `xml:"UefiBootNumberOfParams,omitempty"`   // Number of parameters in UefiBootParametersArray
 		UseIDER                  bool              `xml:"UseIDER,omitempty"`                  // When True, IDER is used on the next boot cycle.
@@ -120,7 +120,7 @@ type (
 type BootSettingDataRequest struct {
 	XMLName                  xml.Name          `xml:"h:AMT_BootSettingData"`
 	H                        string            `xml:"xmlns:h,attr"`
-	BIOSLastStatus           []int             `xml:"h:BIOSLastStatus,omitempty"` // Last boot status reported by BIOS. The first 16-bit word contains the general BIOS status (0 - Success, 1 - In Progress, 2 - Not Updated, 0xFFFF - Failed). The second word contains the detailed error status (0 - Success/In Progress, 1 - General Drive Failure, 2 - Drive Password/Authentication Failure, 3 - Feature is not supported). This property is read-only.
+	BIOSLastStatus           []uint16          `xml:"h:BIOSLastStatus,omitempty"` // Last boot status reported by BIOS. The first 16-bit word contains the general BIOS status (0 - Success, 1 - In Progress, 2 - Not Updated, 0xFFFF - Failed). The second word contains the detailed error status (0 - Success/In Progress, 1 - General Drive Failure, 2 - Drive Password/Authentication Failure, 3 - Feature is not supported). This property is read-only.
 	BIOSPause                bool              `xml:"h:BIOSPause"`                // Required. When True, the BIOS pauses for user input on the next boot cycle. This property can be set to true only when a boot source isn't set (using CIM_BootConfigSetting.ChangeBootOrder method).
 	BIOSSetup                bool              `xml:"h:BIOSSetup"`                // Required. When True, the Intel® AMT firmware enters the CMOS Setup screen on the next boot cycle. This property can be set to true only when a boot source isn't set (using CIM_BootConfigSetting.ChangeBootOrder method).
 	BootMediaIndex           int               `xml:"h:BootMediaIndex"`           // Required. This property identifies the boot-media index for the managed client (when a boot source is set using the CIM_BootConfigSetting.ChangeBootOrder method). For Hard-Drive or CD/DVD boot - when the parameter value is 0, the default boot-media is booted. When the parameter value is 1, the primary boot-media is booted; when the value is 2, the secondary boot-media is booted; and so on. For PXE or diagnostics boot this property must be 0.
@@ -139,13 +139,12 @@ type BootSettingDataRequest struct {
 	OptionsCleared           bool              `xml:"h:OptionsCleared"`           // Indicates whether the boot options have been cleared by BIOS or not. This property is read only.
 	OwningEntity             string            `xml:"h:OwningEntity"`             // OwningEntity identifies the vendor or organization that defines the contained boot settings.
 	PlatformErase            bool              `xml:"h:PlatformErase"`            // When set to True, sets the boot option to trigger Secure Remote Platform Erase in the next boot.  Note: This command needs to execute over TLS.
-	RPEEnabled               bool              `xml:"h:RPEEnabled"`               // Indicates whether Secure Remote Platform Erase is enabled by the BIOS. Note: This command needs to execute over TLS.
 	RSEPassword              string            `xml:"h:RSEPassword"`              // SSD password for Remote Secure Erase operation. This is a write-only field, an empty string is returned when instance is read. When writing, an empty string or lack of field will be ignored. The password length is limited to 32 ASCII characters. Note: Customers are recommended to use Secure Remote Platform Erase which is newer and more advanced than Remote Secure Erase.
 	ReflashBIOS              bool              `xml:"h:ReflashBIOS"`              // Required. When True, the Intel® AMT firmware reflashes the BIOS on the next boot cycle. This property can be set to true only when a boot source isn't set (using CIM_BootConfigSetting.ChangeBootOrder method).
 	SecureBootControlEnabled bool              `xml:"h:SecureBootControlEnabled"` // Determines whether Intel AMT is privileged by BIOS to disable secure boot for an AMT triggered boot option. If not, BIOSSecureBoot must be set to TRUE. This property is read only.
 	SecureErase              bool              `xml:"h:SecureErase"`              // Required. When True, the BIOS performs secure erase operation. Note: Customers are recommended to use Secure Remote Platform Erase which is newer and more advanced than this function.
 	UEFIHTTPSBootEnabled     bool              `xml:"h:UEFIHTTPSBootEnabled"`     // Indicates whether ForceUEFIHTTPSBoot is enabled in BIOS. This property is read only.
-	UEFIBootParametersArray  []int             `xml:"h:UEFIBootParametersArray"`  // TLV parameters array encoded with base64 for configuring boot parameters for One-Click Recovery and Secure Remote Platform Erase.
+	UefiBootParametersArray  string            `xml:"h:UefiBootParametersArray"`  // TLV parameters array encoded with base64 for configuring boot parameters for One-Click Recovery and Secure Remote Platform Erase.
 	UEFILocalPBABootEnabled  bool              `xml:"h:UEFILocalPBABootEnabled"`  // Indicates whether ForceUEFILocalPBABoot is enabled in BIOS. This property is read only.
 	UefiBootNumberOfParams   int               `xml:"h:UefiBootNumberOfParams"`   // Number of parameters in UefiBootParametersArray
 	UseIDER                  bool              `xml:"h:UseIDER"`                  // Required. When True, IDER is used on the next boot cycle.
@@ -168,3 +167,153 @@ type FirmwareVerbosity int
 //
 // Values={Floppy Boot, CD Boot}.
 type IDERBootDevice int
+
+type ParameterType byte
+
+// UEFI Boot Parameter Types.
+const (
+	OCR_EFI_NETWORK_DEVICE_PATH         ParameterType = 1
+	OCR_EFI_FILE_DEVICE_PATH            ParameterType = 2
+	OCR_EFI_DEVICE_PATH_LEN             ParameterType = 3
+	OCR_BOOT_IMAGE_HASH_SHA256          ParameterType = 4
+	OCR_BOOT_IMAGE_HASH_SHA384          ParameterType = 5
+	OCR_BOOT_IMAGE_HASH_SHA512          ParameterType = 6
+	OCR_EFI_BOOT_OPTIONAL_DATA          ParameterType = 10
+	OCR_HTTPS_CERT_SYNC_ROOT_CA         ParameterType = 20
+	OCR_HTTPS_CERT_SERVER_NAME          ParameterType = 21
+	OCR_HTTPS_SERVER_NAME_VERIFY_METHOD ParameterType = 22
+	OCR_HTTPS_SERVER_CERT_HASH_SHA256   ParameterType = 23
+	OCR_HTTPS_SERVER_CERT_HASH_SHA384   ParameterType = 24
+	OCR_HTTPS_SERVER_CERT_HASH_SHA512   ParameterType = 25
+	OCR_HTTPS_REQUEST_TIMEOUT           ParameterType = 30
+	OCR_HTTPS_USER_NAME                 ParameterType = 40
+	OCR_HTTPS_PASSWORD                  ParameterType = 41
+)
+
+// Parameter max sizes (in bytes).
+var MaxSizes = map[ParameterType]int{
+	OCR_EFI_NETWORK_DEVICE_PATH:         300,
+	OCR_EFI_FILE_DEVICE_PATH:            300,
+	OCR_EFI_DEVICE_PATH_LEN:             2, // UINT16
+	OCR_BOOT_IMAGE_HASH_SHA256:          32,
+	OCR_BOOT_IMAGE_HASH_SHA384:          48,
+	OCR_BOOT_IMAGE_HASH_SHA512:          64,
+	OCR_EFI_BOOT_OPTIONAL_DATA:          50,
+	OCR_HTTPS_CERT_SYNC_ROOT_CA:         1, // BOOLEAN
+	OCR_HTTPS_CERT_SERVER_NAME:          256,
+	OCR_HTTPS_SERVER_NAME_VERIFY_METHOD: 2, // UINT16
+	OCR_HTTPS_SERVER_CERT_HASH_SHA256:   32,
+	OCR_HTTPS_SERVER_CERT_HASH_SHA384:   48,
+	OCR_HTTPS_SERVER_CERT_HASH_SHA512:   64,
+	OCR_HTTPS_REQUEST_TIMEOUT:           2, // UINT16
+	OCR_HTTPS_USER_NAME:                 16,
+	OCR_HTTPS_PASSWORD:                  16,
+}
+
+// Parameter names for friendly error messages.
+var ParameterNames = map[ParameterType]string{
+	OCR_EFI_NETWORK_DEVICE_PATH:         "URI to HTTPS Server",
+	OCR_EFI_FILE_DEVICE_PATH:            "Device path to PBA.efi",
+	OCR_EFI_DEVICE_PATH_LEN:             "Device path length",
+	OCR_BOOT_IMAGE_HASH_SHA256:          "SHA256 hash of boot loader",
+	OCR_BOOT_IMAGE_HASH_SHA384:          "SHA384 hash of boot loader",
+	OCR_BOOT_IMAGE_HASH_SHA512:          "SHA512 hash of boot loader",
+	OCR_EFI_BOOT_OPTIONAL_DATA:          "Optional binary data",
+	OCR_HTTPS_CERT_SYNC_ROOT_CA:         "Sync Root CAs with Intel AMT",
+	OCR_HTTPS_CERT_SERVER_NAME:          "HTTPS server certificate name",
+	OCR_HTTPS_SERVER_NAME_VERIFY_METHOD: "Server name verification method",
+	OCR_HTTPS_SERVER_CERT_HASH_SHA256:   "SHA256 hash of server certificate",
+	OCR_HTTPS_SERVER_CERT_HASH_SHA384:   "SHA384 hash of server certificate",
+	OCR_HTTPS_SERVER_CERT_HASH_SHA512:   "SHA512 hash of server certificate",
+	OCR_HTTPS_REQUEST_TIMEOUT:           "HTTP Request timeout",
+	OCR_HTTPS_USER_NAME:                 "HTTPS Username",
+	OCR_HTTPS_PASSWORD:                  "HTTPS Password",
+}
+
+// Parameter details for validation rules.
+var ParameterDetails = map[ParameterType]struct {
+	Mandatory bool
+	DependsOn ParameterType
+	Comment   string
+}{
+	OCR_EFI_NETWORK_DEVICE_PATH: {
+		Mandatory: true,
+		Comment:   "Mandatory for boot to HTTPS",
+	},
+	OCR_EFI_FILE_DEVICE_PATH: {
+		Mandatory: false,
+		Comment:   "Used when console specifies device path not registered by BIOS",
+	},
+	OCR_EFI_DEVICE_PATH_LEN: {
+		Mandatory: false,
+		DependsOn: OCR_EFI_FILE_DEVICE_PATH,
+		Comment:   "Mandatory when OCR_EFI_FILE_DEVICE_PATH is provided",
+	},
+	OCR_BOOT_IMAGE_HASH_SHA256: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot. Mandatory when image not signed and secure boot can't be disabled",
+	},
+	OCR_BOOT_IMAGE_HASH_SHA384: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot. Mandatory when image not signed and secure boot can't be disabled",
+	},
+	OCR_BOOT_IMAGE_HASH_SHA512: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot. Mandatory when image not signed and secure boot can't be disabled",
+	},
+	OCR_EFI_BOOT_OPTIONAL_DATA: {
+		Mandatory: false,
+		Comment:   "Optional binary data for loaded image",
+	},
+	OCR_HTTPS_CERT_SYNC_ROOT_CA: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot. Required if BIOS doesn't have root CA",
+	},
+	OCR_HTTPS_CERT_SERVER_NAME: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot",
+	},
+	OCR_HTTPS_SERVER_NAME_VERIFY_METHOD: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot",
+	},
+	OCR_HTTPS_SERVER_CERT_HASH_SHA256: {
+		Mandatory: false,
+		Comment:   "Can be provided instead of or with Root CA, server name and verify method",
+	},
+	OCR_HTTPS_SERVER_CERT_HASH_SHA384: {
+		Mandatory: false,
+		Comment:   "Can be provided instead of or with Root CA, server name and verify method",
+	},
+	OCR_HTTPS_SERVER_CERT_HASH_SHA512: {
+		Mandatory: false,
+		Comment:   "Can be provided instead of or with Root CA, server name and verify method",
+	},
+	OCR_HTTPS_REQUEST_TIMEOUT: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot",
+	},
+	OCR_HTTPS_USER_NAME: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot",
+	},
+	OCR_HTTPS_PASSWORD: {
+		Mandatory: false,
+		Comment:   "Optional for HTTPS boot",
+	},
+}
+
+// TLVParameter represents a single TLV entry.
+type TLVParameter struct {
+	Type   ParameterType
+	Length byte
+	Value  []byte
+	Valid  bool
+}
+
+// ValidationResult contains the results of TLV validation.
+type ValidationResult struct {
+	Valid      bool
+	Parameters []TLVParameter
+	Errors     []string
+}
