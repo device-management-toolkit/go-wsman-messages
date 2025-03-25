@@ -10,14 +10,14 @@ import (
 )
 
 // NewKVMRedirectionSettings returns a new instance of the KVMRedirectionSettings struct.
-func NewKVMRedirectionSettingsWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) SettingsData {
-	return SettingsData{
+func NewKVMRedirectionSettingDataWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) SettingData {
+	return SettingData{
 		base: message.NewBaseWithClient(wsmanMessageCreator, IPSKVMRedirectionSettingData, client),
 	}
 }
 
 // Get retrieves the representation of the instance.
-func (settings SettingsData) Get() (response Response, err error) {
+func (settings SettingData) Get() (response Response, err error) {
 	response = Response{
 		Message: &client.Message{
 			XMLInput: settings.base.Get(nil),
@@ -38,7 +38,7 @@ func (settings SettingsData) Get() (response Response, err error) {
 }
 
 // Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (settings SettingsData) Enumerate() (response Response, err error) {
+func (settings SettingData) Enumerate() (response Response, err error) {
 	response = Response{
 		Message: &client.Message{
 			XMLInput: settings.base.Enumerate(),
@@ -59,7 +59,7 @@ func (settings SettingsData) Enumerate() (response Response, err error) {
 }
 
 // Pull returns the instances of this class using an enumeration context from Enumerate.
-func (settings SettingsData) Pull(enumerationContext string) (response Response, err error) {
+func (settings SettingData) Pull(enumerationContext string) (response Response, err error) {
 	response = Response{
 		Message: &client.Message{
 			XMLInput: settings.base.Pull(enumerationContext),
@@ -80,7 +80,7 @@ func (settings SettingsData) Pull(enumerationContext string) (response Response,
 }
 
 // Put updates the KVM settings.
-func (settings SettingsData) Put(kvmSettings KVMRedirectionSettingsRequest) (response Response, err error) {
+func (settings SettingData) Put(kvmSettings KVMRedirectionSettingsRequest) (response Response, err error) {
 	kvmSettings.H = fmt.Sprintf("%s%s", message.IPSSchema, IPSKVMRedirectionSettingData)
 	response = Response{
 		Message: &client.Message{
@@ -102,7 +102,7 @@ func (settings SettingsData) Put(kvmSettings KVMRedirectionSettingsRequest) (res
 }
 
 // TerminateSession stops an active KVM session.
-func (settings SettingsData) TerminateSession() (response Response, err error) {
+func (settings SettingData) TerminateSession() (response Response, err error) {
 	header := settings.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSKVMRedirectionSettingData, TerminateSession), IPSKVMRedirectionSettingData, nil, "", "")
 	body := settings.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(TerminateSession), IPSKVMRedirectionSettingData, nil)
 

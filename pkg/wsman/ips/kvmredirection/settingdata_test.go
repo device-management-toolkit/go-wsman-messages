@@ -36,7 +36,7 @@ func TestPositiveIPS_KVMRedirectionSettingData(t *testing.T) {
 	client := wsmantesting.MockClient{
 		PackageUnderTest: "ips/kvmredirection/settings",
 	}
-	elementUnderTest := NewKVMRedirectionSettingsWithClient(wsmanMessageCreator, &client)
+	elementUnderTest := NewKVMRedirectionSettingDataWithClient(wsmanMessageCreator, &client)
 
 	t.Run("ips_KVMRedirectionSettingData Tests", func(t *testing.T) {
 		tests := []struct {

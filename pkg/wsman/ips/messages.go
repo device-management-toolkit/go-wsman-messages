@@ -11,8 +11,11 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/kvmredirection"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/power"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/screensetting"
+	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/secio"
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
@@ -24,6 +27,9 @@ type Messages struct {
 	IEEE8021xCredentialContext ieee8021x.CredentialContext
 	IEEE8021xSettings          ieee8021x.Settings
 	PowerManagementService     power.ManagementService
+	ScreenSettingData          screensetting.Data
+	SecIOService               secio.Service
+	KVMRedirectionSettingData  kvmredirection.SettingData
 }
 
 func NewMessages(client client.WSMan) Messages {
@@ -38,6 +44,9 @@ func NewMessages(client client.WSMan) Messages {
 	m.IEEE8021xCredentialContext = ieee8021x.NewIEEE8021xCredentialContextWithClient(wsmanMessageCreator, client)
 	m.IEEE8021xSettings = ieee8021x.NewIEEE8021xSettingsWithClient(wsmanMessageCreator, client)
 	m.PowerManagementService = power.NewPowerManagementServiceWithClient(wsmanMessageCreator, client)
+	m.ScreenSettingData = screensetting.NewScreenSettingDataWithClient(wsmanMessageCreator, client)
+	m.SecIOService = secio.NewSecIOServiceWithClient(wsmanMessageCreator, client)
+	m.KVMRedirectionSettingData = kvmredirection.NewKVMRedirectionSettingDataWithClient(wsmanMessageCreator, client)
 
 	return m
 }
