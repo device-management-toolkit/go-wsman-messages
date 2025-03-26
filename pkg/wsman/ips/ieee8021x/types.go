@@ -13,16 +13,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-// Package Types.
-type (
-	Settings struct {
-		base message.Base
-	}
-	CredentialContext struct {
-		base message.Base
-	}
-)
-
 // OUTPUT
 // Response Types.
 type (

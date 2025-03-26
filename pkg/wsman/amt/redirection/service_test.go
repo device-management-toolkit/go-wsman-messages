@@ -91,7 +91,7 @@ func TestPositiveAMT_RedirectionService(t *testing.T) {
 				wsmantesting.EnumerateBody,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageEnumerate
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Println("Error")
 					}
 
@@ -142,7 +142,7 @@ func TestPositiveAMT_RedirectionService(t *testing.T) {
 				"<h:AMT_RedirectionService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_RedirectionService\"><h:CreationClassName>AMT_RedirectionService</h:CreationClassName><h:ElementName>Intel(r) AMT Redirection Service</h:ElementName><h:EnabledState>32771</h:EnabledState><h:ListenerEnabled>true</h:ListenerEnabled><h:Name>Intel(r) AMT Redirection Service</h:Name><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName></h:AMT_RedirectionService>",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessagePut
-					redirectionRequest := RedirectionRequest{
+					redirectionRequest := &RedirectionRequest{
 						CreationClassName:       AMTRedirectionService,
 						ElementName:             "Intel(r) AMT Redirection Service",
 						EnabledState:            32771,
@@ -252,7 +252,7 @@ func TestNegativeAMT_RedirectionService(t *testing.T) {
 				wsmantesting.EnumerateBody,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Println("Error")
 					}
 
@@ -303,7 +303,7 @@ func TestNegativeAMT_RedirectionService(t *testing.T) {
 				"<h:AMT_RedirectionService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_RedirectionService\"><h:CreationClassName>AMT_RedirectionService</h:CreationClassName><h:ElementName>Intel(r) AMT Redirection Service</h:ElementName><h:EnabledState>32771</h:EnabledState><h:ListenerEnabled>true</h:ListenerEnabled><h:Name>Intel(r) AMT Redirection Service</h:Name><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName></h:AMT_RedirectionService>",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
-					redirectionRequest := RedirectionRequest{
+					redirectionRequest := &RedirectionRequest{
 						CreationClassName:       AMTRedirectionService,
 						ElementName:             "Intel(r) AMT Redirection Service",
 						EnabledState:            32771,

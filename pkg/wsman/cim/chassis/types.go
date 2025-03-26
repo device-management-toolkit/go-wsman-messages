@@ -13,10 +13,6 @@ import (
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Package struct {
-	base message.Base
-}
-
 type (
 	Response struct {
 		*client.Message
