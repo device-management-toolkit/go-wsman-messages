@@ -137,6 +137,24 @@ func TestPositiveConfigSetting(t *testing.T) {
 					},
 				},
 			},
+			// Change Boot Order with empty source
+			{
+				"should create and parse a valid cim_BootConfigSetting ChangeBootOrder call",
+				CIMBootConfigSetting,
+				methods.GenerateAction(CIMBootConfigSetting, ChangeBootOrder),
+				"<h:ChangeBootOrder_INPUT xmlns:h=\"http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootConfigSetting\"></h:ChangeBootOrder_INPUT>",
+				func() (Response, error) {
+					client.CurrentMessage = "ChangeBootOrder"
+
+					return elementUnderTest.ChangeBootOrder("")
+				},
+				Body{
+					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
+					ChangeBootOrder_OUTPUT: ChangeBootOrder_OUTPUT{
+						ReturnValue: 0,
+					},
+				},
+			},
 		}
 
 		for _, test := range tests {
@@ -242,6 +260,24 @@ func TestNegativeConfigSetting(t *testing.T) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 
 					return elementUnderTest.ChangeBootOrder(HardDrive)
+				},
+				Body{
+					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
+					ChangeBootOrder_OUTPUT: ChangeBootOrder_OUTPUT{
+						ReturnValue: 0,
+					},
+				},
+			},
+			// Change Boot Order with empty source
+			{
+				"should handle error when cim_BootConfigSetting ChangeBootOrder call",
+				CIMBootConfigSetting,
+				methods.GenerateAction(CIMBootConfigSetting, ChangeBootOrder),
+				"<h:ChangeBootOrder_INPUT xmlns:h=\"http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootConfigSetting\"></h:ChangeBootOrder_INPUT>",
+				func() (Response, error) {
+					client.CurrentMessage = wsmantesting.CurrentMessageError
+
+					return elementUnderTest.ChangeBootOrder("")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},

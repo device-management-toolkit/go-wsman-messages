@@ -24,6 +24,7 @@ package boot
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
@@ -120,7 +121,15 @@ func (configSetting ConfigSetting) Pull(enumerationContext string) (response Res
 // 3) Intel AMT Release 7.0: Returns WSMAN Fault = “access denied” if user consent is required but IPS_OptInService.OptInState value is not 'Received' or 'In Session'. An exception to this rule is when the Source parameter is an empty array.
 func (configSetting ConfigSetting) ChangeBootOrder(source Source) (response Response, err error) {
 	header := configSetting.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(CIMBootConfigSetting, ChangeBootOrder), CIMBootConfigSetting, nil, "", "")
-	body := fmt.Sprintf(`<Body><h:ChangeBootOrder_INPUT xmlns:h="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootConfigSetting"><h:Source><Address xmlns="http://schemas.xmlsoap.org/ws/2004/08/addressing">http://schemas.xmlsoap.org/ws/2004/08/addressing</Address><ReferenceParameters xmlns="http://schemas.xmlsoap.org/ws/2004/08/addressing"><ResourceURI xmlns="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd">http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootSourceSetting</ResourceURI><SelectorSet xmlns="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"><Selector Name="InstanceID">%s</Selector></SelectorSet></ReferenceParameters></h:Source></h:ChangeBootOrder_INPUT></Body>`, source)
+
+	var body string
+
+	if source == "" {
+		body = `<Body><h:ChangeBootOrder_INPUT xmlns:h="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootConfigSetting"></h:ChangeBootOrder_INPUT></Body>`
+	} else {
+		body = fmt.Sprintf(`<Body><h:ChangeBootOrder_INPUT xmlns:h="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootConfigSetting"><h:Source><Address xmlns="http://schemas.xmlsoap.org/ws/2004/08/addressing">http://schemas.xmlsoap.org/ws/2004/08/addressing</Address><ReferenceParameters xmlns="http://schemas.xmlsoap.org/ws/2004/08/addressing"><ResourceURI xmlns="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd">http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BootSourceSetting</ResourceURI><SelectorSet xmlns="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"><Selector Name="InstanceID">%s</Selector></SelectorSet></ReferenceParameters></h:Source></h:ChangeBootOrder_INPUT></Body>`, source)
+	}
+
 	response = Response{
 		Message: &client.Message{
 			XMLInput: configSetting.base.WSManMessageCreator.CreateXML(header, body),
@@ -137,5 +146,16 @@ func (configSetting ConfigSetting) ChangeBootOrder(source Source) (response Resp
 		return
 	}
 
+	if response.Body.ChangeBootOrder_OUTPUT.ReturnValue != 0 {
+		err = generateErrorMessage("changebootorder", response.Body.ChangeBootOrder_OUTPUT.ReturnValue)
+	}
+
 	return
+}
+
+// generateErrorMessage returns an error message based on the return value.
+func generateErrorMessage(call string, returnValue ReturnValue) error {
+	ErrSetupFailed := errors.New(call + " failed")
+
+	return fmt.Errorf("%w: returned %d", ErrSetupFailed, returnValue)
 }

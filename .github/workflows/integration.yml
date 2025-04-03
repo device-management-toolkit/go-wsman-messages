@@ -61,7 +61,7 @@ jobs:
       - name: Build rpc-go
         run: |
           cd rpc-go
-          go build -o rpc ./cmd/main.go
+          go build -o rpc ./cmd/rpc/main.go
 
       - name: Build console
         run: |
