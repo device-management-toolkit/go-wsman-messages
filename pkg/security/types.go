@@ -1,7 +1,7 @@
 package security
 
 import (
-	"github.com/99designs/keyring"
+	"github.com/zalando/go-keyring"
 
 	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
 )
@@ -21,6 +21,7 @@ type Crypto struct {
 type Storager interface {
 	GetKeyValue(key string) (string, error)
 	SetKeyValue(key, value string) error
+	DeleteKeyValue(key string) error
 }
 
 type Storage struct {
@@ -30,9 +31,25 @@ type Storage struct {
 
 // Keyring interface to abstract the keyring operations.
 type Keyring interface {
-	Set(serviceName string, item keyring.Item) error
-	Get(serviceName, key string) (keyring.Item, error)
+	Set(serviceName, key, value string) error
+	Get(serviceName, key string) (string, error)
+	Delete(serviceName, key string) error
 }
 
 // RealKeyring struct to implement the Keyring interface using the real keyring package.
 type RealKeyring struct{}
+
+// Set method to set a key-value pair in the real keyring.
+func (r RealKeyring) Set(serviceName, key, value string) error {
+	return keyring.Set(serviceName, key, value)
+}
+
+// Get method to get a value from the real keyring by key.
+func (r RealKeyring) Get(serviceName, key string) (string, error) {
+	return keyring.Get(serviceName, key)
+}
+
+// Delete method to delete a key-value pair from the real keyring.
+func (r RealKeyring) Delete(serviceName, key string) error {
+	return keyring.Delete(serviceName, key)
+}
