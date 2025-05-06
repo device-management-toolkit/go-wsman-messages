@@ -26,6 +26,7 @@ func NewWsmanTCP(cp Parameters) *Target {
 		UseTLS:             cp.UseTLS,
 		InsecureSkipVerify: cp.SelfSignedAllowed,
 		PinnedCert:         cp.PinnedCert,
+		conn:               cp.Connection,
 		bufferPool: sync.Pool{
 			New: func() interface{} {
 				return make([]byte, 4096) // Adjust size according to your needs.
@@ -37,6 +38,10 @@ func NewWsmanTCP(cp Parameters) *Target {
 // Connect establishes a TCP connection to the endpoint specified in the Target struct.
 func (t *Target) Connect() error {
 	var err error
+	// already connected and connection has been provided
+	if t.conn != nil {
+		return nil
+	}
 
 	if t.UseTLS {
 		// check if pinnedCert is not null and not empty
