@@ -9,12 +9,12 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/ips/power"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/power"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
 func TestNewMessages(t *testing.T) {

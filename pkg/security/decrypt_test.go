@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/config"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/config"
 )
 
 var (

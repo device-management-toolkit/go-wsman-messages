@@ -6,7 +6,7 @@ import (
 	"github.com/99designs/keyring"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/security"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/security"
 )
 
 // MockKeyring to mock the keyring interface for unit testing.

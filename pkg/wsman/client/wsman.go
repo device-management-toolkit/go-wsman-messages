@@ -23,7 +23,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/amterror"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/amterror"
 )
 
 const (

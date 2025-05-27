@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/methods"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewBootService returns a new instance of the BootService struct.

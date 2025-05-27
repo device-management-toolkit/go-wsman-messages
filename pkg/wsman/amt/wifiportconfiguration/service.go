@@ -11,11 +11,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewWiFiPortConfigurationServiceWithClient instantiates a new Service.

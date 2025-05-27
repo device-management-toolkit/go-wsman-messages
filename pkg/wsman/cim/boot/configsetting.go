@@ -27,9 +27,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/methods"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewBootConfigSettingWithClient instantiates a new ConfigSetting.
@@ -138,19 +138,19 @@ func (configSetting ConfigSetting) ChangeBootOrder(source Source) (response Resp
 
 	err = configSetting.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	if response.Body.ChangeBootOrder_OUTPUT.ReturnValue != 0 {
 		err = generateErrorMessage("changebootorder", response.Body.ChangeBootOrder_OUTPUT.ReturnValue)
 	}
 
-	return
+	return response, err
 }
 
 // generateErrorMessage returns an error message based on the return value.

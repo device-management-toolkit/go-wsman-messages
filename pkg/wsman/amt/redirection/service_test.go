@@ -13,9 +13,9 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
 func TestJson(t *testing.T) {

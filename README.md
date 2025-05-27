@@ -1,9 +1,9 @@
 # go-wsman-messages
 
-[![CodeQL](https://img.shields.io/github/actions/workflow/status/open-amt-cloud-toolkit/go-wsman-messages/codeql-analysis.yml?style=for-the-badge&label=CodeQL&logo=github)](https://github.com/open-amt-cloud-toolkit/go-wsman-messages/actions/workflows/codeql-analysis.yml)
-[![Build](https://img.shields.io/github/actions/workflow/status/open-amt-cloud-toolkit/go-wsman-messages/ci.yml?style=for-the-badge&logo=github)](https://github.com/open-amt-cloud-toolkit/go-wsman-messages/actions/workflows/ci.yml)
+[![CodeQL](https://img.shields.io/github/actions/workflow/status/open-amt-cloud-toolkit/go-wsman-messages/codeql-analysis.yml?style=for-the-badge&label=CodeQL&logo=github)](https://github.com/device-management-toolkit/go-wsman-messages/actions/workflows/codeql-analysis.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/open-amt-cloud-toolkit/go-wsman-messages/ci.yml?style=for-the-badge&logo=github)](https://github.com/device-management-toolkit/go-wsman-messages/actions/workflows/ci.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/open-amt-cloud-toolkit/go-wsman-messages?style=for-the-badge&logo=codecov)](https://app.codecov.io/gh/open-amt-cloud-toolkit/go-wsman-messages)
-[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/open-amt-cloud-toolkit/go-wsman-messages?style=for-the-badge&label=OSSF%20Score)](https://api.securityscorecards.dev/projects/github.com/open-amt-cloud-toolkit/go-wsman-messages)
+[![OSSF-Scorecard Score](https://img.shields.io/ossf-scorecard/github.com/device-management-toolkit/go-wsman-messages?style=for-the-badge&label=OSSF%20Score)](https://api.securityscorecards.dev/projects/github.com/device-management-toolkit/go-wsman-messages)
 [![Discord](https://img.shields.io/discord/1063200098680582154?style=for-the-badge&label=Discord&logo=discord&logoColor=white&labelColor=%235865F2&link=https%3A%2F%2Fdiscord.gg%2FDKHeUNEWVH)](https://discord.gg/DKHeUNEWVH)
 
 > Disclaimer: Production viable releases are tagged and listed under 'Releases'.  All other check-ins should be considered 'in-development' and should not be used in production
@@ -26,8 +26,8 @@ package main
 import (
     "fmt"
     // 1. Import the library
-    "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman"
-    "github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+    "github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman"
+    "github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 func main() {
