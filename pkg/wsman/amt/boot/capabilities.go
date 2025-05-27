@@ -7,14 +7,14 @@
 //
 // Capabilities reports what boot options that the Intel® AMT device supports.
 //
-// SettingData provides configuration-related and operational parameters for the boot service in the Intel® AMT device.  In order to activate these settings use [pkg/github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power] RequestPowerStateChange().  Notice that you can't set certain values while others are enabled (for example: You can't set UseIDER or UseSOL if a CIM_BootSourceSetting is chosen).
+// SettingData provides configuration-related and operational parameters for the boot service in the Intel® AMT device.  In order to activate these settings use [pkg/github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power] RequestPowerStateChange().  Notice that you can't set certain values while others are enabled (for example: You can't set UseIDER or UseSOL if a CIM_BootSourceSetting is chosen).
 package boot
 
 import (
 	"encoding/xml"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewBootCapabilitiesWithClient instantiates a new Boot Capabilities service.

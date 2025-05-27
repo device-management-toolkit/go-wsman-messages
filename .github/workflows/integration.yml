@@ -54,9 +54,9 @@ jobs:
       - name: Set go-wsman-messages dependency to current branch
         run: |
           cd rpc-go
-          go mod edit -replace github.com/open-amt-cloud-toolkit/go-wsman-messages=../${{ github.repository }}
+          go mod edit -replace github.com/device-management-toolkit/go-wsman-messages=../${{ github.repository }}
           cd ../console
-          go mod edit -replace github.com/open-amt-cloud-toolkit/go-wsman-messages=../${{ github.repository }}
+          go mod edit -replace github.com/device-management-toolkit/go-wsman-messages=../${{ github.repository }}
 
       - name: Build rpc-go
         run: |

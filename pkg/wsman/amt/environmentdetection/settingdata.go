@@ -10,8 +10,8 @@ import (
 	"encoding/xml"
 	"fmt"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewEnvironmentDetectionSettingDataWithClient instantiates a new Environment Detection Setting Data service.

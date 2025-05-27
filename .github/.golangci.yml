@@ -1,6 +1,6 @@
 linters-settings:
   gci:
-    local-prefixes: github.com/open-amt-cloud-toolkit/go-wsman-messages
+    local-prefixes: github.com/device-management-toolkit/go-wsman-messages
   errorlint:
     errorf: true
   errcheck:

@@ -8,7 +8,7 @@ package message
 import (
 	"fmt"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 func NewBase(wsmanMessageCreator *WSManMessageCreator, className string) Base {

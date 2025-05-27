@@ -1,4 +1,4 @@
-module github.com/open-amt-cloud-toolkit/go-wsman-messages/v2
+module github.com/device-management-toolkit/go-wsman-messages/v2
 
 go 1.20
 
