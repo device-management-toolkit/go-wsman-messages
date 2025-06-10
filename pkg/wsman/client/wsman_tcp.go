@@ -98,7 +98,7 @@ func (t *Target) Receive() ([]byte, error) {
 	}
 
 	tmp := t.bufferPool.Get().([]byte)
-	defer t.bufferPool.Put(tmp)
+	defer t.bufferPool.Put(tmp) //nolint:staticcheck // changing the argument to be pointer-like to avoid allocations caused issues.
 
 	n, err := t.conn.Read(tmp)
 	if err != nil {

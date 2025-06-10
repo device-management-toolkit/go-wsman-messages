@@ -75,11 +75,7 @@ func relayTester(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	simulateDelay := false
-
-	if strings.Contains(r.RequestURI, "simulate_delay") {
-		simulateDelay = true
-	}
+	simulateDelay := strings.Contains(r.RequestURI, "simulate_delay")
 
 	defer c.Close()
 
