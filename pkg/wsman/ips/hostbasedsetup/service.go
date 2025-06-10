@@ -16,84 +16,26 @@ import (
 	"io"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/methods"
 )
 
+type Service struct {
+	base.WSManService[Response]
+}
+
 // NewHostBasedSetupService returns a new instance of the HostBasedSetupService struct.
 func NewHostBasedSetupServiceWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Service {
 	return Service{
-		base: message.NewBaseWithClient(wsmanMessageCreator, IPSHostBasedSetupService, client),
+		base.NewService[Response](wsmanMessageCreator, IPSHostBasedSetupService, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (service Service) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Get(nil),
-		},
-	}
-
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (service Service) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Enumerate(),
-		},
-	}
-
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (service Service) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Pull(enumerationContext),
-		},
-	}
-
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
 }
 
 // Add a certificate to the provisioning certificate chain, to be used by AdminSetup or UpgradeClientToAdmin methods.
 func (service Service) AddNextCertInChain(cert string, isLeaf, isRoot bool) (response Response, err error) {
-	header := service.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, AddNextCertInChain), IPSHostBasedSetupService, nil, "", "")
-	body := service.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddNextCertInChain), IPSHostBasedSetupService, AddNextCertInChainInput{
+	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, AddNextCertInChain), IPSHostBasedSetupService, nil, "", "")
+	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddNextCertInChain), IPSHostBasedSetupService, AddNextCertInChainInput{
 		H:                 "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService",
 		NextCertificate:   cert,
 		IsLeafCertificate: isLeaf,
@@ -101,11 +43,11 @@ func (service Service) AddNextCertInChain(cert string, isLeaf, isRoot bool) (res
 	})
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: service.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -125,8 +67,8 @@ func (service Service) AddNextCertInChain(cert string, isLeaf, isRoot bool) (res
 // Setup Intel® AMT from the local host, resulting in Admin Setup Mode. Requires OS administrator rights, and moves Intel® AMT from "Pre Provisioned" state to "Post Provisioned" state. The control mode after this method is run will be "Admin".
 func (service Service) AdminSetup(adminPassEncryptionType AdminPassEncryptionType, digestRealm, adminPassword, mcNonce string, signingAlgorithm SigningAlgorithm, digitalSignature string) (response Response, err error) {
 	hashInHex := createMD5Hash(adminPassword, digestRealm)
-	header := service.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, AdminSetup), IPSHostBasedSetupService, nil, "", "")
-	body := service.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AdminSetup), IPSHostBasedSetupService, AdminSetupInput{
+	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, AdminSetup), IPSHostBasedSetupService, nil, "", "")
+	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AdminSetup), IPSHostBasedSetupService, AdminSetupInput{
 		H:                          "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService",
 		NetAdminPassEncryptionType: int(adminPassEncryptionType),
 		NetworkAdminPassword:       hashInHex,
@@ -136,11 +78,11 @@ func (service Service) AdminSetup(adminPassEncryptionType AdminPassEncryptionTyp
 	})
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: service.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -159,19 +101,19 @@ func (service Service) AdminSetup(adminPassEncryptionType AdminPassEncryptionTyp
 
 func (service Service) Setup(adminPassEncryptionType AdminPassEncryptionType, digestRealm, adminPassword string) (response Response, err error) {
 	hashInHex := createMD5Hash(adminPassword, digestRealm)
-	header := service.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, Setup), IPSHostBasedSetupService, nil, "", "")
-	body := service.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(Setup), IPSHostBasedSetupService, SetupInput{
+	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, Setup), IPSHostBasedSetupService, nil, "", "")
+	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(Setup), IPSHostBasedSetupService, SetupInput{
 		H:                          "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService",
 		NetAdminPassEncryptionType: int(adminPassEncryptionType),
 		NetworkAdminPassword:       hashInHex,
 	})
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: service.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -205,8 +147,8 @@ func createMD5Hash(adminPassword, digestRealm string) string {
 
 // Upgrade Intel® AMT from Client to Admin Control Mode.
 func (service Service) UpgradeClientToAdmin(mcNonce string, signingAlgorithm SigningAlgorithm, digitalSignature string) (response Response, err error) {
-	header := service.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, UpgradeClientToAdmin), IPSHostBasedSetupService, nil, "", "")
-	body := service.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(UpgradeClientToAdmin), IPSHostBasedSetupService, UpgradeClientToAdminInput{
+	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(IPSHostBasedSetupService, UpgradeClientToAdmin), IPSHostBasedSetupService, nil, "", "")
+	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(UpgradeClientToAdmin), IPSHostBasedSetupService, UpgradeClientToAdminInput{
 		H:                "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService",
 		McNonce:          mcNonce,
 		SigningAlgorithm: int(signingAlgorithm),
@@ -214,11 +156,11 @@ func (service Service) UpgradeClientToAdmin(mcNonce string, signingAlgorithm Sig
 	})
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: service.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}

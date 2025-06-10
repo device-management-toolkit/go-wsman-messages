@@ -14,21 +14,21 @@ import (
 func NewBase(wsmanMessageCreator *WSManMessageCreator, className string) Base {
 	return Base{
 		WSManMessageCreator: wsmanMessageCreator,
-		className:           className,
+		ClassName:           className,
 	}
 }
 
 func NewBaseWithClient(wsmanMessageCreator *WSManMessageCreator, className string, client client.WSMan) Base {
 	return Base{
 		WSManMessageCreator: wsmanMessageCreator,
-		className:           className,
+		ClassName:           className,
 		client:              client,
 	}
 }
 
 // Enumerate returns an enumeration context which is used in a subsequent Pull call.
 func (b *Base) Enumerate() string {
-	header := b.WSManMessageCreator.CreateHeader(BaseActionsEnumerate, b.className, nil, "", "")
+	header := b.WSManMessageCreator.CreateHeader(BaseActionsEnumerate, b.ClassName, nil, "", "")
 
 	return b.WSManMessageCreator.CreateXML(header, EnumerateBody)
 }
@@ -40,14 +40,14 @@ func (b *Base) Get(selector *Selector) string {
 		selectors = append(selectors, *selector)
 	}
 
-	header := b.WSManMessageCreator.CreateHeader(BaseActionsGet, b.className, selectors, "", "")
+	header := b.WSManMessageCreator.CreateHeader(BaseActionsGet, b.ClassName, selectors, "", "")
 
 	return b.WSManMessageCreator.CreateXML(header, GetBody)
 }
 
 // Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
 func (b *Base) Pull(enumerationContext string) string {
-	header := b.WSManMessageCreator.CreateHeader(BaseActionsPull, b.className, nil, "", "")
+	header := b.WSManMessageCreator.CreateHeader(BaseActionsPull, b.ClassName, nil, "", "")
 	body := createCommonBodyPull(enumerationContext, 0, 0)
 
 	return b.WSManMessageCreator.CreateXML(header, body)
@@ -55,7 +55,7 @@ func (b *Base) Pull(enumerationContext string) string {
 
 // Delete removes a the specified instance.
 func (b *Base) Delete(selector Selector) string {
-	header := b.WSManMessageCreator.CreateHeader(BaseActionsDelete, b.className, []Selector{selector}, "", "")
+	header := b.WSManMessageCreator.CreateHeader(BaseActionsDelete, b.ClassName, []Selector{selector}, "", "")
 
 	return b.WSManMessageCreator.CreateXML(header, DeleteBody)
 }
@@ -69,28 +69,28 @@ func (b *Base) Put(data interface{}, useHeaderSelector bool, selectorSet []Selec
 	var header string
 
 	if useHeaderSelector {
-		header = b.WSManMessageCreator.CreateHeader(BaseActionsPut, b.className, selectorSet, "", "")
+		header = b.WSManMessageCreator.CreateHeader(BaseActionsPut, b.ClassName, selectorSet, "", "")
 	} else {
-		header = b.WSManMessageCreator.CreateHeader(BaseActionsPut, b.className, nil, "", "")
+		header = b.WSManMessageCreator.CreateHeader(BaseActionsPut, b.ClassName, nil, "", "")
 	}
 
-	body := b.WSManMessageCreator.createCommonBodyCreateOrPut(b.className, data)
+	body := b.WSManMessageCreator.createCommonBodyCreateOrPut(b.ClassName, data)
 
 	return b.WSManMessageCreator.CreateXML(header, body)
 }
 
 // Creates a new instance of this class.
 func (b *Base) Create(data interface{}, selectorSet []Selector) string {
-	header := b.WSManMessageCreator.CreateHeader(BaseActionsCreate, b.className, selectorSet, "", "")
-	body := b.WSManMessageCreator.createCommonBodyCreateOrPut(b.className, data)
+	header := b.WSManMessageCreator.CreateHeader(BaseActionsCreate, b.ClassName, selectorSet, "", "")
+	body := b.WSManMessageCreator.createCommonBodyCreateOrPut(b.ClassName, data)
 
 	return b.WSManMessageCreator.CreateXML(header, body)
 }
 
 // RequestStateChange requests that the state of the element be changed to the value specified in the RequestedState parameter . . .
 func (b *Base) RequestStateChange(actionName string, requestedState int) string {
-	header := b.WSManMessageCreator.CreateHeader(actionName, b.className, nil, "", "")
-	body := createCommonBodyRequestStateChange(fmt.Sprintf("%s%s", b.WSManMessageCreator.ResourceURIBase, b.className), requestedState)
+	header := b.WSManMessageCreator.CreateHeader(actionName, b.ClassName, nil, "", "")
+	body := createCommonBodyRequestStateChange(fmt.Sprintf("%s%s", b.WSManMessageCreator.ResourceURIBase, b.ClassName), requestedState)
 
 	return b.WSManMessageCreator.CreateXML(header, body)
 }

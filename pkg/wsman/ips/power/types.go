@@ -13,10 +13,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type ManagementService struct {
-	base message.Base
-}
-
 type OSPowerSavingState int
 
 // Response Types.

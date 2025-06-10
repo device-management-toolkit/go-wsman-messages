@@ -29,77 +29,19 @@ import (
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
+
+type Service struct {
+	base.WSManService[Response]
+}
 
 // NewMessageLogWithClient instantiates a new MessageLog.
 func NewMessageLogWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Service {
 	return Service{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTMessageLog, client),
+		base.NewService[Response](wsmanMessageCreator, AMTMessageLog, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (messageLog Service) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: messageLog.base.Get(nil),
-		},
-	}
-	// send the message to AMT
-	err = messageLog.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (messageLog Service) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: messageLog.base.Enumerate(),
-		},
-	}
-	// send the message to AMT
-	err = messageLog.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (messageLog Service) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: messageLog.base.Pull(enumerationContext),
-		},
-	}
-	// send the message to AMT
-	err = messageLog.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // GetRecords retrieves multiple records from event log.
@@ -116,19 +58,19 @@ func (messageLog Service) GetRecords(identifier, maxReadRecords int) (response R
 		maxReadRecords = MaxAMTRecords
 	}
 
-	header := messageLog.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTMessageLog, GetRecords), AMTMessageLog, nil, "", "")
-	body := messageLog.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(GetRecords), AMTMessageLog, &GetRecords_INPUT{
+	header := messageLog.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTMessageLog, GetRecords), AMTMessageLog, nil, "", "")
+	body := messageLog.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(GetRecords), AMTMessageLog, &GetRecords_INPUT{
 		IterationIdentifier: identifier,
 		MaxReadRecords:      maxReadRecords,
 	})
 
 	response = Response{
 		Message: &client.Message{
-			XMLInput: messageLog.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: messageLog.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 	// send the message to AMT
-	err = messageLog.base.Execute(response.Message)
+	err = messageLog.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -152,15 +94,15 @@ func (messageLog Service) GetRecords(identifier, maxReadRecords int) (response R
 //
 // Product Specific Usage: In current implementation this method doesn't have any affect. In order to get the events from the log user should just call GetRecord or GetRecords.
 func (messageLog Service) PositionToFirstRecord() (response Response, err error) {
-	header := messageLog.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTMessageLog, PositionToFirstRecord), AMTMessageLog, nil, "", "")
-	body := messageLog.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(PositionToFirstRecord), AMTMessageLog, nil)
+	header := messageLog.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTMessageLog, PositionToFirstRecord), AMTMessageLog, nil, "", "")
+	body := messageLog.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(PositionToFirstRecord), AMTMessageLog, nil)
 	response = Response{
 		Message: &client.Message{
-			XMLInput: messageLog.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: messageLog.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 	// send the message to AMT
-	err = messageLog.base.Execute(response.Message)
+	err = messageLog.Base.Execute(response.Message)
 	if err != nil {
 		return
 	}

@@ -8,13 +8,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-// Package Types.
-type (
-	SettingData struct {
-		base message.Base
-	}
-)
-
 // OUTPUT.
 type (
 	Response struct {

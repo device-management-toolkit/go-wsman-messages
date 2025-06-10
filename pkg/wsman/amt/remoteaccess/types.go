@@ -17,14 +17,6 @@ type PolicyAppliesToMPS struct {
 	base message.Base
 }
 
-type PolicyRule struct {
-	base message.Base
-}
-
-type Service struct {
-	base message.Base
-}
-
 // OUTPUTS
 // Response Types.
 type (

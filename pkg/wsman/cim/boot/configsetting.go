@@ -28,78 +28,20 @@ import (
 	"fmt"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/methods"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
+type ConfigSetting struct {
+	base.WSManService[Response]
+}
+
 // NewBootConfigSettingWithClient instantiates a new ConfigSetting.
 func NewBootConfigSettingWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) ConfigSetting {
 	return ConfigSetting{
-		base: message.NewBaseWithClient(wsmanMessageCreator, CIMBootConfigSetting, client),
+		base.NewService[Response](wsmanMessageCreator, CIMBootConfigSetting, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (configSetting ConfigSetting) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: configSetting.base.Get(nil),
-		},
-	}
-
-	err = configSetting.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (configSetting ConfigSetting) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: configSetting.base.Enumerate(),
-		},
-	}
-
-	err = configSetting.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (configSetting ConfigSetting) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: configSetting.base.Pull(enumerationContext),
-		},
-	}
-
-	err = configSetting.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // ChangeBootOrder sets the boot order within a boot configuration.
@@ -120,7 +62,7 @@ func (configSetting ConfigSetting) Pull(enumerationContext string) (response Res
 //
 // 3) Intel AMT Release 7.0: Returns WSMAN Fault = “access denied” if user consent is required but IPS_OptInService.OptInState value is not 'Received' or 'In Session'. An exception to this rule is when the Source parameter is an empty array.
 func (configSetting ConfigSetting) ChangeBootOrder(source Source) (response Response, err error) {
-	header := configSetting.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(CIMBootConfigSetting, ChangeBootOrder), CIMBootConfigSetting, nil, "", "")
+	header := configSetting.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(CIMBootConfigSetting, ChangeBootOrder), CIMBootConfigSetting, nil, "", "")
 
 	var body string
 
@@ -132,11 +74,11 @@ func (configSetting ConfigSetting) ChangeBootOrder(source Source) (response Resp
 
 	response = Response{
 		Message: &client.Message{
-			XMLInput: configSetting.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: configSetting.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
-	err = configSetting.base.Execute(response.Message)
+	err = configSetting.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}

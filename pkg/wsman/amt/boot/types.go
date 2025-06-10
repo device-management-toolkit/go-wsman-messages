@@ -17,10 +17,6 @@ type SettingData struct {
 	base message.Base
 }
 
-type Capabilities struct {
-	base message.Base
-}
-
 // OUTPUTS
 // Response Types.
 type (

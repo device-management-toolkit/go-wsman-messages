@@ -11,76 +11,18 @@ import (
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
+type Service struct {
+	base.WSManService[Response]
+}
+
 func NewUserInitiatedConnectionServiceWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Service {
 	return Service{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTUserInitiatedConnectionService, client),
+		base.NewService[Response](wsmanMessageCreator, AMTUserInitiatedConnectionService, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (service Service) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Get(nil),
-		},
-	}
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (service Service) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Enumerate(),
-		},
-	}
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (service Service) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Pull(enumerationContext),
-		},
-	}
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // Requests that the state of the element be changed to the value specified in the RequestedState parameter.
@@ -104,11 +46,11 @@ func (service Service) Pull(enumerationContext string) (response Response, err e
 func (service Service) RequestStateChange(requestedState RequestedState) (response Response, err error) {
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.RequestStateChange(methods.RequestStateChange(AMTUserInitiatedConnectionService), int(requestedState)),
+			XMLInput: service.Base.RequestStateChange(methods.RequestStateChange(AMTUserInitiatedConnectionService), int(requestedState)),
 		},
 	}
 	// send the message to AMT
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return
 	}

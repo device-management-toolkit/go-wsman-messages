@@ -9,115 +9,22 @@ package redirection
 import (
 	"encoding/xml"
 	"errors"
-	"fmt"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
+
+type Service struct {
+	base.WSManService[Response]
+}
 
 // NewRedirectionServiceWithClient instantiates a new Service.
 func NewRedirectionServiceWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Service {
 	return Service{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTRedirectionService, client),
+		base.NewService[Response](wsmanMessageCreator, AMTRedirectionService, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (service Service) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Get(nil),
-		},
-	}
-
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (service Service) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Enumerate(),
-		},
-	}
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (service Service) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Pull(enumerationContext),
-		},
-	}
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Put changes properties of the selected instance.
-// The following properties must be included in any representation of AMT_RedirectionService:
-//
-// - Name(cannot be modified)
-//
-// - CreationClassName(cannot be modified)
-//
-// - SystemName (cannot be modified)
-//
-// - SystemCreationClassName (cannot be modified)
-//
-// - ListenerEnabled.
-func (service Service) Put(redirectionService RedirectionRequest) (response Response, err error) {
-	redirectionService.H = fmt.Sprintf("%s%s", message.AMTSchema, AMTRedirectionService)
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Put(redirectionService, false, nil),
-		},
-	}
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
 }
 
 // RequestStateChange requests that AMT change the state of the element to the value specified in the RequestedState parameter.
@@ -129,11 +36,11 @@ func (service Service) Put(redirectionService RedirectionRequest) (response Resp
 func (service Service) RequestStateChange(requestedState RequestedState) (response Response, err error) {
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.RequestStateChange(methods.GenerateAction(AMTRedirectionService, RequestStateChange), int(requestedState)),
+			XMLInput: service.Base.RequestStateChange(methods.GenerateAction(AMTRedirectionService, RequestStateChange), int(requestedState)),
 		},
 	}
 	// send the message to AMT
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return
 	}
