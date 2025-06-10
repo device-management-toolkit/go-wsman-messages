@@ -71,7 +71,7 @@ func (context Context) Pull(enumerationContext string) (response Response, err e
 			return response, err
 		}
 
-		err = xml.Unmarshal([]byte(response.Message.XMLOutput), &response)
+		err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 		if err != nil {
 			return response, err
 		}

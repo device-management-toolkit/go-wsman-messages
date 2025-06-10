@@ -71,7 +71,7 @@ func ValidateTLVEntry(paramType ParameterType, length byte, value []byte) error 
 		// Add timeout validation if needed
 
 	case OCR_HTTPS_USER_NAME, OCR_HTTPS_PASSWORD:
-		return fmt.Errorf("Validation is not added for %s", ParameterNames[paramType])
+		return fmt.Errorf("validation is not added for %s", ParameterNames[paramType])
 	}
 
 	return nil

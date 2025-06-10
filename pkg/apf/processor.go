@@ -169,13 +169,14 @@ func ProcessGlobalRequest(data []byte) interface{} {
 		log.Tracef("%+v", genericHeader)
 		log.Tracef("%+v", tcpForwardRequest)
 
-		if genericHeader.String == APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST {
+		switch genericHeader.String {
+		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST:
 			if tcpForwardRequest.Port == 16992 || tcpForwardRequest.Port == 16993 {
 				reply = TcpForwardReplySuccess(tcpForwardRequest.Port)
 			} else {
 				reply = APF_REQUEST_FAILURE
 			}
-		} else if genericHeader.String == APF_GLOBAL_REQUEST_STR_TCP_FORWARD_CANCEL_REQUEST {
+		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_CANCEL_REQUEST:
 			reply = APF_REQUEST_SUCCESS
 		}
 	}
@@ -260,9 +261,10 @@ func ProcessServiceRequest(data []byte) APF_SERVICE_ACCEPT_MESSAGE {
 	log.Tracef("%+v", message)
 
 	if message.ServiceNameLength == 18 {
-		if message.ServiceName == "pfwd@amt.intel.com" {
+		switch message.ServiceName {
+		case "pfwd@amt.intel.com":
 			service = 1
-		} else if message.ServiceName == "auth@amt.intel.com" {
+		case "auth@amt.intel.com":
 			service = 2
 		}
 	}
