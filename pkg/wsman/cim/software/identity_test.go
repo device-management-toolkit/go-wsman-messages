@@ -67,7 +67,7 @@ func TestPositiveCIMSoftwareIdentity(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageGet
 
-					return elementUnderTest.Get("AMTApps")
+					return elementUnderTest.GetByInstanceID("AMTApps")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
@@ -229,7 +229,7 @@ func TestNegativeCIMSoftwareIdentity(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 
-					return elementUnderTest.Get("AMTApps")
+					return elementUnderTest.GetByInstanceID("AMTApps")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},

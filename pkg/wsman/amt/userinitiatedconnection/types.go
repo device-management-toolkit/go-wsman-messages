@@ -13,10 +13,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Service struct {
-	base message.Base
-}
-
 // The state requested for the element. The valid input values for userinitiatedconnection request state change are: 32768, 32769, 32770, 32771.
 //
 // ValueMap={32768, 32769, 32770, 32771}

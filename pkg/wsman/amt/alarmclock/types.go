@@ -15,10 +15,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Service struct {
-	base message.Base
-}
-
 // INPUTS
 // AlarmClockOccurrence represents a single alarm clock setting.
 type AlarmClockOccurrence struct {

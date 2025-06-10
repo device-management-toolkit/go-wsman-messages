@@ -14,10 +14,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Dependency struct {
-	base message.Base
-}
-
 // Response Types.
 type (
 	Response struct {

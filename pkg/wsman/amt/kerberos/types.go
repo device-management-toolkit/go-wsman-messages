@@ -13,10 +13,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type SettingData struct {
-	base message.Base
-}
-
 // OUTPUTS
 // Response Types.
 type (

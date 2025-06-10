@@ -11,82 +11,18 @@
 package software
 
 import (
-	"encoding/xml"
-
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
+
+type Identity struct {
+	base.WSManService[Response]
+}
 
 // NewSoftwareIdentity returns a new instance of the SoftwareIdentity struct.
 func NewSoftwareIdentityWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Identity {
 	return Identity{
-		base: message.NewBaseWithClient(wsmanMessageCreator, CIMSoftwareIdentity, client),
+		base.NewService[Response](wsmanMessageCreator, CIMSoftwareIdentity, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (identity Identity) Get(instanceID string) (response Response, err error) {
-	selector := message.Selector{
-		Name:  "InstanceID",
-		Value: instanceID,
-	}
-	response = Response{
-		Message: &client.Message{
-			XMLInput: identity.base.Get(&selector),
-		},
-	}
-
-	err = identity.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (identity Identity) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: identity.base.Enumerate(),
-		},
-	}
-
-	err = identity.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (identity Identity) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: identity.base.Pull(enumerationContext),
-		},
-	}
-
-	err = identity.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, nil
 }

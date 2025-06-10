@@ -13,14 +13,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Port struct {
-	base message.Base
-}
-
-type EndpointSettings struct {
-	base message.Base
-}
-
 // OUTPUT
 // Response Types.
 type (

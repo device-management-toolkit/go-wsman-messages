@@ -9,78 +9,18 @@
 package card
 
 import (
-	"encoding/xml"
-
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
+
+type Package struct {
+	base.WSManService[Response]
+}
 
 // NewCard returns a new instance of the Card struct.
 func NewCardWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Package {
 	return Package{
-		base: message.NewBaseWithClient(wsmanMessageCreator, CIMCard, client),
+		base.NewService[Response](wsmanMessageCreator, CIMCard, client),
 	}
-}
-
-// Get retrieves the representation of the instance.
-func (card Package) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: card.base.Get(nil),
-		},
-	}
-
-	err = card.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (card Package) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: card.base.Enumerate(),
-		},
-	}
-
-	err = card.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (card Package) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: card.base.Pull(enumerationContext),
-		},
-	}
-
-	err = card.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
 }

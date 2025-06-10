@@ -14,10 +14,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Service struct {
-	base message.Base
-}
-
 // INPUTS
 // Request Types.
 type ReadRecordsInput struct {
