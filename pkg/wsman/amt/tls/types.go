@@ -20,9 +20,6 @@ type (
 	CredentialContext struct {
 		base message.Base
 	}
-	ProtocolEndpointCollection struct {
-		base message.Base
-	}
 )
 
 // OUTPUT

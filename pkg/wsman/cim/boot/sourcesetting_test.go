@@ -45,7 +45,7 @@ func TestPositiveSourceSetting(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageGet
 
-					return elementUnderTest.Get("Intel(r) AMT: Force Hard-drive Boot")
+					return elementUnderTest.GetByInstanceID("Intel(r) AMT: Force Hard-drive Boot")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
@@ -162,7 +162,7 @@ func TestNegativeSourceSetting(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 
-					return elementUnderTest.Get("Intel(r) AMT: Force Hard-drive Boot")
+					return elementUnderTest.GetByInstanceID("Intel(r) AMT: Force Hard-drive Boot")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},

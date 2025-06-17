@@ -13,7 +13,7 @@ import (
 
 type Base struct {
 	WSManMessageCreator *WSManMessageCreator
-	className           string
+	ClassName           string
 	client              client.WSMan
 }
 

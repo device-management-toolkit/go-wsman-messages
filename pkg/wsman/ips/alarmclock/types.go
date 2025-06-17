@@ -14,10 +14,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Occurrence struct {
-	base message.Base
-}
-
 // OUTPUT
 // Response Types.
 type (

@@ -15,10 +15,6 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
-type Memory struct {
-	base message.Base
-}
-
 type Package struct {
 	base message.Base
 }

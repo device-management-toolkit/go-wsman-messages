@@ -69,7 +69,7 @@ func TestPositiveIPS_AlarmClockOccurrence(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageGet
 
-					return elementUnderTest.Get("testalarm")
+					return elementUnderTest.GetByName("testalarm")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
@@ -201,7 +201,7 @@ func TestNegativeIPS_AlarmClockOccurrence(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 
-					return elementUnderTest.Get("testalarm")
+					return elementUnderTest.GetByName("testalarm")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},

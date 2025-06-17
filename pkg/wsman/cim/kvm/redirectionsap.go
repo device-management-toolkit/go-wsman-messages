@@ -10,14 +10,19 @@ import (
 	"encoding/xml"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/methods"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
+type RedirectionSAP struct {
+	base.WSManService[Response]
+}
+
 // NewKVMRedirectionSAP returns a new instance of the KVMRedirectionSAP struct.
 func NewKVMRedirectionSAPWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) RedirectionSAP {
 	return RedirectionSAP{
-		base: message.NewBaseWithClient(wsmanMessageCreator, CIMKVMRedirectionSAP, client),
+		base.NewService[Response](wsmanMessageCreator, CIMKVMRedirectionSAP, client),
 	}
 }
 
@@ -25,74 +30,11 @@ func NewKVMRedirectionSAPWithClient(wsmanMessageCreator *message.WSManMessageCre
 func (redirectionSAP RedirectionSAP) RequestStateChange(requestedState KVMRedirectionSAPRequestStateChangeInput) (response Response, err error) {
 	response = Response{
 		Message: &client.Message{
-			XMLInput: redirectionSAP.base.RequestStateChange(methods.RequestStateChange(CIMKVMRedirectionSAP), int(requestedState)),
+			XMLInput: redirectionSAP.Base.RequestStateChange(methods.RequestStateChange(CIMKVMRedirectionSAP), int(requestedState)),
 		},
 	}
 
-	err = redirectionSAP.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Get retrieves the representation of the instance.
-func (redirectionSAP RedirectionSAP) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: redirectionSAP.base.Get(nil),
-		},
-	}
-
-	err = redirectionSAP.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (redirectionSAP RedirectionSAP) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: redirectionSAP.base.Enumerate(),
-		},
-	}
-
-	err = redirectionSAP.base.Execute(response.Message)
-	if err != nil {
-		return
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (redirectionSAP RedirectionSAP) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: redirectionSAP.base.Pull(enumerationContext),
-		},
-	}
-
-	err = redirectionSAP.base.Execute(response.Message)
+	err = redirectionSAP.Base.Execute(response.Message)
 	if err != nil {
 		return
 	}
