@@ -44,8 +44,9 @@ type Wired struct {
 }
 
 type Wireless struct {
-	WiFiSyncEnabled bool              `yaml:"wifiSyncEnabled"`
-	Profiles        []WirelessProfile `yaml:"profiles"`
+	WiFiSyncEnabled     bool              `yaml:"wifiSyncEnabled"`
+	UEFIWiFiSyncEnabled bool              `yaml:"uefiWiFiSyncEnabled"`
+	Profiles            []WirelessProfile `yaml:"profiles"`
 }
 
 type WirelessProfile struct {
