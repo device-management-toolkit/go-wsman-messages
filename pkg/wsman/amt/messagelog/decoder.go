@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -482,6 +483,10 @@ func decodeEventRecord(eventLog []RawEventData) []RefinedEventData {
 
 func decodeEventDetailString(eventSensorType, eventOffset uint8, eventDataField []uint8) string {
 	switch eventSensorType {
+	case 5:
+		if eventOffset == 0 {
+			return "Case intrusion"
+		}
 	case 6:
 		value := int(eventDataField[1]) + (int(eventDataField[2]) << 8)
 
@@ -489,14 +494,73 @@ func decodeEventDetailString(eventSensorType, eventOffset uint8, eventDataField 
 	case 15:
 		{
 			if eventDataField[0] == 235 {
-				return "Invalid Data"
+				return InvalidData
 			}
 
 			if eventOffset == 0 {
 				return SystemFirmwareError[int(eventDataField[1])]
 			}
 
+			if eventOffset == 3 {
+				if eventDataField[0] == 170 && eventDataField[1] == 48 {
+					return fmt.Sprintf("One Click Recovery: %s", OCRErrorEvents[int(eventDataField[2])])
+				} else if eventDataField[0] == 170 && eventDataField[1] == 64 {
+					return PlatformEraseErrorEvents[int(eventDataField[2])]
+				}
+
+				return OEMSpecificFirmwareErrorEvent
+			}
+
+			if eventOffset == 5 {
+				if eventDataField[0] == 170 && eventDataField[1] == 48 {
+					if eventDataField[2] == 1 {
+						return fmt.Sprintf("One Click Recovery: CSME Boot Option %d:%s added successfully", eventDataField[3], OCRSource[int(eventDataField[3])])
+					}
+					if eventDataField[2] < 7 {
+						return fmt.Sprintf("One Click Recovery: %s", OCRProgressEvents[int(eventDataField[2])])
+					}
+
+					return fmt.Sprintf("One Click Recovery: Unknown progress event %d", eventDataField[2])
+				}
+				if eventDataField[0] == 170 && eventDataField[1] == 64 {
+					if eventDataField[2] == 1 {
+						if eventDataField[3] == 2 {
+							return "Started erasing Device SSD"
+						}
+						if eventDataField[3] == 3 {
+							return "Started erasing Device TPM"
+						}
+						if eventDataField[3] == 5 {
+							return "Started erasing Device BIOS Reload of Golden Config"
+						}
+					}
+					if eventDataField[2] == 2 {
+						if eventDataField[3] == 2 {
+							return "Erasing Device SSD ended successfully"
+						}
+						if eventDataField[3] == 3 {
+							return "Erasing Device TPM ended successfully"
+						}
+						if eventDataField[3] == 5 {
+							return "Erasing Device BIOS Reload of Golden Config ended successfully"
+						}
+					}
+					if eventDataField[2] == 3 {
+						return "Beginning Platform Erase"
+					}
+					if eventDataField[2] == 4 {
+						return "Clear Reserved Parameters"
+					}
+					if eventDataField[2] == 5 {
+						return "All setting decremented"
+					}
+				}
+
+				return OEMSpecificFirmwareErrorEvent
+			}
+
 			return SystemFirmwareProgress[int(eventDataField[1])]
+
 		}
 	case 18:
 		// System watchdog event
@@ -513,12 +577,109 @@ func decodeEventDetailString(eventSensorType, eventOffset uint8, eventDataField 
 	case 32:
 		return "Operating system lockup or power interrupt"
 	case 35:
+		if eventDataField[0] == 64 {
+			return "BIOS POST (Power On Self-Test) Watchdog Timeout." // 64,2,252,84,89,0,0,0
+		}
+
 		return "System boot failure"
+	case 36:
+		var handle uint32
+		handle = (uint32(eventDataField[1]) << 24) + (uint32(eventDataField[2]) << 16) + (uint32(eventDataField[3]) << 8) + uint32(eventDataField[4])
+
+		var nic = "#" + strconv.Itoa(int(eventDataField[0]))
+
+		if eventDataField[0] == 0xAA {
+			nic = "wired"
+		}
+		// TODO: Add wireless *****
+		//if (eventDataField[0] == 0xAA) nic = "wireless";
+
+		if handle == 4294967293 {
+			return fmt.Sprintf("All received packet filter was matched on %s interface.", nic)
+		}
+
+		if handle == 4294967292 {
+			return fmt.Sprintf("All outbound packet filter was matched on %s interface.", nic)
+		}
+
+		if handle == 4294967290 {
+			return fmt.Sprintf("Spoofed packet filter was matched on %s interface.", nic)
+		}
+
+		return fmt.Sprintf("Filter %d was matched on %s interface.", handle, nic)
 	case 37:
 		return "System firmware started (at least one CPU is properly executing)."
-	default:
-		return fmt.Sprintf("Unknown Sensor Type #%d", eventSensorType)
+	case 192:
+		if eventOffset == 0 && eventDataField[0] == 170 && eventDataField[1] == 48 {
+			return SOLIDERStatus[int(eventDataField[2])]
+		}
+		if eventDataField[2] == 0 || eventDataField[2] == 2 {
+			return SecurityPolicyEvent[int(eventDataField[2])]
+		} else {
+			return "Security policy invoked."
+		}
+	case 193:
+		if (eventDataField[0] == 0xAA) && (eventDataField[1] == 0x30) && (eventDataField[2] == 0x00) && (eventDataField[3] == 0x00) {
+			return "User request for remote connection."
+		}
+		if (eventDataField[0] == 0xAA) && (eventDataField[1] == 0x20) && (eventDataField[2] == 0x03) && (eventDataField[3] == 0x01) {
+			return "EAC error: attempt to get posture while NAC in Intel® AMT is disabled."
+		} // eventDataField = 0xAA20030100000000
+		if (eventDataField[0] == 0xAA) && (eventDataField[1] == 0x20) && (eventDataField[2] == 0x04) && (eventDataField[3] == 0x00) {
+			return "HWA Error: general error"
+		} // Used to be "Certificate revoked." but don"t know the source of this.
 	}
+	return fmt.Sprintf("Unknown Sensor Type #%d", eventSensorType)
+}
+
+const InvalidData = "Invalid Data"
+const OEMSpecificFirmwareErrorEvent = "OEM Specific Firmware Error event"
+
+var SecurityPolicyEvent = map[int]string{
+	0: "Security policy invoked. Some or all network traffic (TX) was stopped.",
+	2: "Security policy invoked. Some or all network traffic (RX) was stopped.",
+}
+
+var SOLIDERStatus = map[int]string{
+	0: "A remote Serial Over LAN session was established.",
+	1: "Remote Serial Over LAN session finished.  User control was restored.",
+	2: "A remote IDE-Redirection session was established.",
+	3: "Remote IDE-Redirection session finished. User control was restored.",
+}
+
+var PlatformEraseErrorEvents = map[int]string{
+	1: "Got an error erasing Device SSD",
+	2: "Erasing Device TPM is not supported",
+	3: "Reached Max Counter",
+}
+
+var OCRProgressEvents = map[int]string{
+	0: "Boot parameters received from CSME",
+	1: "CSME Boot Option % added successfully",
+	2: "HTTPS URI name resolved",
+	3: "HTTPS connected successfully",
+	4: "HTTPSBoot download is completed",
+	5: "Attempt to boot",
+	6: "Exit boot services",
+}
+
+var OCRSource = map[int]string{
+	1: "",
+	2: "HTTPS",
+	4: "Local PBA",
+	8: "WinRE",
+}
+
+var OCRErrorEvents = map[int]string{
+	0: "",
+	1: "No network connection available",
+	2: "Name resolution of URI failed",
+	3: "Connect to URI failed",
+	4: "OEM app not found at local URI",
+	5: "HTTPS TLS Auth failed",
+	6: "HTTPS Digest Auth failed",
+	7: "Verified boot failed (bad image)",
+	8: "HTTPS Boot File not found",
 }
 
 var EventSeverity = map[int]string{
