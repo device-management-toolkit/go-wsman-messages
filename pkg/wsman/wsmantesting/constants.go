@@ -34,6 +34,7 @@ const (
 	AdminSetup              = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService/AdminSetup"
 	UpgradeClientToAdmin    = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService/UpgradeClientToAdmin"
 	Setup                   = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HostBasedSetupService/Setup"
+	AddProxyAccessPoint     = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HTTPProxyService/AddProxyAccessPoint"
 	SendOptInCode           = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_OptInService/SendOptInCode"
 	StartOptIn              = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_OptInService/StartOptIn"
 	CancelOptIn             = "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_OptInService/CancelOptIn"

@@ -10,6 +10,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/http"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/kvmredirection"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
@@ -30,6 +31,7 @@ type Messages struct {
 	ScreenSettingData          screensetting.Data
 	SecIOService               secio.Service
 	KVMRedirectionSettingData  kvmredirection.SettingData
+	HTTPProxyService           http.ProxyService
 }
 
 func NewMessages(client client.WSMan) Messages {
@@ -47,6 +49,7 @@ func NewMessages(client client.WSMan) Messages {
 	m.ScreenSettingData = screensetting.NewScreenSettingDataWithClient(wsmanMessageCreator, client)
 	m.SecIOService = secio.NewSecIOServiceWithClient(wsmanMessageCreator, client)
 	m.KVMRedirectionSettingData = kvmredirection.NewKVMRedirectionSettingDataWithClient(wsmanMessageCreator, client)
+	m.HTTPProxyService = http.NewHTTPProxyServiceWithClient(wsmanMessageCreator, client)
 
 	return m
 }
