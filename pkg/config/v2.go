@@ -70,6 +70,7 @@ type IEEE8021x struct {
 }
 
 type TLS struct {
+	SigningAuthority     string   `yaml:"signingAuthority"`
 	MutualAuthentication bool     `yaml:"mutualAuthentication"`
 	Enabled              bool     `yaml:"enabled"`
 	TrustedCN            []string `yaml:"trustedCN"`

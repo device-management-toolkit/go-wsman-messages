@@ -5,6 +5,8 @@
 
 package wifi
 
+import "strings"
+
 const (
 	CIMWiFiEndpoint         string = "CIM_WiFiEndpoint"
 	CIMWiFiEndpointSettings string = "CIM_WiFiEndpointSettings"
@@ -37,6 +39,19 @@ var authenticationMethodMap = map[AuthenticationMethod]string{
 	AuthenticationMethodWPA3OWE:       "WPA3OWE",
 }
 
+// authenticationMethodReverseMap is a reverse lookup map for AuthenticationMethod enumeration.
+var authenticationMethodReverseMap = map[string]AuthenticationMethod{
+	"OTHER":         AuthenticationMethodOther,
+	"OPENSYSTEM":    AuthenticationMethodOpenSystem,
+	"SHAREDKEY":     AuthenticationMethodSharedKey,
+	"WPAPSK":        AuthenticationMethodWPAPSK,
+	"WPAIEEE8021X":  AuthenticationMethodWPAIEEE8021x,
+	"WPA2PSK":       AuthenticationMethodWPA2PSK,
+	"WPA2IEEE8021X": AuthenticationMethodWPA2IEEE8021x,
+	"WPA3SAE":       AuthenticationMethodWPA3SAE,
+	"WPA3OWE":       AuthenticationMethodWPA3OWE,
+}
+
 // String returns a human-readable string representation of the AuthenticationMethod enumeration.
 func (e AuthenticationMethod) String() string {
 	if s, ok := authenticationMethodMap[e]; ok {
@@ -44,6 +59,16 @@ func (e AuthenticationMethod) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseAuthenticationMethod returns the AuthenticationMethod enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseAuthenticationMethod(s string) (AuthenticationMethod, bool) {
+	if method, ok := authenticationMethodReverseMap[strings.ToUpper(s)]; ok {
+		return method, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -59,6 +84,13 @@ var bssTypeMap = map[BSSType]string{
 	BSSTypeInfrastructure: "Infrastructure",
 }
 
+// bssTypeReverseMap is a reverse lookup map for BSSType enumeration.
+var bssTypeReverseMap = map[string]BSSType{
+	"UNKNOWN":        BSSTypeUnknown,
+	"INDEPENDENT":    BSSTypeIndependent,
+	"INFRASTRUCTURE": BSSTypeInfrastructure,
+}
+
 // String returns a human-readable string representation of the BSSType enumeration.
 func (e BSSType) String() string {
 	if s, ok := bssTypeMap[e]; ok {
@@ -66,6 +98,16 @@ func (e BSSType) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseBSSType returns the BSSType enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseBSSType(s string) (BSSType, bool) {
+	if bssType, ok := bssTypeReverseMap[strings.ToUpper(s)]; ok {
+		return bssType, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -81,6 +123,13 @@ var enabledStateMap = map[EnabledState]string{
 	EnabledStateWifiEnabledS0SxAC: "WifiEnabledS0SxAC",
 }
 
+// enabledStateReverseMap is a reverse lookup map for EnabledState enumeration.
+var enabledStateReverseMap = map[string]EnabledState{
+	"WIFIDISABLED":      EnabledStateWifiDisabled,
+	"WIFIENABLEDS0":     EnabledStateWifiEnabledS0,
+	"WIFIENABLEDS0SXAC": EnabledStateWifiEnabledS0SxAC,
+}
+
 // String returns a human-readable string representation of the EnabledState enumeration.
 func (e EnabledState) String() string {
 	if s, ok := enabledStateMap[e]; ok {
@@ -90,21 +139,40 @@ func (e EnabledState) String() string {
 	return ValueNotFound
 }
 
+// ParseEnabledState returns the EnabledState enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseEnabledState(s string) (EnabledState, bool) {
+	if state, ok := enabledStateReverseMap[strings.ToUpper(s)]; ok {
+		return state, true
+	}
+
+	return 0, false
+}
+
 const (
-	EncryptionMethod_Other EncryptionMethod = iota + 1
-	EncryptionMethod_WEP
-	EncryptionMethod_TKIP
-	EncryptionMethod_CCMP
-	EncryptionMethod_None
+	EncryptionMethodOther EncryptionMethod = iota + 1
+	EncryptionMethodWEP
+	EncryptionMethodTKIP
+	EncryptionMethodCCMP
+	EncryptionMethodNone
 )
 
 // encryptionMethodMap is a map of the EncryptionMethod enumeration.
 var encryptionMethodMap = map[EncryptionMethod]string{
-	EncryptionMethod_Other: "Other",
-	EncryptionMethod_WEP:   "WEP",
-	EncryptionMethod_TKIP:  "TKIP",
-	EncryptionMethod_CCMP:  "CCMP",
-	EncryptionMethod_None:  "None",
+	EncryptionMethodOther: "Other",
+	EncryptionMethodWEP:   "WEP",
+	EncryptionMethodTKIP:  "TKIP",
+	EncryptionMethodCCMP:  "CCMP",
+	EncryptionMethodNone:  "None",
+}
+
+// encryptionMethodReverseMap is a reverse lookup map for EncryptionMethod enumeration.
+var encryptionMethodReverseMap = map[string]EncryptionMethod{
+	"OTHER": EncryptionMethodOther,
+	"WEP":   EncryptionMethodWEP,
+	"TKIP":  EncryptionMethodTKIP,
+	"CCMP":  EncryptionMethodCCMP,
+	"NONE":  EncryptionMethodNone,
 }
 
 // String returns a human-readable string representation of the EncryptionMethod enumeration.
@@ -114,6 +182,16 @@ func (e EncryptionMethod) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseEncryptionMethod returns the EncryptionMethod enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseEncryptionMethod(s string) (EncryptionMethod, bool) {
+	if method, ok := encryptionMethodReverseMap[strings.ToUpper(s)]; ok {
+		return method, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -128,12 +206,24 @@ const (
 
 // healthStateMap is a map of the HealthState enumeration.
 var healthStateMap = map[HealthState]string{
+	HealthStateUnknown:             "Unknown",
 	HealthStateOK:                  "OK",
 	HealthStateDegraded:            "Degraded",
 	HealthStateMinorFailure:        "MinorFailure",
 	HealthStateMajorFailure:        "MajorFailure",
 	HealthStateCriticalFailure:     "CriticalFailure",
 	HealthStateNonRecoverableError: "NonRecoverableError",
+}
+
+// healthStateReverseMap is a reverse lookup map for HealthState enumeration.
+var healthStateReverseMap = map[string]HealthState{
+	"UNKNOWN":             HealthStateUnknown,
+	"OK":                  HealthStateOK,
+	"DEGRADED":            HealthStateDegraded,
+	"MINORFAILURE":        HealthStateMinorFailure,
+	"MAJORFAILURE":        HealthStateMajorFailure,
+	"CRITICALFAILURE":     HealthStateCriticalFailure,
+	"NONRECOVERABLEERROR": HealthStateNonRecoverableError,
 }
 
 // String returns a human-readable string representation of the HealthState enumeration.
@@ -143,6 +233,16 @@ func (e HealthState) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseHealthState returns the HealthState enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseHealthState(s string) (HealthState, bool) {
+	if state, ok := healthStateReverseMap[strings.ToUpper(s)]; ok {
+		return state, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -176,6 +276,22 @@ var linkTechnologyMap = map[LinkTechnology]string{
 	LinkTechnologyWirelessLAN: "WirelessLAN",
 }
 
+// linkTechnologyReverseMap is a reverse lookup map for LinkTechnology enumeration.
+var linkTechnologyReverseMap = map[string]LinkTechnology{
+	"UNKNOWN":     LinkTechnologyUnknown,
+	"OTHER":       LinkTechnologyOther,
+	"ETHERNET":    LinkTechnologyEthernet,
+	"IB":          LinkTechnologyIB,
+	"FC":          LinkTechnologyFC,
+	"FDDI":        LinkTechnologyFDDI,
+	"ATM":         LinkTechnologyATM,
+	"TOKENRING":   LinkTechnologyTokenRing,
+	"FRAMERELAY":  LinkTechnologyFrameRelay,
+	"INFRARED":    LinkTechnologyInfrared,
+	"BLUETOOTH":   LinkTechnologyBlueTooth,
+	"WIRELESSLAN": LinkTechnologyWirelessLAN,
+}
+
 // String returns a human-readable string representation of the LinkTechnology enumeration.
 func (e LinkTechnology) String() string {
 	if s, ok := linkTechnologyMap[e]; ok {
@@ -183,6 +299,16 @@ func (e LinkTechnology) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseLinkTechnology returns the LinkTechnology enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseLinkTechnology(s string) (LinkTechnology, bool) {
+	if tech, ok := linkTechnologyReverseMap[strings.ToUpper(s)]; ok {
+		return tech, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -198,6 +324,13 @@ var requestedStateMap = map[RequestedState]string{
 	RequestedStateWifiEnabledS0SxAC: "WifiEnabledS0SxAC",
 }
 
+// requestedStateReverseMap is a reverse lookup map for RequestedState enumeration.
+var requestedStateReverseMap = map[string]RequestedState{
+	"WIFIDISABLED":      RequestedStateWifiDisabled,
+	"WIFIENABLEDS0":     RequestedStateWifiEnabledS0,
+	"WIFIENABLEDS0SXAC": RequestedStateWifiEnabledS0SxAC,
+}
+
 // String returns a human-readable string representation of the RequestedState enumeration.
 func (e RequestedState) String() string {
 	if s, ok := requestedStateMap[e]; ok {
@@ -205,6 +338,16 @@ func (e RequestedState) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseRequestedState returns the RequestedState enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseRequestedState(s string) (RequestedState, bool) {
+	if state, ok := requestedStateReverseMap[strings.ToUpper(s)]; ok {
+		return state, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -236,6 +379,21 @@ var returnValueMap = map[ReturnValue]string{
 	Busy:                              "Busy",
 }
 
+// returnValueReverseMap is a reverse lookup map for ReturnValue enumeration.
+var returnValueReverseMap = map[string]ReturnValue{
+	"COMPLETEDWITHNOERROR":              CompletedWithNoError,
+	"NOTSUPPORTED":                      NotSupported,
+	"UNKNOWNORUNSPECIFIEDERROR":         UnknownOrUnspecifiedError,
+	"CANNOTCOMPLETEWITHINTIMEOUTPERIOD": CannotCompleteWithinTimeoutPeriod,
+	"FAILED":                            Failed,
+	"INVALIDPARAMETER":                  InvalidParameter,
+	"INUSE":                             InUse,
+	"METHODPARAMETERSCHECKEDJOBSTARTED": MethodParametersCheckedJobStarted,
+	"INVALIDSTATETRANSITION":            InvalidStateTransition,
+	"USEOFTIMEOUTPARAMETERNOTSUPPORTED": UseOfTimeoutParameterNotSupported,
+	"BUSY":                              Busy,
+}
+
 // String returns a human-readable string representation of the ReturnValue enumeration.
 func (e ReturnValue) String() string {
 	if s, ok := returnValueMap[e]; ok {
@@ -243,6 +401,16 @@ func (e ReturnValue) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParseReturnValue returns the ReturnValue enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParseReturnValue(s string) (ReturnValue, bool) {
+	if value, ok := returnValueReverseMap[strings.ToUpper(s)]; ok {
+		return value, true
+	}
+
+	return 0, false
 }
 
 const (
@@ -264,6 +432,16 @@ var portTypeMap = map[PortType]string{
 	PortType80211n:  "802.11n",
 }
 
+// portTypeReverseMap is a reverse lookup map for PortType enumeration.
+var portTypeReverseMap = map[string]PortType{
+	"UNKNOWN": PortTypeUnknown,
+	"OTHER":   PortTypeOther,
+	"802.11A": PortType80211a,
+	"802.11B": PortType80211b,
+	"802.11G": PortType80211g,
+	"802.11N": PortType80211n,
+}
+
 // String returns a human-readable string representation of the PortType enumeration.
 func (e PortType) String() string {
 	if s, ok := portTypeMap[e]; ok {
@@ -271,4 +449,14 @@ func (e PortType) String() string {
 	}
 
 	return ValueNotFound
+}
+
+// ParsePortType returns the PortType enumeration value for a given string.
+// The comparison is case-insensitive.
+func ParsePortType(s string) (PortType, bool) {
+	if portType, ok := portTypeReverseMap[strings.ToUpper(s)]; ok {
+		return portType, true
+	}
+
+	return 0, false
 }
