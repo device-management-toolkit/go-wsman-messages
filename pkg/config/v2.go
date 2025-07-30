@@ -105,6 +105,7 @@ type AMTSpecific struct {
 	ProvisioningCert    string `yaml:"provisioningCert"`
 	ProvisioningCertPwd string `yaml:"provisioningCertPwd"`
 	MEBXPassword        string `yaml:"mebxPassword"`
+	CIRA                CIRA   `yaml:"cira"`
 }
 
 type BMCSpecific struct {
@@ -117,4 +118,12 @@ type DASHSpecific struct {
 
 type RedfishSpecific struct {
 	AdminPassword string `yaml:"adminPassword"`
+}
+
+type CIRA struct {
+	MPSUsername          string   `yaml:"mpsUsername"`
+	MPSPassword          string   `yaml:"mpsPassword"`
+	MPSAddress           string   `yaml:"mpsAddress"`
+	MPSCert              string   `yaml:"mpsCert"`
+	EnvironmentDetection []string `yaml:"environmentDetection"`
 }
