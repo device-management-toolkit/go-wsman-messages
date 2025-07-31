@@ -103,7 +103,7 @@ type (
 		BIOSSecureBoot                     bool     `xml:"BIOSSecureBoot,omitempty"`                     // Indicates whether Intel® AMT device supports 'BIOS Secure Boot'
 		SecureErase                        bool     `xml:"SecureErase,omitempty"`                        // Indicates whether Intel® AMT device supports 'Secure Erase'
 		ForceWinREBoot                     bool     `xml:"ForceWinREBoot,omitempty"`                     // Supports Intel AMT invoking boot to WinRE
-		ForceUEFILocalPBABoot              bool     `xml:"ForceUEFILocalPBABoot,omitempty"`              // Supports booting to an ISV’s PBA
+		ForceUEFILocalPBABoot              bool     `xml:"ForceUEFIPBABoot,omitempty"`                   // Supports booting to an ISV’s PBA
 		ForceUEFIHTTPSBoot                 bool     `xml:"ForceUEFIHTTPSBoot,omitempty"`                 // Supports Intel AMT invoking HTTPS boot
 		AMTSecureBootControl               bool     `xml:"AMTSecureBootControl,omitempty"`               // Determines whether Intel AMT is privileged by BIOS to disable secure boot for an AMT triggered boot option. If true, the BIOS allows Intel AMT to control the secure boot (i.e., to disable secure boot in recovery from HTTPS under certain conditions).
 		UEFIWiFiCoExistenceAndProfileShare bool     `xml:"UEFIWiFiCoExistenceAndProfileShare,omitempty"` // Read-only field, determines whether UEFI BIOS and Intel AMT WiFi profile share is supported. The feature is available from Intel® CSME 16.0.
