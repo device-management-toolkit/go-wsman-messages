@@ -95,7 +95,12 @@ func (w WSManMessageCreator) CreateBody(method, wsmanClass string, data interfac
 			log.Println(err)
 		}
 
-		str.WriteString(string(xmlString))
+		xmlStr := string(xmlString)
+
+		namespace := fmt.Sprintf("%s%s", w.ResourceURIBase, wsmanClass)
+		xmlStr = strings.ReplaceAll(xmlStr, `xmlns:h=""`, fmt.Sprintf(`xmlns:h="%s"`, namespace))
+
+		str.WriteString(xmlStr)
 	} else {
 		str.WriteString(fmt.Sprintf(`<h:%s xmlns:h="%s%s">`, method, w.ResourceURIBase, wsmanClass))
 		str.WriteString(fmt.Sprintf(`</h:%s>`, method))
