@@ -8,6 +8,19 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
+)
+
+const (
+	// defaultBufferPoolSize controls the per-Receive temporary buffer size used to read from the socket.
+	// Larger values reduce syscalls and fragmentation for KVM streaming payloads.
+	defaultBufferPoolSize = 64 * 1024
+
+	// tcpSocketBufferSize sets OS-level socket read/write buffer hints for throughput.
+	tcpSocketBufferSize = 256 * 1024
+
+	// defaultKeepAlive configures TCP keepalive probe interval on the dialer.
+	defaultKeepAlive = 30 * time.Second
 )
 
 func NewWsmanTCP(cp Parameters) *Target {
@@ -28,7 +41,8 @@ func NewWsmanTCP(cp Parameters) *Target {
 		PinnedCert:         cp.PinnedCert,
 		bufferPool: sync.Pool{
 			New: func() interface{} {
-				return make([]byte, 4096) // Adjust size according to your needs.
+				// Larger buffer to reduce read syscalls and frame fragmentation for KVM streams
+				return make([]byte, defaultBufferPoolSize)
 			},
 		},
 	}
@@ -36,21 +50,21 @@ func NewWsmanTCP(cp Parameters) *Target {
 
 // Connect establishes a TCP connection to the endpoint specified in the Target struct.
 func (t *Target) Connect() error {
-	var err error
+	// Use a Dialer so we can enable TCP keep-alives and TCP_NODELAY for lower latency.
+	d := &net.Dialer{KeepAlive: defaultKeepAlive}
 
 	if t.UseTLS {
-		// check if pinnedCert is not null and not empty
+		// Build TLS config with optional pinning
 		var config *tls.Config
 		if len(t.PinnedCert) > 0 {
 			config = &tls.Config{
 				InsecureSkipVerify: t.InsecureSkipVerify,
-				VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+				VerifyPeerCertificate: func(rawCerts [][]byte, _ [][]*x509.Certificate) error {
 					for _, rawCert := range rawCerts {
 						cert, err := x509.ParseCertificate(rawCert)
 						if err != nil {
 							return err
 						}
-
 						// Compare the current certificate with the pinned certificate
 						sha256Fingerprint := sha256.Sum256(cert.Raw)
 						if hex.EncodeToString(sha256Fingerprint[:]) == t.PinnedCert {
@@ -65,14 +79,44 @@ func (t *Target) Connect() error {
 			config = &tls.Config{InsecureSkipVerify: t.InsecureSkipVerify}
 		}
 
-		t.conn, err = tls.Dial("tcp", t.endpoint, config)
-	} else {
-		t.conn, err = net.Dial("tcp", t.endpoint)
+		// Establish plain TCP first to set socket options
+		plainConn, err := d.Dial("tcp", t.endpoint)
+		if err != nil {
+			return fmt.Errorf("failed to connect to %s: %w", t.endpoint, err)
+		}
+
+		if tcp, ok := plainConn.(*net.TCPConn); ok {
+			// Best-effort; ignore error to avoid failing connection setup
+			_ = tcp.SetNoDelay(true)
+			_ = tcp.SetReadBuffer(tcpSocketBufferSize)
+			_ = tcp.SetWriteBuffer(tcpSocketBufferSize)
+		}
+
+		tlsConn := tls.Client(plainConn, config)
+		if err := tlsConn.Handshake(); err != nil {
+			_ = plainConn.Close()
+
+			return fmt.Errorf("TLS handshake failed with %s: %w", t.endpoint, err)
+		}
+
+		t.conn = tlsConn
+
+		return nil
 	}
 
+	// Non-TLS path
+	c, err := d.Dial("tcp", t.endpoint)
 	if err != nil {
 		return fmt.Errorf("failed to connect to %s: %w", t.endpoint, err)
 	}
+
+	if tcp, ok := c.(*net.TCPConn); ok {
+		_ = tcp.SetNoDelay(true)
+		_ = tcp.SetReadBuffer(tcpSocketBufferSize)
+		_ = tcp.SetWriteBuffer(tcpSocketBufferSize)
+	}
+
+	t.conn = c
 
 	return nil
 }
