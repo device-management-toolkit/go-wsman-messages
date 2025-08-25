@@ -68,7 +68,10 @@ type Target struct {
 	UseTLS             bool
 	InsecureSkipVerify bool
 	PinnedCert         string
-	tlsConfig          *tls.Config
+	tlsConfig             *tls.Config
+	lastReadDeadlineSet   time.Time  // Track when read deadline was last set
+	lastWriteDeadlineSet  time.Time  // Track when write deadline was last set
+	deadlineMutex         sync.Mutex // Protect deadline setting operations
 }
 
 const timeout = 10 * time.Second

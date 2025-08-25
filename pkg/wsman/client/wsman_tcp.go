@@ -21,6 +21,12 @@ const (
 
 	// defaultKeepAlive configures TCP keepalive probe interval on the dialer.
 	defaultKeepAlive = 30 * time.Second
+
+	// defaultReadTimeout sets the maximum time to wait for read operations.
+	defaultReadTimeout = 30 * time.Second
+
+	// defaultWriteTimeout sets the maximum time to wait for write operations.
+	defaultWriteTimeout = 30 * time.Second
 )
 
 func NewWsmanTCP(cp Parameters) *Target {
@@ -127,6 +133,11 @@ func (t *Target) Send(data []byte) error {
 		return fmt.Errorf("no active connection")
 	}
 
+	// Optimize: Only set deadline if enough time has passed or it's not set
+	if err := t.setWriteDeadlineIfNeeded(); err != nil {
+		return fmt.Errorf("failed to set write deadline: %w", err)
+	}
+
 	_, err := t.conn.Write(data)
 	if err != nil {
 		return fmt.Errorf("failed to send data: %w", err)
@@ -141,6 +152,11 @@ func (t *Target) Receive() ([]byte, error) {
 		return nil, fmt.Errorf("no active connection")
 	}
 
+	// Optimize: Only set deadline if enough time has passed or it's not set
+	if err := t.setReadDeadlineIfNeeded(); err != nil {
+		return nil, fmt.Errorf("failed to set read deadline: %w", err)
+	}
+
 	tmp := t.bufferPool.Get().([]byte)
 	defer t.bufferPool.Put(tmp) //nolint:staticcheck // changing the argument to be pointer-like to avoid allocations caused issues.
 
@@ -150,6 +166,48 @@ func (t *Target) Receive() ([]byte, error) {
 	}
 
 	return append([]byte(nil), tmp[:n]...), nil
+}
+
+// setReadDeadlineIfNeeded sets read deadline only when needed to reduce syscall overhead
+func (t *Target) setReadDeadlineIfNeeded() error {
+	t.deadlineMutex.Lock()
+	defer t.deadlineMutex.Unlock()
+	
+	now := time.Now()
+	// Only set deadline if it's been more than half the timeout period since last set
+	// or if it's never been set (zero value)
+	const deadlineRefreshInterval = defaultReadTimeout / 2
+	
+	if t.lastReadDeadlineSet.IsZero() || now.Sub(t.lastReadDeadlineSet) > deadlineRefreshInterval {
+		newDeadline := now.Add(defaultReadTimeout)
+		if err := t.conn.SetReadDeadline(newDeadline); err != nil {
+			return err
+		}
+		t.lastReadDeadlineSet = now
+	}
+	
+	return nil
+}
+
+// setWriteDeadlineIfNeeded sets write deadline only when needed to reduce syscall overhead  
+func (t *Target) setWriteDeadlineIfNeeded() error {
+	t.deadlineMutex.Lock()
+	defer t.deadlineMutex.Unlock()
+	
+	now := time.Now()
+	// Only set deadline if it's been more than half the timeout period since last set
+	// or if it's never been set (zero value)
+	const deadlineRefreshInterval = defaultWriteTimeout / 2
+	
+	if t.lastWriteDeadlineSet.IsZero() || now.Sub(t.lastWriteDeadlineSet) > deadlineRefreshInterval {
+		newDeadline := now.Add(defaultWriteTimeout)
+		if err := t.conn.SetWriteDeadline(newDeadline); err != nil {
+			return err
+		}
+		t.lastWriteDeadlineSet = now
+	}
+	
+	return nil
 }
 
 // CloseConnection cleanly closes the TCP connection.
@@ -164,6 +222,12 @@ func (t *Target) CloseConnection() error {
 	}
 
 	t.conn = nil
+	
+	// Reset deadline tracking when connection is closed
+	t.deadlineMutex.Lock()
+	t.lastReadDeadlineSet = time.Time{}
+	t.lastWriteDeadlineSet = time.Time{}
+	t.deadlineMutex.Unlock()
 
 	return nil
 }
