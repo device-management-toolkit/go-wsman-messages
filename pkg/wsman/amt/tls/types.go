@@ -53,7 +53,7 @@ type (
 	SelectorResponse struct {
 		XMLName           xml.Name                  `xml:"Selector,omitempty"`
 		Name              string                    `xml:"Name,attr,omitempty"`
-		Text              string                    `xml:"Text,omitempty"`
+		Text              string                    `xml:",chardata"`
 		EndpointReference EndpointReferenceResponse `xml:"EndpointReference,omitempty"`
 	}
 	SelectorSetResponse struct {
