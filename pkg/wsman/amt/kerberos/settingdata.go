@@ -40,15 +40,15 @@ func (settingData SettingData) GetCredentialCacheState() (response Response, err
 	// send the message to AMT
 	err = settingData.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // SetCredentialCacheState enables/disables the credential caching functionality
@@ -69,13 +69,13 @@ func (settingData SettingData) SetCredentialCacheState(enabled bool) (response R
 	// send the message to AMT
 	err = settingData.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }

@@ -20,8 +20,7 @@
             <g:ProxyAccessPoint>
                 <b:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:Address>
                 <b:ReferenceParameters>
-                    <c:ResourceURI>
-                        http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HTTPProxyAccessPoint</c:ResourceURI>
+                    <c:ResourceURI>http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HTTPProxyAccessPoint</c:ResourceURI>
                     <c:SelectorSet>
                         <c:Selector Name="CreationClassName">IPS_HTTPProxyAccessPoint</c:Selector>
                         <c:Selector Name="Name">Intel(r) ME:HTTP Proxy Access Point 3</c:Selector>

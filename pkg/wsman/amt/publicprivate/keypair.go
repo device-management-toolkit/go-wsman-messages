@@ -36,15 +36,15 @@ func (keyPair KeyPair) Get(instanceID string) (response Response, err error) {
 	// send the message to AMT
 	err = keyPair.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Enumerate returns an enumeration context which is used in a subsequent Pull call.
@@ -57,15 +57,15 @@ func (keyPair KeyPair) Enumerate() (response Response, err error) {
 	// send the message to AMT
 	err = keyPair.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
@@ -119,13 +119,13 @@ func (keyPair KeyPair) Delete(handle string) (response Response, err error) {
 	// send the message to AMT
 	err = keyPair.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }

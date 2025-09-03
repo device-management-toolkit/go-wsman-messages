@@ -53,15 +53,15 @@ func (service Service) SetHighAccuracyTimeSynch(ta0, tm1, tm2 int64) (response R
 	// send the message to AMT
 	err = service.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // GetLowAccuracyTimeSynch is used for reading the Intel® AMT device's internal clock.
@@ -76,13 +76,13 @@ func (service Service) GetLowAccuracyTimeSynch() (response Response, err error) 
 	// send the message to AMT
 	err = service.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
