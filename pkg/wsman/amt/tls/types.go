@@ -7,6 +7,7 @@ package tls
 
 import (
 	"encoding/xml"
+	"strings"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
@@ -53,7 +54,7 @@ type (
 	SelectorResponse struct {
 		XMLName           xml.Name                  `xml:"Selector,omitempty"`
 		Name              string                    `xml:"Name,attr,omitempty"`
-		Text              string                    `xml:"Text,omitempty"`
+		Text              string                    `xml:",chardata"`
 		EndpointReference EndpointReferenceResponse `xml:"EndpointReference,omitempty"`
 	}
 	SelectorSetResponse struct {
@@ -101,6 +102,21 @@ type (
 		ReferenceParameters ReferenceParametersResponse `xml:"ReferenceParameters,omitempty"`
 	}
 )
+
+// UnmarshalXML trims insignificant whitespace in SelectorResponse.Text while decoding.
+func (s *SelectorResponse) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	type Alias SelectorResponse
+
+	var aux Alias
+	if err := d.DecodeElement(&aux, &start); err != nil {
+		return err
+	}
+
+	aux.Text = strings.TrimSpace(aux.Text)
+	*s = SelectorResponse(aux)
+
+	return nil
+}
 
 type (
 	SettingDataRequest struct {

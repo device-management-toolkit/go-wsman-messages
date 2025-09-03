@@ -46,16 +46,16 @@ func (service Service) AddMPS(mpServer AddMpServerRequest) (response Response, e
 	// send the message to AMT.
 	err = service.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct.
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // AddRemoteAccessPolicyRule adds a Remote Access policy to the Intel® AMT subsystem.

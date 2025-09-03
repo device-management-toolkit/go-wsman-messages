@@ -43,15 +43,15 @@ func (credentialContext CredentialContext) Get() (response Response, err error) 
 	// send the message to AMT
 	err = credentialContext.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Enumerate returns an enumeration context which is used in a subsequent Pull call.
@@ -64,15 +64,15 @@ func (credentialContext CredentialContext) Enumerate() (response Response, err e
 	// send the message to AMT
 	err = credentialContext.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
@@ -85,15 +85,15 @@ func (credentialContext CredentialContext) Pull(enumerationContext string) (resp
 	// send the message to AMT
 	err = credentialContext.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Delete removes a the specified instance.
@@ -107,15 +107,15 @@ func (credentialContext CredentialContext) Delete(handle string) (response Respo
 	// send the message to AMT
 	err = credentialContext.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Creates a new instance of this class.
@@ -130,15 +130,16 @@ func (credentialContext CredentialContext) Create(certHandle string) (response R
 	// send the message to AMT
 	err = credentialContext.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
+
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Put will update the certificate when TLS is enabled.

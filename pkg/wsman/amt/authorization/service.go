@@ -51,16 +51,16 @@ func (as Service) EnumerateUserACLEntries(startIndex int) (response Response, er
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Gets the state of a user ACL entry (enabled/disabled).
@@ -76,16 +76,16 @@ func (as Service) GetACLEnabledState(handle int) (response Response, err error) 
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Returns the username attribute of the Admin ACL.
@@ -101,16 +101,16 @@ func (as Service) GetAdminACLEntry() (response Response, err error) {
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Reads the Admin ACL Entry status from Intel® AMT. The return state changes as a function of the admin password.
@@ -126,16 +126,16 @@ func (as Service) GetAdminACLEntryStatus() (response Response, err error) {
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Reads the remote Admin ACL Entry status from Intel® AMT. The return state changes as a function of the remote admin password.
@@ -151,16 +151,16 @@ func (as Service) GetAdminNetACLEntryStatus() (response Response, err error) {
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Reads a user entry from the Intel® AMT device. Note: confidential information, such as password (hash) is omitted or zeroed in the response.
@@ -176,16 +176,16 @@ func (as Service) GetUserACLEntryEx(handle int) (response Response, err error) {
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Removes an entry from the User Access Control List (ACL), given a handle.
@@ -201,16 +201,16 @@ func (as Service) RemoveUserACLEntry(handle int) (response Response, err error) 
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Enables or disables a user ACL entry. Disabling ACL entries is useful when accounts that cannot be removed (system accounts - starting with $$) are required to be disabled.
@@ -226,16 +226,16 @@ func (as Service) SetACLEnabledState(handle int, enabled bool) (response Respons
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Updates an Admin entry in the Intel® AMT device.
@@ -251,14 +251,14 @@ func (as Service) SetAdminAclEntryEx(username, digestPassword string) (response 
 
 	err = as.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }

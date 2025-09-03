@@ -52,13 +52,13 @@ func (service Service) RequestStateChange(requestedState RequestedState) (respon
 	// send the message to AMT
 	err = service.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
