@@ -43,15 +43,15 @@ func (context Context) Enumerate() (response Response, err error) {
 
 	err = context.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Pull instances of this class, following an Enumerate operation.

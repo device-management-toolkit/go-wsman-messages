@@ -78,7 +78,7 @@ func TestPositiveIPS_HTTPProxyService(t *testing.T) {
 							XMLName: xml.Name{Space: fmt.Sprintf("%s%s", message.IPSSchema, IPSHTTPProxyService), Local: "ProxyAccessPoint"},
 							Address: "http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous",
 							ReferenceParameters: models.ReferenceParameters_OUTPUT{
-								ResourceURI: "\n                        http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HTTPProxyAccessPoint",
+								ResourceURI: "http://intel.com/wbem/wscim/1/ips-schema/1/IPS_HTTPProxyAccessPoint",
 								SelectorSet: models.SelectorSet_OUTPUT{
 									XMLName: xml.Name{Space: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd", Local: "SelectorSet"},
 									Selector: []message.Selector_OUTPUT{

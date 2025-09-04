@@ -43,16 +43,16 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Get() (response Response, err error
 	// send the message to AMT
 	err = policyAppliesToMPS.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Enumerate returns an enumeration context which is used in a subsequent Pull call.
@@ -65,16 +65,16 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Enumerate() (response Response, err
 	// send the message to AMT
 	err = policyAppliesToMPS.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
@@ -87,16 +87,16 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Pull(enumerationContext string) (re
 	// send the message to AMT
 	err = policyAppliesToMPS.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Put will change properties of the selected instance.
@@ -120,16 +120,16 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Put(remoteAccessPolicyAppliesToMPS 
 	// send the message to AMT
 	err = policyAppliesToMPS.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Delete removes a the specified instance.
@@ -143,14 +143,14 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Delete(handle string) (response Res
 	// send the message to AMT
 	err = policyAppliesToMPS.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	// put the xml response into the go struct
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }

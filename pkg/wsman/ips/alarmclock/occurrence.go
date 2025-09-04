@@ -36,13 +36,13 @@ func (occurrence Occurrence) Delete(handle string) (response Response, err error
 
 	err = occurrence.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }

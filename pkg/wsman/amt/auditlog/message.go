@@ -45,15 +45,15 @@ func (service Service) ReadRecords(startIndex int) (response Response, err error
 
 	err = service.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	response.Body.DecodedRecordsResponse = convertToAuditLogResult(response.Body.ReadRecordsResponse.EventRecords)
 
-	return
+	return response, err
 }

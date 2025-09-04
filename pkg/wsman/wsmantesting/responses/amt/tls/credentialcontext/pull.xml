@@ -15,20 +15,18 @@
                     <h:ElementInContext>
                         <b:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:Address>
                         <b:ReferenceParameters>
-                            <c:ResourceURI>
-                                http://intel.com/wbem/wscim/1/amt-schema/1/AMT_PublicKeyCertificate</c:ResourceURI>
+                            <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_PublicKeyCertificate</c:ResourceURI>
                             <c:SelectorSet>
-                                <c:Selector Name= "InstanceID">Intel(r) AMT Certificate: Handle: 3</c:Selector>
+                                <c:Selector Name="InstanceID">Intel(r) AMT Certificate: Handle: 3</c:Selector>
                             </c:SelectorSet>
                         </b:ReferenceParameters>
                     </h:ElementInContext>
                     <h:ElementProvidingContext>
                         <b:Address>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:Address>
                         <b:ReferenceParameters>
-                            <c:ResourceURI>
-                                http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TLSProtocolEndpointCollection</c:ResourceURI>
+                            <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TLSProtocolEndpointCollection</c:ResourceURI>
                             <c:SelectorSet>
-                                <c:Selector Name= "ElementName">TLSProtocolEndpoint Instances Collection</c:Selector>
+                                <c:Selector Name="ElementName">TLSProtocolEndpoint Instances Collection</c:Selector>
                             </c:SelectorSet>
                         </b:ReferenceParameters>
                     </h:ElementProvidingContext>

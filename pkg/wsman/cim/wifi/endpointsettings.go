@@ -43,13 +43,13 @@ func (endpointSettings EndpointSettings) Delete(handle string) (response Respons
 
 	err = endpointSettings.Base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
