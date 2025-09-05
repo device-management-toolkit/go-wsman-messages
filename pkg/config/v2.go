@@ -28,6 +28,7 @@ type GeneralSettings struct {
 type Network struct {
 	Wired    Wired    `yaml:"wired"`
 	Wireless Wireless `yaml:"wireless"`
+	Proxies  []Proxy  `yaml:"proxy"`
 }
 
 type Wired struct {
@@ -126,4 +127,10 @@ type CIRA struct {
 	MPSAddress           string   `yaml:"mpsAddress"`
 	MPSCert              string   `yaml:"mpsCert"`
 	EnvironmentDetection []string `yaml:"environmentDetection"`
+}
+
+type Proxy struct {
+	Address          string `yaml:"address"`
+	Port             int    `yaml:"port"`
+	NetworkDnsSuffix string `yaml:"networkDnsSuffix"`
 }
