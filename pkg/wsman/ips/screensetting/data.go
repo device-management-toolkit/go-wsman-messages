@@ -1,3 +1,9 @@
+/*********************************************************************
+ * Copyright (c) Intel Corporation 2025
+ * SPDX-License-Identifier: Apache-2.0
+ **********************************************************************/
+
+// Package screensetting provides the data structures and methods for managing screen settings in Intel® AMT devices.
 package screensetting
 
 import (
