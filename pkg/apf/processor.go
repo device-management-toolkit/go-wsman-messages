@@ -2,6 +2,8 @@
  * Copyright (c) Intel Corporation 2022
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
+
+// Package apf implements the APF (AMT Port Forwarding) Protocol
 package apf
 
 import (
