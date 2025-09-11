@@ -6,8 +6,9 @@
 package http
 
 const (
-	ValueNotFound       = "Value not found in map"
-	IPSHTTPProxyService = "IPS_HTTPProxyService"
+	ValueNotFound           = "Value not found in map"
+	IPSHTTPProxyService     = "IPS_HTTPProxyService"
+	IPSHTTPProxyAccessPoint = "IPS_HTTPProxyAccessPoint"
 
 	AddProxyAccessPoint = "AddProxyAccessPoint"
 )

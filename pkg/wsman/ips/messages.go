@@ -21,17 +21,18 @@ import (
 )
 
 type Messages struct {
-	wsmanMessageCreator        *message.WSManMessageCreator
-	OptInService               optin.Service
-	HostBasedSetupService      hostbasedsetup.Service
-	AlarmClockOccurrence       alarmclock.Occurrence
-	IEEE8021xCredentialContext ieee8021x.CredentialContext
-	IEEE8021xSettings          ieee8021x.Settings
-	PowerManagementService     power.ManagementService
-	ScreenSettingData          screensetting.Data
-	SecIOService               secio.Service
-	KVMRedirectionSettingData  kvmredirection.SettingData
-	HTTPProxyService           http.ProxyService
+	wsmanMessageCreator         *message.WSManMessageCreator
+	OptInService                optin.Service
+	HostBasedSetupService       hostbasedsetup.Service
+	AlarmClockOccurrence        alarmclock.Occurrence
+	IEEE8021xCredentialContext  ieee8021x.CredentialContext
+	IEEE8021xSettings           ieee8021x.Settings
+	PowerManagementService      power.ManagementService
+	ScreenSettingData           screensetting.Data
+	SecIOService                secio.Service
+	KVMRedirectionSettingData   kvmredirection.SettingData
+	HTTPProxyService            http.ProxyService
+	HTTPProxyAccessPointService http.ProxyAccessPointService
 }
 
 func NewMessages(client client.WSMan) Messages {
@@ -50,6 +51,7 @@ func NewMessages(client client.WSMan) Messages {
 	m.SecIOService = secio.NewSecIOServiceWithClient(wsmanMessageCreator, client)
 	m.KVMRedirectionSettingData = kvmredirection.NewKVMRedirectionSettingDataWithClient(wsmanMessageCreator, client)
 	m.HTTPProxyService = http.NewHTTPProxyServiceWithClient(wsmanMessageCreator, client)
+	m.HTTPProxyAccessPointService = http.NewHTTPProxyAccessPointServiceWithClient(wsmanMessageCreator, client)
 
 	return m
 }
