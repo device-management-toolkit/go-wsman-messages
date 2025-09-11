@@ -1,3 +1,10 @@
+/*********************************************************************
+ * Copyright (c) Intel Corporation 2025
+ * SPDX-License-Identifier: Apache-2.0
+ **********************************************************************/
+
+// Package secio is a feature that allows the ME control over a Sprite screen on the local display, and/or secured input operations.
+// This class allows control over the Secured IO service's settings and operational status.
 package secio
 
 import (

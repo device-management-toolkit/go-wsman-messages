@@ -1,3 +1,9 @@
+/*********************************************************************
+ * Copyright (c) Intel Corporation 2025
+ * SPDX-License-Identifier: Apache-2.0
+ **********************************************************************/
+
+// Package kvmredirection represents configuration-related and operational parameters for the KVM redirection service in the Intel(R) AMT.
 package kvmredirection
 
 import (
