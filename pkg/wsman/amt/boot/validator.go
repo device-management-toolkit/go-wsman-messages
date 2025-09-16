@@ -254,17 +254,12 @@ func ValidateParameters(parameters []TLVParameter) (bool, []string) {
 
 	// Check for mandatory parameters
 	if !presentTypes[OCR_EFI_NETWORK_DEVICE_PATH] {
-		valid = false
+		if !presentTypes[OCR_EFI_FILE_DEVICE_PATH] || !presentTypes[OCR_EFI_DEVICE_PATH_LEN] {
+			valid = false
 
-		errors = append(errors, "missing mandatory parameter: URI to HTTPS Server")
-	}
-
-	// Check for dependent parameters
-	if presentTypes[OCR_EFI_FILE_DEVICE_PATH] && !presentTypes[OCR_EFI_DEVICE_PATH_LEN] {
-		valid = false
-
-		errors = append(errors,
-			"missing device path length which is mandatory when file device path is provided")
+			errors = append(errors,
+				"missing file device path or device path length which is mandatory")
+		}
 	}
 
 	return valid, errors
