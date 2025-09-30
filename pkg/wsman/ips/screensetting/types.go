@@ -33,15 +33,15 @@ type (
 		XMLName        xml.Name `xml:"IPS_ScreenSettingData"`
 		ElementName    string   `xml:"ElementName"`
 		InstanceID     string   `xml:"InstanceID"`
-		PrimaryIndex   uint8    `xml:"PrimaryIndex"`
-		SecondaryIndex uint8    `xml:"SecondaryIndex"`
-		TertiaryIndex  uint8    `xml:"TertiaryIndex"`
-		QuadraryIndex  uint8    `xml:"QuadraryIndex"`
+		PrimaryIndex   int      `xml:"PrimaryIndex"`
+		SecondaryIndex int      `xml:"SecondaryIndex"`
+		TertiaryIndex  int      `xml:"TertiaryIndex"`
+		QuadraryIndex  int      `xml:"QuadraryIndex"`
 		IsActive       []bool   `xml:"IsActive"`
-		UpperLeftX     []int32  `xml:"UpperLeftX"`
-		UpperLeftY     []int32  `xml:"UpperLeftY"`
-		ResolutionX    []uint32 `xml:"ResolutionX"`
-		ResolutionY    []uint32 `xml:"ResolutionY"`
+		UpperLeftX     []int    `xml:"UpperLeftX"`
+		UpperLeftY     []int    `xml:"UpperLeftY"`
+		ResolutionX    []int    `xml:"ResolutionX"`
+		ResolutionY    []int    `xml:"ResolutionY"`
 	}
 
 	PullResponse struct {
