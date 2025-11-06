@@ -70,7 +70,7 @@ func main() {
         fmt.Println(string(alog.JSON()))
     }
 
-    // 3.d Get the Processor Information
+    // 3.d Get the Processor Information.
     aproc, err := amtClass.CIM.Processor.Get()
     if err != nil {
         fmt.Println("Error getting Processor Info:", err)
