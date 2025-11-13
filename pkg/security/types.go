@@ -1,6 +1,8 @@
 package security
 
 import (
+	"context"
+
 	"github.com/zalando/go-keyring"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/config"
@@ -18,10 +20,20 @@ type Crypto struct {
 	EncryptionKey string
 }
 
+// Storager interface for secret storage operations.
+// Implementations can be simple (keyring) or complex (Vault, AWS Secrets Manager).
 type Storager interface {
+	// Simple key-value operations - works for both local keyring and remote storage
 	GetKeyValue(key string) (string, error)
 	SetKeyValue(key, value string) error
 	DeleteKeyValue(key string) error
+
+	// Remote secret storage operations - hierarchical path-based storage (Vault, AWS Secrets Manager)
+	GetSecret(ctx context.Context, path string) (map[string]interface{}, error)
+	SetSecret(ctx context.Context, path string, data map[string]interface{}) error
+	DeleteSecret(ctx context.Context, path string) error
+	GetSecretValue(ctx context.Context, path, key string) (string, error)
+	SetSecretValue(ctx context.Context, path, key, value string) error
 }
 
 type Storage struct {
