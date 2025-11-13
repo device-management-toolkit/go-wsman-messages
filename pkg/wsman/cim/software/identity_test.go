@@ -11,9 +11,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
 func TestJson(t *testing.T) {
@@ -67,7 +67,7 @@ func TestPositiveCIMSoftwareIdentity(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageGet
 
-					return elementUnderTest.Get("AMTApps")
+					return elementUnderTest.GetByInstanceID("AMTApps")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
@@ -229,7 +229,7 @@ func TestNegativeCIMSoftwareIdentity(t *testing.T) {
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 
-					return elementUnderTest.Get("AMTApps")
+					return elementUnderTest.GetByInstanceID("AMTApps")
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},

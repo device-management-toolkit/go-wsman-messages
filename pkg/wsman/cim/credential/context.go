@@ -20,8 +20,8 @@ import (
 	"encoding/xml"
 	"errors"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewContext returns a new instance of the NewContext struct.
@@ -43,15 +43,15 @@ func (context Context) Enumerate() (response Response, err error) {
 
 	err = context.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Pull instances of this class, following an Enumerate operation.
@@ -71,7 +71,7 @@ func (context Context) Pull(enumerationContext string) (response Response, err e
 			return response, err
 		}
 
-		err = xml.Unmarshal([]byte(response.Message.XMLOutput), &response)
+		err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 		if err != nil {
 			return response, err
 		}

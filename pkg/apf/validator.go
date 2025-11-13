@@ -63,7 +63,9 @@ func ValidateChannelClose(data []byte) bool {
 
 // ValidateChannelData checks if the data length is sufficient for APF_CHANNEL_DATA.
 func ValidateChannelData(data []byte) bool {
-	return len(data) >= 9 && len(data) >= 9+int(binary.BigEndian.Uint32(data[5:9]))
+	result := len(data) >= 9 && len(data) >= 9+int(binary.BigEndian.Uint32(data[5:9]))
+
+	return result
 }
 
 // ValidateChannelWindowAdjust checks if the data length is at least 9 bytes for APF_CHANNEL_WINDOW_ADJUST.

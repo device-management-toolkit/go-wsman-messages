@@ -1,3 +1,8 @@
+/*********************************************************************
+ * Copyright (c) Intel Corporation 2025
+ * SPDX-License-Identifier: Apache-2.0
+ **********************************************************************/
+
 package screensetting
 
 import (
@@ -7,9 +12,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
 func TestPositiveIPS_ScreenSettingData(t *testing.T) {
@@ -55,10 +60,10 @@ func TestPositiveIPS_ScreenSettingData(t *testing.T) {
 						TertiaryIndex:  3,
 						QuadraryIndex:  4,
 						IsActive:       []bool{true, true, false, false},
-						UpperLeftX:     []int32{0, 1920, -1, -1},
-						UpperLeftY:     []int32{0, 0, -1, -1},
-						ResolutionX:    []uint32{1920, 1920, 0, 0},
-						ResolutionY:    []uint32{1080, 1080, 0, 0},
+						UpperLeftX:     []int{0, 1920, -1, -1},
+						UpperLeftY:     []int{0, 0, -1, -1},
+						ResolutionX:    []int{1920, 1920, 0, 0},
+						ResolutionY:    []int{1080, 1080, 0, 0},
 					},
 				},
 			},
@@ -107,10 +112,10 @@ func TestPositiveIPS_ScreenSettingData(t *testing.T) {
 								TertiaryIndex:  3,
 								QuadraryIndex:  4,
 								IsActive:       []bool{true, true, false, false},
-								UpperLeftX:     []int32{0, 1920, -1, -1},
-								UpperLeftY:     []int32{0, 0, -1, -1},
-								ResolutionX:    []uint32{1920, 1920, 0, 0},
-								ResolutionY:    []uint32{1080, 1080, 0, 0},
+								UpperLeftX:     []int{0, 1920, -1, -1},
+								UpperLeftY:     []int{0, 0, -1, -1},
+								ResolutionX:    []int{1920, 1920, 0, 0},
+								ResolutionY:    []int{1080, 1080, 0, 0},
 							},
 						},
 					},

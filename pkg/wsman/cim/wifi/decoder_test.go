@@ -75,11 +75,11 @@ func TestEncryptionMethod_String(t *testing.T) {
 		state    EncryptionMethod
 		expected string
 	}{
-		{EncryptionMethod_Other, "Other"},
-		{EncryptionMethod_WEP, "WEP"},
-		{EncryptionMethod_TKIP, "TKIP"},
-		{EncryptionMethod_CCMP, "CCMP"},
-		{EncryptionMethod_None, "None"},
+		{EncryptionMethodOther, "Other"},
+		{EncryptionMethodWEP, "WEP"},
+		{EncryptionMethodTKIP, "TKIP"},
+		{EncryptionMethodCCMP, "CCMP"},
+		{EncryptionMethodNone, "None"},
 		{EncryptionMethod(999), "Value not found in map"},
 	}
 
@@ -205,6 +205,34 @@ func TestPortType_String(t *testing.T) {
 		result := test.state.String()
 		if result != test.expected {
 			t.Errorf("Expected %s, but got %s", test.expected, result)
+		}
+	}
+}
+
+func TestParseEncryptionMethod(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected EncryptionMethod
+		success  bool
+	}{
+		{"Other", EncryptionMethodOther, true},
+		{"WEP", EncryptionMethodWEP, true},
+		{"TKIP", EncryptionMethodTKIP, true},
+		{"CCMP", EncryptionMethodCCMP, true},
+		{"None", EncryptionMethodNone, true},
+		{"wep", EncryptionMethodWEP, true},      // case insensitive
+		{"tkip", EncryptionMethodTKIP, true},    // case insensitive
+		{"invalid", EncryptionMethod(0), false}, // invalid
+	}
+
+	for _, test := range tests {
+		result, ok := ParseEncryptionMethod(test.input)
+		if ok != test.success {
+			t.Errorf("For input %s, expected success %v but got %v", test.input, test.success, ok)
+		}
+
+		if result != test.expected {
+			t.Errorf("For input %s, expected %v but got %v", test.input, test.expected, result)
 		}
 	}
 }

@@ -28,6 +28,7 @@ type GeneralSettings struct {
 type Network struct {
 	Wired    Wired    `yaml:"wired"`
 	Wireless Wireless `yaml:"wireless"`
+	Proxies  []Proxy  `yaml:"proxy"`
 }
 
 type Wired struct {
@@ -44,8 +45,9 @@ type Wired struct {
 }
 
 type Wireless struct {
-	WiFiSyncEnabled bool              `yaml:"wifiSyncEnabled"`
-	Profiles        []WirelessProfile `yaml:"profiles"`
+	WiFiSyncEnabled     bool              `yaml:"wifiSyncEnabled"`
+	UEFIWiFiSyncEnabled bool              `yaml:"uefiWiFiSyncEnabled"`
+	Profiles            []WirelessProfile `yaml:"profiles"`
 }
 
 type WirelessProfile struct {
@@ -69,6 +71,7 @@ type IEEE8021x struct {
 }
 
 type TLS struct {
+	SigningAuthority     string   `yaml:"signingAuthority"`
 	MutualAuthentication bool     `yaml:"mutualAuthentication"`
 	Enabled              bool     `yaml:"enabled"`
 	TrustedCN            []string `yaml:"trustedCN"`
@@ -103,6 +106,7 @@ type AMTSpecific struct {
 	ProvisioningCert    string `yaml:"provisioningCert"`
 	ProvisioningCertPwd string `yaml:"provisioningCertPwd"`
 	MEBXPassword        string `yaml:"mebxPassword"`
+	CIRA                CIRA   `yaml:"cira"`
 }
 
 type BMCSpecific struct {
@@ -115,4 +119,18 @@ type DASHSpecific struct {
 
 type RedfishSpecific struct {
 	AdminPassword string `yaml:"adminPassword"`
+}
+
+type CIRA struct {
+	MPSUsername          string   `yaml:"mpsUsername"`
+	MPSPassword          string   `yaml:"mpsPassword"`
+	MPSAddress           string   `yaml:"mpsAddress"`
+	MPSCert              string   `yaml:"mpsCert"`
+	EnvironmentDetection []string `yaml:"environmentDetection"`
+}
+
+type Proxy struct {
+	Address          string `yaml:"address"`
+	Port             int    `yaml:"port"`
+	NetworkDnsSuffix string `yaml:"networkDnsSuffix"`
 }

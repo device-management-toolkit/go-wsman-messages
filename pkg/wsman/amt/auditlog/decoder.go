@@ -15,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/common"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/common"
 )
 
 const (

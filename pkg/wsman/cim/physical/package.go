@@ -9,8 +9,8 @@ import (
 	"encoding/xml"
 	"errors"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewPhysicalPackage returns a new instance of the PhysicalPackage struct.
@@ -33,15 +33,15 @@ func (physicalPackage Package) Enumerate() (response Response, err error) {
 
 	err = physicalPackage.base.Execute(response.Message)
 	if err != nil {
-		return
+		return response, err
 	}
 
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
-		return
+		return response, err
 	}
 
-	return
+	return response, err
 }
 
 // Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.

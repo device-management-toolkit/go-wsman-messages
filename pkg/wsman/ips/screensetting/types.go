@@ -1,18 +1,16 @@
+/*********************************************************************
+ * Copyright (c) Intel Corporation 2025
+ * SPDX-License-Identifier: Apache-2.0
+ **********************************************************************/
+
 package screensetting
 
 import (
 	"encoding/xml"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/client"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
-)
-
-// Data structure represents IPS_ScreenSettingData.
-type (
-	Data struct {
-		base message.Base
-	}
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
 // OUTPUT.
@@ -35,15 +33,15 @@ type (
 		XMLName        xml.Name `xml:"IPS_ScreenSettingData"`
 		ElementName    string   `xml:"ElementName"`
 		InstanceID     string   `xml:"InstanceID"`
-		PrimaryIndex   uint8    `xml:"PrimaryIndex"`
-		SecondaryIndex uint8    `xml:"SecondaryIndex"`
-		TertiaryIndex  uint8    `xml:"TertiaryIndex"`
-		QuadraryIndex  uint8    `xml:"QuadraryIndex"`
+		PrimaryIndex   int      `xml:"PrimaryIndex"`
+		SecondaryIndex int      `xml:"SecondaryIndex"`
+		TertiaryIndex  int      `xml:"TertiaryIndex"`
+		QuadraryIndex  int      `xml:"QuadraryIndex"`
 		IsActive       []bool   `xml:"IsActive"`
-		UpperLeftX     []int32  `xml:"UpperLeftX"`
-		UpperLeftY     []int32  `xml:"UpperLeftY"`
-		ResolutionX    []uint32 `xml:"ResolutionX"`
-		ResolutionY    []uint32 `xml:"ResolutionY"`
+		UpperLeftX     []int    `xml:"UpperLeftX"`
+		UpperLeftY     []int    `xml:"UpperLeftY"`
+		ResolutionX    []int    `xml:"ResolutionX"`
+		ResolutionY    []int    `xml:"ResolutionY"`
 	}
 
 	PullResponse struct {

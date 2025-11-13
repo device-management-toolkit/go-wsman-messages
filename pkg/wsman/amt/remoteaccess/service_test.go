@@ -13,10 +13,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/internal/message"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/common"
-	"github.com/open-amt-cloud-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
 
 const (
@@ -73,7 +73,7 @@ func TestPositiveAMT_RemoteAccessService(t *testing.T) {
 				wsmantesting.EnumerateBody,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageEnumerate
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Print("Error")
 					}
 
@@ -297,7 +297,7 @@ func TestNegativeAMT_RemoteAccessService(t *testing.T) {
 				wsmantesting.EnumerateBody,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Print("Error")
 					}
 

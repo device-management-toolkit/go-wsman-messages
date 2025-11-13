@@ -468,19 +468,27 @@ func TestValidateParameters(t *testing.T) {
 		},
 	}
 
-	// Missing dependent parameter
-	missingDependentParams := []TLVParameter{
+	// Valid parameters with device file path
+	deviceFileParams := []TLVParameter{
 		{
-			Type:   OCR_EFI_NETWORK_DEVICE_PATH,
-			Length: 22,
-			Value:  []byte("https://example.com/boot"),
+			Type:   OCR_EFI_DEVICE_PATH_LEN,
+			Length: 2,
+			Value:  []byte{5, 0}, // Length of device path
 		},
 		{
 			Type:   OCR_EFI_FILE_DEVICE_PATH,
 			Length: 5,
 			Value:  []byte("/boot"),
 		},
-		// Missing OCR_EFI_DEVICE_PATH_LEN
+	}
+
+	// Missing OCR_EFI_DEVICE_PATH_LEN
+	missingDependentParams := []TLVParameter{
+		{
+			Type:   OCR_EFI_FILE_DEVICE_PATH,
+			Length: 5,
+			Value:  []byte("/boot"),
+		},
 	}
 
 	// Invalid value for a parameter
@@ -520,6 +528,12 @@ func TestValidateParameters(t *testing.T) {
 			params:      missingMandatoryParams,
 			expectValid: false,
 			errorCount:  1,
+		},
+		{
+			name:        "Valid device file parameters",
+			params:      deviceFileParams,
+			expectValid: true,
+			errorCount:  0,
 		},
 		{
 			name:        "Missing dependent parameter",

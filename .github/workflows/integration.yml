@@ -20,32 +20,32 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [1.22.x, 1.23.x]
+        go-version: [1.24.x, 1.25.x]
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        uses: step-security/harden-runner@95d9a5deda9de15063e7595e9719c11c38c90ae2 # v2.13.2
         with:
           egress-policy: audit
 
       - name: Install Go
-        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with:
           go-version: ${{ matrix.go-version }}
 
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
        
 
       - name: Checkout rpc-go repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
           repository: open-amt-cloud-toolkit/rpc-go
           path: rpc-go
           ref: main
 
       - name: Checkout console repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
           repository: open-amt-cloud-toolkit/console
           path: console
@@ -54,14 +54,14 @@ jobs:
       - name: Set go-wsman-messages dependency to current branch
         run: |
           cd rpc-go
-          go mod edit -replace github.com/open-amt-cloud-toolkit/go-wsman-messages=../${{ github.repository }}
+          go mod edit -replace github.com/device-management-toolkit/go-wsman-messages=../${{ github.repository }}
           cd ../console
-          go mod edit -replace github.com/open-amt-cloud-toolkit/go-wsman-messages=../${{ github.repository }}
+          go mod edit -replace github.com/device-management-toolkit/go-wsman-messages=../${{ github.repository }}
 
       - name: Build rpc-go
         run: |
           cd rpc-go
-          go build -o rpc ./cmd/main.go
+          go build -o rpc ./cmd/rpc/main.go
 
       - name: Build console
         run: |

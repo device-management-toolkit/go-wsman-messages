@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope"
+    xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+    xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
+    xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust"
+    xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+    xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd"
+    xmlns:g="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <a:Header>
+        <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
+        <b:RelatesTo>3</b:RelatesTo>
+        <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/transfer/PutResponse</b:Action>
+        <b:MessageID>uuid:00000000-8086-8086-8086-0000000008AD</b:MessageID>
+        <c:ResourceURI>http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData</c:ResourceURI>
+    </a:Header>
+    <a:Body>
+        <g:IPS_KVMRedirectionSettingData>
+            <g:BackToBackFbMode>false</g:BackToBackFbMode>
+            <g:DefaultScreen>1</g:DefaultScreen>
+            <g:DoubleBufferActive>false</g:DoubleBufferActive>
+            <g:DoubleBufferEnabled>true</g:DoubleBufferEnabled>
+            <g:ElementName>Intel(r) KVM Redirection Settings</g:ElementName>
+            <g:EnabledByMEBx>true</g:EnabledByMEBx>
+            <g:GrayscalePixelFormatSupported>true</g:GrayscalePixelFormatSupported>
+            <g:InitialDecimationModeForLowRes>2</g:InitialDecimationModeForLowRes>
+            <g:InstanceID>Intel(r) KVM Redirection Settings</g:InstanceID>
+            <g:Is5900PortEnabled>false</g:Is5900PortEnabled>
+            <g:OptInPolicy>false</g:OptInPolicy>
+            <g:RFBPassword></g:RFBPassword>
+            <g:SessionTimeout>3</g:SessionTimeout>
+            <g:ZlibControlSupported>true</g:ZlibControlSupported>
+        </g:IPS_KVMRedirectionSettingData>
+    </a:Body>
+</a:Envelope>
