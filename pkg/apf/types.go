@@ -32,6 +32,9 @@ const (
 	APF_CHANNEL_DATA              = 94
 	APF_CHANNEL_CLOSE             = 97
 	APF_PROTOCOLVERSION           = 192
+	APF_KEEPALIVE_REQUEST         = 208
+	APF_KEEPALIVE_REPLY           = 209
+	APF_KEEPALIVE_OPTIONS_REPLY   = 211
 )
 
 // disconnect reason codes.
@@ -91,6 +94,11 @@ const (
 
 type APF_MESSAGE_HEADER struct {
 	MessageType byte
+}
+
+type APF_KEEPALIVE_REPLY_MESSAGE struct {
+	MessageType byte
+	Cookie      uint32
 }
 
 /**
