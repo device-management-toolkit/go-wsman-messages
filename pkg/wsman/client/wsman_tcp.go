@@ -39,6 +39,7 @@ func NewWsmanTCP(cp Parameters) *Target {
 		UseTLS:             cp.UseTLS,
 		InsecureSkipVerify: cp.SelfSignedAllowed,
 		PinnedCert:         cp.PinnedCert,
+		conn:               cp.Connection,
 		bufferPool: sync.Pool{
 			New: func() interface{} {
 				// Larger buffer to reduce read syscalls and frame fragmentation for KVM streams
@@ -52,6 +53,10 @@ func NewWsmanTCP(cp Parameters) *Target {
 func (t *Target) Connect() error {
 	// Use a Dialer so we can enable TCP keep-alives and TCP_NODELAY for lower latency.
 	d := &net.Dialer{KeepAlive: defaultKeepAlive}
+	// already connected and connection has been provided
+	if t.conn != nil {
+		return nil
+	}
 
 	if t.UseTLS {
 		// Build TLS config with optional pinning

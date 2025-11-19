@@ -196,7 +196,7 @@ func TestServiceAcceptMoreThan18Characters(t *testing.T) {
 func TestProtocolVersion(t *testing.T) {
 	t.Parallel()
 
-	result := ProtocolVersion(1, 0, 9)
+	result := ProtocolVersion(1, 0, 9, [16]byte{})
 	assert.NotNil(t, result)
 }
 
