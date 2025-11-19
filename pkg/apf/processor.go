@@ -17,6 +17,7 @@ import (
 )
 
 func Process(data []byte, session *Session) bytes.Buffer {
+	log.SetLevel(log.Level(log.DebugLevel))
 	var bin_buf bytes.Buffer
 
 	var dataToSend interface{}
@@ -414,14 +415,7 @@ func ProcessGlobalRequest(data []byte) interface{} {
 
 		switch genericHeader.String {
 		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST:
-			// if tcpForwardRequest.Port == 16992 || tcpForwardRequest.Port == 16993 {
 			reply = TcpForwardReplySuccess(tcpForwardRequest.Port)
-
-			if tcpForwardRequest.Port == 5900 {
-			}
-			// } else {
-			// 	reply = APF_REQUEST_FAILURE
-			// }
 		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_CANCEL_REQUEST:
 			reply = APF_REQUEST_SUCCESS
 		}
@@ -567,10 +561,44 @@ func ProcessProtocolVersion(data []byte) APF_PROTOCOL_VERSION_MESSAGE {
 		log.Error(err)
 	}
 
+	// Convert UUID from raw bytes to proper GUID format and log it
+	if len(data) >= 29 {
+		uuidBytes := data[13:29]
+		hexStr := bytesToHex(uuidBytes)
+		guidStr := hexToGUID(hexStr)
+		log.Debugf("SystemId UUID: %s", guidStr)
+	}
+
 	log.Tracef("%+v", message)
-	version := ProtocolVersion(message.MajorVersion, message.MinorVersion, message.TriggerReason)
+	version := ProtocolVersion(message.MajorVersion, message.MinorVersion, message.TriggerReason, message.UUID)
 
 	return version
+}
+
+// bytesToHex converts bytes to uppercase hex string
+func bytesToHex(data []byte) string {
+	result := ""
+	for _, b := range data {
+		result += fmt.Sprintf("%02X", b)
+	}
+	return result
+}
+
+// hexToGUID converts a hex string to GUID format with proper byte swapping
+// Matches the TypeScript guidToStr function
+func hexToGUID(hexStr string) string {
+	if len(hexStr) < 32 {
+		return hexStr
+	}
+
+	// Rearrange according to GUID format (little-endian for first 3 groups)
+	guid := hexStr[6:8] + hexStr[4:6] + hexStr[2:4] + hexStr[0:2] + "-" +
+		hexStr[10:12] + hexStr[8:10] + "-" +
+		hexStr[14:16] + hexStr[12:14] + "-" +
+		hexStr[16:20] + "-" +
+		hexStr[20:]
+
+	return guid
 }
 
 // Send the AFP service accept message to the MEI.
@@ -596,7 +624,7 @@ func ServiceAccept(serviceName string) APF_SERVICE_ACCEPT_MESSAGE {
 	return serviceAcceptMessage
 }
 
-func ProtocolVersion(majorversion, minorversion, triggerreason uint32) APF_PROTOCOL_VERSION_MESSAGE {
+func ProtocolVersion(majorversion, minorversion, triggerreason uint32, uuid [16]byte) APF_PROTOCOL_VERSION_MESSAGE {
 	log.Debug("sending APF_PROTOCOL_VERSION_MESSAGE")
 
 	protVersion := APF_PROTOCOL_VERSION_MESSAGE{}
@@ -604,10 +632,28 @@ func ProtocolVersion(majorversion, minorversion, triggerreason uint32) APF_PROTO
 	protVersion.MajorVersion = majorversion
 	protVersion.MinorVersion = minorversion
 	protVersion.TriggerReason = triggerreason
+	protVersion.UUID = uuid
+
+	// Log the UUID as GUID format
+	hexStr := bytesToHex(uuid[:])
+	guidStr := hexToGUID(hexStr)
+	log.Debugf("Sending SystemId UUID: %s", guidStr)
 
 	log.Tracef("%+v", protVersion)
 
 	return protVersion
+}
+
+func KeepAliveOptionsRequest(keepAliveTime, timeout uint32) APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE {
+	log.Debug("sending APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE")
+
+	message := APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE{
+		MessageType:     APF_KEEPALIVE_OPTIONS_REQUEST,
+		IntervalSeconds: keepAliveTime,
+		TimeoutSeconds:  timeout,
+	}
+
+	return message
 }
 
 func TcpForwardReplySuccess(port uint32) APF_TCP_FORWARD_REPLY_MESSAGE {

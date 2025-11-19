@@ -34,6 +34,7 @@ const (
 	APF_PROTOCOLVERSION           = 192
 	APF_KEEPALIVE_REQUEST         = 208
 	APF_KEEPALIVE_REPLY           = 209
+	APF_KEEPALIVE_OPTIONS_REQUEST = 210
 	APF_KEEPALIVE_OPTIONS_REPLY   = 211
 )
 
@@ -99,6 +100,12 @@ type APF_MESSAGE_HEADER struct {
 type APF_KEEPALIVE_REPLY_MESSAGE struct {
 	MessageType byte
 	Cookie      uint32
+}
+
+type APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE struct {
+	MessageType     byte
+	IntervalSeconds uint32
+	TimeoutSeconds  uint32
 }
 
 /**
