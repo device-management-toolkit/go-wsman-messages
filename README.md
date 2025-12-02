@@ -14,8 +14,8 @@ This repository contains a Go library that implements APIs for communicating wit
 
 A few steps are required to use the library in your code.
 
-1. Import the library in your project,
-1. Provide the connection parameters,
+1. Import the library in your project
+1. Provide the connection parameters
 1. Create the desired messages to act on the AMT device.
 
 See the commented source code as follows:
