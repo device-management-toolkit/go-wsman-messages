@@ -32,6 +32,10 @@ const (
 	APF_CHANNEL_DATA              = 94
 	APF_CHANNEL_CLOSE             = 97
 	APF_PROTOCOLVERSION           = 192
+	APF_KEEPALIVE_REQUEST         = 208
+	APF_KEEPALIVE_REPLY           = 209
+	APF_KEEPALIVE_OPTIONS_REQUEST = 210
+	APF_KEEPALIVE_OPTIONS_REPLY   = 211
 )
 
 // disconnect reason codes.
@@ -91,6 +95,17 @@ const (
 
 type APF_MESSAGE_HEADER struct {
 	MessageType byte
+}
+
+type APF_KEEPALIVE_REPLY_MESSAGE struct {
+	MessageType byte
+	Cookie      uint32
+}
+
+type APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE struct {
+	MessageType     byte
+	IntervalSeconds uint32
+	TimeoutSeconds  uint32
 }
 
 /**
@@ -244,6 +259,20 @@ type APF_PROTOCOL_VERSION_MESSAGE struct {
  *.*/
 type APF_USERAUTH_SUCCESS_MESSAGE struct {
 	MessageType byte
+}
+
+/**
+ * holds the user authentication request failure response.
+ * @MessageType - APF_USERAUTH_FAILURE
+ * @AuthenticationsThatCanContinueLength - length of the methods string
+ * @AuthenticationsThatCanContinue - methods that can continue (e.g., "password")
+ * @PartialSuccess - 0 for no partial success.
+ */
+type APF_USERAUTH_FAILURE_MESSAGE struct {
+	MessageType                          byte
+	AuthenticationsThatCanContinueLength uint32
+	AuthenticationsThatCanContinue       [8]byte
+	PartialSuccess                       byte
 }
 type APF_CHANNEL_OPEN_MESSAGE struct {
 	MessageType               byte
