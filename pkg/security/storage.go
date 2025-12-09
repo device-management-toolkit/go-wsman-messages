@@ -1,5 +1,11 @@
 package security
 
+import (
+	"errors"
+
+	"github.com/zalando/go-keyring"
+)
+
 // NewStorage function to create a new Storage instance with a keyring interface (for testing).
 func NewStorage(serviceName string, kr Keyring) Storage {
 	return Storage{
@@ -23,7 +29,16 @@ func (s Storage) SetKeyValue(key, value string) error {
 
 // GetKeyValue method to get a value from the keyring by key.
 func (s Storage) GetKeyValue(key string) (string, error) {
-	return s.Keyring.Get(s.ServiceName, key)
+	val, err := s.Keyring.Get(s.ServiceName, key)
+	if err != nil {
+		if errors.Is(err, keyring.ErrNotFound) {
+			return "", ErrKeyNotFound
+		}
+
+		return "", err
+	}
+
+	return val, nil
 }
 
 // DeleteKeyValue method to delete a key-value pair from the keyring.

@@ -1,6 +1,7 @@
 package security_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -58,6 +59,24 @@ func TestGetKeyValue(t *testing.T) {
 
 	if value != "testValue" {
 		t.Errorf("Expected value 'testValue', got %v", value)
+	}
+
+	mockKeyring.AssertExpectations(t)
+}
+
+func TestGetKeyValue_NotFound(t *testing.T) {
+	mockKeyring := new(MockKeyring)
+	storage := security.NewStorage("testService", mockKeyring)
+
+	mockKeyring.On("Get", "testService", "nonExistentKey").Return("", security.ErrKeyNotFound)
+
+	value, err := storage.GetKeyValue("nonExistentKey")
+	if !errors.Is(err, security.ErrKeyNotFound) {
+		t.Errorf("Expected ErrKeyNotFound, got %v", err)
+	}
+
+	if value != "" {
+		t.Errorf("Expected empty value, got %v", value)
 	}
 
 	mockKeyring.AssertExpectations(t)
