@@ -1,6 +1,8 @@
 package security
 
 import (
+	"errors"
+
 	"github.com/zalando/go-keyring"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/config"
@@ -18,6 +20,12 @@ type Crypto struct {
 	EncryptionKey string
 }
 
+// ErrKeyNotFound indicates a requested key was not found in storage.
+var ErrKeyNotFound = errors.New("key not found")
+
+// Storager is the interface for secret storage operations.
+// Implementations can be keyring-based (local) or remote (Vault).
+// Currently supports simple key-value operations; blob/hierarchical storage can be added later if needed.
 type Storager interface {
 	GetKeyValue(key string) (string, error)
 	SetKeyValue(key, value string) error
