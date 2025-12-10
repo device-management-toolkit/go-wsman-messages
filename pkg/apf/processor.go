@@ -9,24 +9,199 @@ package apf
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 )
 
-func Process(data []byte, session *Session) bytes.Buffer {
+// Processor handles APF protocol messages with optional callbacks.
+type Processor struct {
+	handler Handler
+}
+
+// NewProcessor creates a new Processor with the given handler.
+// If handler is nil, a DefaultHandler is used (maintains backward compatibility).
+func NewProcessor(handler Handler) *Processor {
+	if handler == nil {
+		handler = DefaultHandler{}
+	}
+
+	return &Processor{handler: handler}
+}
+
+// decodeProtocolVersion extracts fields from an APF_PROTOCOL_VERSION_MESSAGE.
+func (p *Processor) decodeProtocolVersion(data []byte) ProtocolVersionInfo {
+	message := APF_PROTOCOL_VERSION_MESSAGE{}
+	dataBuffer := bytes.NewBuffer(data)
+
+	err := binary.Read(dataBuffer, binary.BigEndian, &message)
+	if err != nil {
+		log.Error(err)
+	}
+
+	// Convert UUID to GUID string format
+	uuidBytes := message.UUID[:]
+	hexStr := bytesToHex(uuidBytes)
+	guidStr := hexToGUID(hexStr)
+
+	return ProtocolVersionInfo{
+		MajorVersion:  message.MajorVersion,
+		MinorVersion:  message.MinorVersion,
+		TriggerReason: message.TriggerReason,
+		UUID:          guidStr,
+		RawUUID:       message.UUID,
+	}
+}
+
+// decodeUserAuthRequest extracts fields from an APF_USERAUTH_REQUEST message.
+func (p *Processor) decodeUserAuthRequest(data []byte) (AuthRequest, error) {
+	dataBuffer := bytes.NewReader(data)
+
+	var messageType byte
+
+	if err := binary.Read(dataBuffer, binary.BigEndian, &messageType); err != nil {
+		return AuthRequest{}, err
+	}
+
+	// Read username length
+	var usernameLen uint32
+
+	if err := binary.Read(dataBuffer, binary.BigEndian, &usernameLen); err != nil {
+		return AuthRequest{}, err
+	}
+
+	if usernameLen > 2048 || uint32(dataBuffer.Len()) < usernameLen {
+		return AuthRequest{}, errors.New("invalid username length")
+	}
+
+	usernameBytes := make([]byte, usernameLen)
+	if _, err := dataBuffer.Read(usernameBytes); err != nil {
+		return AuthRequest{}, err
+	}
+
+	// Read service name length
+	var serviceNameLen uint32
+
+	if err := binary.Read(dataBuffer, binary.BigEndian, &serviceNameLen); err != nil {
+		return AuthRequest{}, err
+	}
+
+	if serviceNameLen > 2048 || uint32(dataBuffer.Len()) < serviceNameLen {
+		return AuthRequest{}, errors.New("invalid service name length")
+	}
+
+	serviceNameBytes := make([]byte, serviceNameLen)
+	if _, err := dataBuffer.Read(serviceNameBytes); err != nil {
+		return AuthRequest{}, err
+	}
+
+	// Read method name length
+	var methodNameLen uint32
+
+	if err := binary.Read(dataBuffer, binary.BigEndian, &methodNameLen); err != nil {
+		return AuthRequest{}, err
+	}
+
+	if methodNameLen > 2048 || uint32(dataBuffer.Len()) < methodNameLen {
+		return AuthRequest{}, errors.New("invalid method name length")
+	}
+
+	methodNameBytes := make([]byte, methodNameLen)
+	if _, err := dataBuffer.Read(methodNameBytes); err != nil {
+		return AuthRequest{}, err
+	}
+
+	request := AuthRequest{
+		Username:    string(usernameBytes),
+		ServiceName: string(serviceNameBytes),
+		MethodName:  string(methodNameBytes),
+	}
+
+	// If method is password, read the password
+	if request.MethodName == APF_AUTH_PASSWORD {
+		if dataBuffer.Len() < 1 {
+			return AuthRequest{}, errors.New("not enough data for password FALSE byte")
+		}
+
+		var passwordFalse byte
+
+		if err := binary.Read(dataBuffer, binary.BigEndian, &passwordFalse); err != nil {
+			return AuthRequest{}, err
+		}
+
+		if passwordFalse != 0 {
+			return AuthRequest{}, errors.New("password FALSE byte is not zero")
+		}
+
+		var passwordLen uint32
+
+		if err := binary.Read(dataBuffer, binary.BigEndian, &passwordLen); err != nil {
+			return AuthRequest{}, err
+		}
+
+		if passwordLen > 2048 || uint32(dataBuffer.Len()) < passwordLen {
+			return AuthRequest{}, errors.New("invalid password length")
+		}
+
+		passwordBytes := make([]byte, passwordLen)
+		if _, err := dataBuffer.Read(passwordBytes); err != nil {
+			return AuthRequest{}, err
+		}
+
+		request.Password = string(passwordBytes)
+	}
+
+	return request, nil
+}
+
+// createAuthFailureMessage creates an APF_USERAUTH_FAILURE_MESSAGE.
+func (p *Processor) createAuthFailureMessage() *APF_USERAUTH_FAILURE_MESSAGE {
+	var authMethods [8]byte
+
+	copy(authMethods[:], []byte(APF_AUTH_PASSWORD))
+
+	return &APF_USERAUTH_FAILURE_MESSAGE{
+		MessageType:                          APF_USERAUTH_FAILURE,
+		AuthenticationsThatCanContinueLength: uint32(len(APF_AUTH_PASSWORD)),
+		AuthenticationsThatCanContinue:       authMethods,
+		PartialSuccess:                       0,
+	}
+}
+
+// Process handles incoming APF data with handler callbacks and returns the response.
+func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 	var bin_buf bytes.Buffer
 
 	var dataToSend interface{}
 
 	switch data[0] {
+	case APF_KEEPALIVE_REQUEST:
+		log.Debug("received APF_KEEPALIVE_REQUEST")
+
+		dataToSend = ProcessKeepAliveRequest(data, session)
+	case APF_KEEPALIVE_REPLY:
+		log.Debug("received APF_KEEPALIVE_REPLY")
+
+		ProcessKeepAliveReply(data, session)
+	case APF_KEEPALIVE_OPTIONS_REPLY:
+		log.Debug("received APF_KEEPALIVE_OPTIONS_REPLY")
+
+		ProcessKeepAliveOptionsReply(data, session)
 	case APF_GLOBAL_REQUEST: // 80
 		log.Debug("received APF_GLOBAL_REQUEST")
 
 		if ValidateGlobalRequest(data) {
-			dataToSend = ProcessGlobalRequest(data)
+			// Decode once - get both the request info and the reply
+			request, reply := ProcessGlobalRequest(data)
+
+			// Notify handler (returns true if keep-alive should be sent after)
+			p.handler.OnGlobalRequest(request)
+
+			dataToSend = reply
 		}
 	case APF_CHANNEL_OPEN: // (90) Sent by Intel AMT when a channel needs to be open from Intel AMT. This is not common, but WSMAN events are a good example of channel coming from AMT.
 		log.Debug("received APF_CHANNEL_OPEN")
@@ -72,9 +247,34 @@ func Process(data []byte, session *Session) bytes.Buffer {
 		log.Debug("received APF PROTOCOL VERSION")
 
 		if ValidateProtocolVersion(data) {
+			info := p.decodeProtocolVersion(data)
+
+			if err := p.handler.OnProtocolVersion(info); err != nil {
+				log.Errorf("Protocol version rejected: %v", err)
+
+				return bin_buf
+			}
+
 			dataToSend = ProcessProtocolVersion(data)
 		}
 	case APF_USERAUTH_REQUEST: // 50
+		log.Debug("received APF_USERAUTH_REQUEST")
+
+		request, err := p.decodeUserAuthRequest(data)
+		if err != nil {
+			log.Errorf("Failed to decode auth request: %v", err)
+
+			dataToSend = p.createAuthFailureMessage()
+		} else {
+			log.Debugf("username=%s serviceName=%s methodName=%s", request.Username, request.ServiceName, request.MethodName)
+
+			response := p.handler.OnAuthRequest(request)
+			if response.Authenticated {
+				dataToSend = &APF_USERAUTH_SUCCESS_MESSAGE{MessageType: APF_USERAUTH_SUCCESS}
+			} else {
+				dataToSend = p.createAuthFailureMessage()
+			}
+		}
 	default:
 	}
 
@@ -86,6 +286,55 @@ func Process(data []byte, session *Session) bytes.Buffer {
 	}
 
 	return bin_buf
+}
+
+// Process is maintained for backward compatibility.
+// It uses a DefaultHandler for non CIRA use cases.
+func Process(data []byte, session *Session) bytes.Buffer {
+	p := NewProcessor(nil)
+
+	return p.Process(data, session)
+}
+
+func ProcessKeepAliveRequest(data []byte, session *Session) any {
+	if len(data) < 5 {
+		log.Warn("APF_KEEPALIVE_REQUEST message too short")
+
+		return APF_KEEPALIVE_REPLY_MESSAGE{}
+	}
+
+	cookie := binary.BigEndian.Uint32(data[1:5])
+	log.Debugf("received APF_KEEPALIVE_REQUEST with cookie: %d", cookie)
+
+	reply := APF_KEEPALIVE_REPLY_MESSAGE{
+		MessageType: APF_KEEPALIVE_REPLY,
+		Cookie:      cookie,
+	}
+
+	return reply
+}
+
+func ProcessKeepAliveReply(data []byte, session *Session) {
+	if len(data) < 5 {
+		log.Warn("APF_KEEPALIVE_REPLY message too short")
+
+		return
+	}
+
+	cookie := binary.BigEndian.Uint32(data[1:5])
+	log.Debugf("received APF_KEEPALIVE_REPLY with cookie: %d", cookie)
+}
+
+func ProcessKeepAliveOptionsReply(data []byte, session *Session) {
+	if len(data) < 9 {
+		log.Warn("APF_KEEPALIVE_OPTIONS_REPLY message too short")
+
+		return
+	}
+
+	keepaliveInterval := binary.BigEndian.Uint32(data[1:5])
+	timeout := binary.BigEndian.Uint32(data[5:9])
+	log.Debugf("KEEPALIVE_OPTIONS_REPLY, Keepalive Interval=%d Timeout=%d", keepaliveInterval, timeout)
 }
 
 func ProcessChannelWindowAdjust(data []byte, session *Session) {
@@ -115,7 +364,8 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 	return ChannelClose(closeMessage.RecipientChannel)
 }
 
-func ProcessGlobalRequest(data []byte) interface{} {
+// ProcessGlobalRequest decodes the global request and returns both the decoded info and the reply.
+func ProcessGlobalRequest(data []byte) (GlobalRequest, interface{}) {
 	genericHeader := APF_GENERIC_HEADER{}
 	dataBuffer := bytes.NewBuffer(data)
 
@@ -131,6 +381,8 @@ func ProcessGlobalRequest(data []byte) interface{} {
 
 	var reply interface{}
 
+	request := GlobalRequest{}
+
 	if int(genericHeader.StringLength) > 0 {
 		stringBuffer := make([]byte, genericHeader.StringLength)
 		tcpForwardRequest := APF_TCP_FORWARD_REQUEST{}
@@ -141,6 +393,7 @@ func ProcessGlobalRequest(data []byte) interface{} {
 		}
 
 		genericHeader.String = string(stringBuffer[:int(genericHeader.StringLength)])
+		request.RequestType = genericHeader.String
 
 		err = binary.Read(dataBuffer, binary.BigEndian, &tcpForwardRequest.WantReply)
 		if err != nil {
@@ -161,6 +414,7 @@ func ProcessGlobalRequest(data []byte) interface{} {
 			}
 
 			tcpForwardRequest.Address = string(addressBuffer[:int(tcpForwardRequest.AddressLength)])
+			request.Address = tcpForwardRequest.Address
 		}
 
 		err = binary.Read(dataBuffer, binary.BigEndian, &tcpForwardRequest.Port)
@@ -168,22 +422,20 @@ func ProcessGlobalRequest(data []byte) interface{} {
 			log.Error(err)
 		}
 
+		request.Port = tcpForwardRequest.Port
+
 		log.Tracef("%+v", genericHeader)
 		log.Tracef("%+v", tcpForwardRequest)
 
 		switch genericHeader.String {
 		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST:
-			if tcpForwardRequest.Port == 16992 || tcpForwardRequest.Port == 16993 {
-				reply = TcpForwardReplySuccess(tcpForwardRequest.Port)
-			} else {
-				reply = APF_REQUEST_FAILURE
-			}
+			reply = TcpForwardReplySuccess(tcpForwardRequest.Port)
 		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_CANCEL_REQUEST:
 			reply = APF_REQUEST_SUCCESS
 		}
 	}
 
-	return reply
+	return request, reply
 }
 
 func ProcessChannelData(data []byte, session *Session) {
@@ -264,9 +516,9 @@ func ProcessServiceRequest(data []byte) APF_SERVICE_ACCEPT_MESSAGE {
 
 	if message.ServiceNameLength == 18 {
 		switch message.ServiceName {
-		case "pfwd@amt.intel.com":
+		case APF_SERVICE_PFWD:
 			service = 1
-		case "auth@amt.intel.com":
+		case APF_SERVICE_AUTH:
 			service = 2
 		}
 	}
@@ -323,13 +575,45 @@ func ProcessProtocolVersion(data []byte) APF_PROTOCOL_VERSION_MESSAGE {
 		log.Error(err)
 	}
 
+	// Convert UUID from raw bytes to proper GUID format and log it
+	if len(data) >= 29 {
+		uuidBytes := data[13:29]
+		hexStr := bytesToHex(uuidBytes)
+		guidStr := hexToGUID(hexStr)
+		log.Debugf("SystemId UUID: %s", guidStr)
+	}
+
 	log.Tracef("%+v", message)
-	version := ProtocolVersion(message.MajorVersion, message.MinorVersion, message.TriggerReason)
+	version := ProtocolVersionWithUUID(message.MajorVersion, message.MinorVersion, message.TriggerReason, message.UUID)
 
 	return version
 }
 
-// Send the AFP service accept message to the MEI.
+// bytesToHex converts bytes to uppercase hex string.
+func bytesToHex(data []byte) string {
+	return strings.ToUpper(hex.EncodeToString(data))
+}
+
+// hexToGUID converts a hex string to GUID format with proper byte swapping
+// Matches the TypeScript guidToStr function.
+func hexToGUID(hexStr string) string {
+	if len(hexStr) < 32 {
+		log.Warnf("hexToGUID: input string too short (%d chars), expected 32", len(hexStr))
+
+		return "00000000-0000-0000-0000-000000000000"
+	}
+
+	// Rearrange according to GUID format (little-endian for first 3 groups)
+	guid := hexStr[6:8] + hexStr[4:6] + hexStr[2:4] + hexStr[0:2] + "-" +
+		hexStr[10:12] + hexStr[8:10] + "-" +
+		hexStr[14:16] + hexStr[12:14] + "-" +
+		hexStr[16:20] + "-" +
+		hexStr[20:]
+
+	return guid
+}
+
+// Send the APF service accept message to the MEI.
 func ServiceAccept(serviceName string) APF_SERVICE_ACCEPT_MESSAGE {
 	log.Debug("sending APF_SERVICE_ACCEPT_MESSAGE")
 
@@ -353,6 +637,10 @@ func ServiceAccept(serviceName string) APF_SERVICE_ACCEPT_MESSAGE {
 }
 
 func ProtocolVersion(majorversion, minorversion, triggerreason uint32) APF_PROTOCOL_VERSION_MESSAGE {
+	return ProtocolVersionWithUUID(majorversion, minorversion, triggerreason, [16]byte{})
+}
+
+func ProtocolVersionWithUUID(majorversion, minorversion, triggerreason uint32, uuid [16]byte) APF_PROTOCOL_VERSION_MESSAGE {
 	log.Debug("sending APF_PROTOCOL_VERSION_MESSAGE")
 
 	protVersion := APF_PROTOCOL_VERSION_MESSAGE{}
@@ -360,10 +648,28 @@ func ProtocolVersion(majorversion, minorversion, triggerreason uint32) APF_PROTO
 	protVersion.MajorVersion = majorversion
 	protVersion.MinorVersion = minorversion
 	protVersion.TriggerReason = triggerreason
+	protVersion.UUID = uuid
+
+	// Log the UUID as GUID format
+	hexStr := bytesToHex(uuid[:])
+	guidStr := hexToGUID(hexStr)
+	log.Debugf("Sending SystemId UUID: %s", guidStr)
 
 	log.Tracef("%+v", protVersion)
 
 	return protVersion
+}
+
+func KeepAliveOptionsRequest(keepAliveTime, timeout uint32) APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE {
+	log.Debug("sending APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE")
+
+	message := APF_KEEPALIVE_OPTIONS_REQUEST_MESSAGE{
+		MessageType:     APF_KEEPALIVE_OPTIONS_REQUEST,
+		IntervalSeconds: keepAliveTime,
+		TimeoutSeconds:  timeout,
+	}
+
+	return message
 }
 
 func TcpForwardReplySuccess(port uint32) APF_TCP_FORWARD_REPLY_MESSAGE {

@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: [1.23.x, 1.24.x, 1.25.x]
+        go-version: [1.25]
         os: [windows-2019, windows-2022, ubuntu-22.04, ubuntu-20.04]
     steps:
       - name: Harden Runner
@@ -96,7 +96,7 @@ jobs:
           go test -covermode=atomic -coverprofile=coverage.out -race -v ./... > test_output.txt 2>&1 || true
           cat test_output.txt
           cat test_output.txt | go-junit-report -set-exit-code > junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
-          if grep -q "FAIL" test_output.txt; then exit 1; fi
+          if grep -qE "^(--- FAIL:|FAIL\t)" test_output.txt; then exit 1; fi
       - name: Upload Coverage Results
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
