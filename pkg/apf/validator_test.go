@@ -125,11 +125,22 @@ func TestValidateGlobalRequest(t *testing.T) {
 			want: false,
 		},
 		{
+			name:        "not enough for string plus one byte",
+			serviceName: "test",
+			totalLen:    9, // 5 bytes header + 4 bytes for "test" = 9, but need 5+4+1=10
+			dataSetup: func(data []byte, totalLen int, service string, addrLen int) {
+				globalReqLen := len(service)
+				binary.BigEndian.PutUint32(data[1:5], uint32(globalReqLen))
+				copy(data[5:5+globalReqLen], service)
+			},
+			want: false,
+		},
+		{
 			name:        "non-matching service name",
 			serviceName: "unknown",
 			// globalReqLen = len("unknown") = 7
-			// Minimum length for reading globalReqLen and serviceName: 5 + 7 = 12
-			totalLen: 12,
+			// Minimum length for reading globalReqLen and serviceName and WantReply: 5 + 7 + 1 = 13
+			totalLen: 13,
 			dataSetup: func(data []byte, totalLen int, service string, addrLen int) {
 				globalReqLen := len(service)
 				binary.BigEndian.PutUint32(data[1:5], uint32(globalReqLen))
@@ -141,9 +152,10 @@ func TestValidateGlobalRequest(t *testing.T) {
 			name:        "tcpip-forward insufficient for addrLen",
 			serviceName: APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST,
 			// globalReqLen = 13
-			// minimum to copy service name: 5 + 13 = 18
-			// less than required for addrLen parsing (23)
-			totalLen: 18,
+			// Need to pass line 30: len(data) >= 5+13+1 = 19
+			// But fail at line 37: len(data) < 6+13+4 = 23
+			// So we need 19 <= totalLen < 23
+			totalLen: 22,
 			dataSetup: func(data []byte, totalLen int, service string, addrLen int) {
 				globalReqLen := len(service)
 				binary.BigEndian.PutUint32(data[1:5], uint32(globalReqLen))
