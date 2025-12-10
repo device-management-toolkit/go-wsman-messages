@@ -20,7 +20,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [1.24.x, 1.25.x]
+        go-version: [1.25.x]
 
     steps:
       - name: Harden Runner
@@ -40,14 +40,14 @@ jobs:
       - name: Checkout rpc-go repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
-          repository: open-amt-cloud-toolkit/rpc-go
+          repository: device-management-toolkit/rpc-go
           path: rpc-go
           ref: main
 
       - name: Checkout console repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
-          repository: open-amt-cloud-toolkit/console
+          repository: device-management-toolkit/console
           path: console
           ref: main
 
