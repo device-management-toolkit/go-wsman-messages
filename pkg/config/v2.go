@@ -101,12 +101,14 @@ type EnterpriseAssistant struct {
 }
 
 type AMTSpecific struct {
-	ControlMode         string `yaml:"controlMode"`
-	AdminPassword       string `yaml:"adminPassword"`
-	ProvisioningCert    string `yaml:"provisioningCert"`
-	ProvisioningCertPwd string `yaml:"provisioningCertPwd"`
-	MEBXPassword        string `yaml:"mebxPassword"`
-	CIRA                CIRA   `yaml:"cira"`
+	ControlMode                string `yaml:"controlMode"`
+	AdminPassword              string `yaml:"adminPassword"`
+	GenerateRandomPassword     string `yaml:"generateRandomPassword"`
+	ProvisioningCert           string `yaml:"provisioningCert"`
+	ProvisioningCertPwd        string `yaml:"provisioningCertPwd"`
+	MEBXPassword               string `yaml:"mebxPassword"`
+	GenerateRandomMEBXPassword string `yaml:"generateRandomMEBXPassword"`
+	CIRA                       CIRA   `yaml:"cira"`
 }
 
 type BMCSpecific struct {
@@ -122,11 +124,12 @@ type RedfishSpecific struct {
 }
 
 type CIRA struct {
-	MPSUsername          string   `yaml:"mpsUsername"`
-	MPSPassword          string   `yaml:"mpsPassword"`
-	MPSAddress           string   `yaml:"mpsAddress"`
-	MPSCert              string   `yaml:"mpsCert"`
-	EnvironmentDetection []string `yaml:"environmentDetection"`
+	MPSUsername            string   `yaml:"mpsUsername"`
+	MPSPassword            string   `yaml:"mpsPassword"`
+	MPSAddress             string   `yaml:"mpsAddress"`
+	MPSCert                string   `yaml:"mpsCert"`
+	EnvironmentDetection   []string `yaml:"environmentDetection"`
+	GenerateRandomPassword string   `yaml:"generateRandomPassword"`
 }
 
 type Proxy struct {
