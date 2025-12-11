@@ -781,3 +781,39 @@ func ChannelWindowAdjust(recipientChannel, l uint32) APF_CHANNEL_WINDOW_ADJUST_M
 
 	return message
 }
+
+// BuildChannelDataBytes serializes APF_CHANNEL_DATA for sending over the wire.
+func BuildChannelDataBytes(recipientChannel uint32, data []byte) []byte {
+	log.Debug("building APF_CHANNEL_DATA bytes")
+
+	buf := make([]byte, 9+len(data))
+	buf[0] = APF_CHANNEL_DATA
+	binary.BigEndian.PutUint32(buf[1:5], recipientChannel)
+	binary.BigEndian.PutUint32(buf[5:9], uint32(len(data)))
+	copy(buf[9:], data)
+
+	return buf
+}
+
+// BuildChannelCloseBytes serializes APF_CHANNEL_CLOSE for sending over the wire.
+func BuildChannelCloseBytes(recipientChannel uint32) []byte {
+	log.Debug("building APF_CHANNEL_CLOSE bytes")
+
+	buf := make([]byte, 5)
+	buf[0] = APF_CHANNEL_CLOSE
+	binary.BigEndian.PutUint32(buf[1:5], recipientChannel)
+
+	return buf
+}
+
+// BuildChannelWindowAdjustBytes serializes APF_CHANNEL_WINDOW_ADJUST for sending over the wire.
+func BuildChannelWindowAdjustBytes(recipientChannel, bytesToAdd uint32) []byte {
+	log.Debug("building APF_CHANNEL_WINDOW_ADJUST bytes")
+
+	buf := make([]byte, 9)
+	buf[0] = APF_CHANNEL_WINDOW_ADJUST
+	binary.BigEndian.PutUint32(buf[1:5], recipientChannel)
+	binary.BigEndian.PutUint32(buf[5:9], bytesToAdd)
+
+	return buf
+}
