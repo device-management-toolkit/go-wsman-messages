@@ -103,11 +103,11 @@ type EnterpriseAssistant struct {
 type AMTSpecific struct {
 	ControlMode                string `yaml:"controlMode"`
 	AdminPassword              string `yaml:"adminPassword"`
-	GenerateRandomPassword     string `yaml:"generateRandomPassword"`
+	GenerateRandomPassword     bool   `yaml:"generateRandomPassword"`
 	ProvisioningCert           string `yaml:"provisioningCert"`
 	ProvisioningCertPwd        string `yaml:"provisioningCertPwd"`
 	MEBXPassword               string `yaml:"mebxPassword"`
-	GenerateRandomMEBXPassword string `yaml:"generateRandomMEBXPassword"`
+	GenerateRandomMEBXPassword bool   `yaml:"generateRandomMEBXPassword"`
 	CIRA                       CIRA   `yaml:"cira"`
 }
 
@@ -129,7 +129,7 @@ type CIRA struct {
 	MPSAddress             string   `yaml:"mpsAddress"`
 	MPSCert                string   `yaml:"mpsCert"`
 	EnvironmentDetection   []string `yaml:"environmentDetection"`
-	GenerateRandomPassword string   `yaml:"generateRandomPassword"`
+	GenerateRandomPassword bool     `yaml:"generateRandomPassword"`
 }
 
 type Proxy struct {
