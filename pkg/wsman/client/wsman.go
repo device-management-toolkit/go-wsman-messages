@@ -34,6 +34,7 @@ const (
 	NonTLSPort            = "16992"
 	RedirectionTLSPort    = "16995"
 	RedirectionNonTLSPort = "16994"
+	WSManPath             = "/wsman"
 )
 
 type Message struct {
@@ -74,7 +75,7 @@ type Target struct {
 const timeout = 10 * time.Second
 
 func NewWsman(cp Parameters) *Target {
-	path := "/wsman"
+	path := WSManPath
 	port := NonTLSPort
 
 	if cp.UseTLS {

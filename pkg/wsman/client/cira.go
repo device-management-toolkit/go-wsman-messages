@@ -13,6 +13,8 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -51,6 +53,8 @@ type CIRAChannel interface {
 	SetTXWindow(window uint32)
 	// AddTXWindow adds to the transmit window.
 	AddTXWindow(bytes uint32)
+	// SubtractTXWindow subtracts from the transmit window.
+	SubtractTXWindow(bytes uint32)
 	// WaitForOpen waits for the channel open result.
 	WaitForOpen(timeout time.Duration) error
 	// ReceiveData receives data from the channel with timeout.
@@ -114,7 +118,7 @@ func (c *CIRATransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	if c.logMessages {
-		logrus.Tracef("CIRA TX HTTP Request:\n%s", string(reqBytes))
+		logrus.Tracef("CIRA TX HTTP Request:\n%s", redactAuthorizationHeader(string(reqBytes)))
 	}
 
 	// Send via APF_CHANNEL_DATA
@@ -254,7 +258,7 @@ func (c *CIRATransport) sendData(channel CIRAChannel, data []byte) error {
 			return fmt.Errorf("failed to send CHANNEL_DATA: %w", err)
 		}
 
-		channel.AddTXWindow(^uint32(chunkSize - 1)) // Subtract chunkSize
+		channel.SubtractTXWindow(uint32(chunkSize))
 		offset += chunkSize
 	}
 
@@ -293,8 +297,13 @@ func (c *CIRATransport) readResponse(channel CIRAChannel) ([]byte, error) {
 		if bytesReceived >= apf.LME_RX_WINDOW_SIZE/2 {
 			adjustMsg := apf.BuildChannelWindowAdjustBytes(channel.GetRecipientChannel(), bytesReceived)
 
-			_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
-			_, _ = conn.Write(adjustMsg)
+			if err := conn.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
+				logrus.Debugf("CIRA: failed to set write deadline for window adjust: %v", err)
+			}
+
+			if _, err := conn.Write(adjustMsg); err != nil {
+				logrus.Debugf("CIRA: failed to send window adjust: %v", err)
+			}
 
 			bytesReceived = 0
 		}
@@ -338,15 +347,17 @@ func isCompleteHTTPResponse(data []byte) bool {
 	headers := string(data[:headerEnd])
 
 	// Look for Content-Length header
-	clStart := bytes.Index([]byte(headers), []byte("Content-Length:"))
-	if clStart == -1 {
-		clStart = bytes.Index([]byte(headers), []byte("content-length:"))
-	}
+	headersLower := strings.ToLower(headers)
+	clStart := strings.Index(headersLower, "content-length:")
 
 	if clStart != -1 {
-		clEnd := bytes.Index([]byte(headers[clStart:]), []byte("\r\n"))
+		// Find the end of this header line (relative to clStart)
+		remaining := headers[clStart:]
+		clEnd := strings.Index(remaining, "\r\n")
+
 		if clEnd != -1 {
-			clValue := headers[clStart+15 : clStart+clEnd]
+			// Extract just the value part (skip "content-length:" which is 15 chars)
+			clValue := remaining[15:clEnd]
 
 			var contentLength int
 
@@ -371,8 +382,22 @@ func (c *CIRATransport) sendChannelClose(channel CIRAChannel) {
 	closeMsg := apf.BuildChannelCloseBytes(channel.GetRecipientChannel())
 
 	conn := c.manager.GetConnection()
-	_ = conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
-	_, _ = conn.Write(closeMsg)
+
+	if err := conn.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
+		logrus.Debugf("CIRA: failed to set write deadline for channel close: %v", err)
+	}
+
+	if _, err := conn.Write(closeMsg); err != nil {
+		logrus.Debugf("CIRA: failed to send channel close: %v", err)
+	}
 
 	logrus.Debugf("CIRA channel closed: recipient=%d", channel.GetRecipientChannel())
+}
+
+// authHeaderRegex matches Authorization header lines for redaction.
+var authHeaderRegex = regexp.MustCompile(`(?i)(Authorization:\s*).+`)
+
+// redactAuthorizationHeader replaces Authorization header values with [REDACTED].
+func redactAuthorizationHeader(request string) string {
+	return authHeaderRegex.ReplaceAllString(request, "${1}[REDACTED]")
 }
