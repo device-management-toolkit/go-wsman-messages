@@ -34,6 +34,7 @@ const (
 	NonTLSPort            = "16992"
 	RedirectionTLSPort    = "16995"
 	RedirectionNonTLSPort = "16994"
+	WSManPath             = "/wsman"
 )
 
 type Message struct {
@@ -74,7 +75,7 @@ type Target struct {
 const timeout = 10 * time.Second
 
 func NewWsman(cp Parameters) *Target {
-	path := "/wsman"
+	path := WSManPath
 	port := NonTLSPort
 
 	if cp.UseTLS {
@@ -94,62 +95,69 @@ func NewWsman(cp Parameters) *Target {
 		logAMTMessages:     cp.LogAMTMessages,
 		UseTLS:             cp.UseTLS,
 		InsecureSkipVerify: cp.SelfSignedAllowed,
+		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
 	}
 
 	res.Timeout = timeout
 
 	if cp.Transport == nil {
-		// check if pinnedCert is not null and not empty
-		var config *tls.Config
-		if len(cp.PinnedCert) > 0 {
-			config = &tls.Config{
-				InsecureSkipVerify: cp.SelfSignedAllowed,
-				VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-					for _, rawCert := range rawCerts {
-						cert, err := x509.ParseCertificate(rawCert)
-						if err != nil {
-							return err
-						}
-
-						// Compare the current certificate with the pinned certificate
-						sha256Fingerprint := sha256.Sum256(cert.Raw)
-						if hex.EncodeToString(sha256Fingerprint[:]) == cp.PinnedCert {
-							return nil // Success: The certificate matches the pinned certificate
-						}
-					}
-
-					return fmt.Errorf("certificate pinning failed")
-				},
-			}
+		// Use CIRATransport for CIRA APF tunnel connections
+		if cp.IsCIRA && cp.CIRAManager != nil {
+			res.Transport = NewCIRATransport(cp.CIRAManager, cp.LogAMTMessages)
 		} else {
-			if res.tlsConfig != nil {
-				config = res.tlsConfig
+			// Standard HTTP transport setup
+			var config *tls.Config
+			if len(cp.PinnedCert) > 0 {
+				// check if pinnedCert is not null and not empty
+				config = &tls.Config{
+					InsecureSkipVerify: cp.SelfSignedAllowed,
+					VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
+						for _, rawCert := range rawCerts {
+							cert, err := x509.ParseCertificate(rawCert)
+							if err != nil {
+								return err
+							}
+
+							// Compare the current certificate with the pinned certificate
+							sha256Fingerprint := sha256.Sum256(cert.Raw)
+							if hex.EncodeToString(sha256Fingerprint[:]) == cp.PinnedCert {
+								return nil // Success: The certificate matches the pinned certificate
+							}
+						}
+
+						return fmt.Errorf("certificate pinning failed")
+					},
+				}
 			} else {
-				config = &tls.Config{InsecureSkipVerify: cp.SelfSignedAllowed}
+				if res.tlsConfig != nil {
+					config = res.tlsConfig
+				} else {
+					config = &tls.Config{InsecureSkipVerify: cp.SelfSignedAllowed}
 
-				if cp.AllowInsecureCipherSuites {
-					defaultCipherSuites := tls.CipherSuites()
-					config.CipherSuites = make([]uint16, 0, len(defaultCipherSuites)+3)
+					if cp.AllowInsecureCipherSuites {
+						defaultCipherSuites := tls.CipherSuites()
+						config.CipherSuites = make([]uint16, 0, len(defaultCipherSuites)+3)
 
-					for _, suite := range defaultCipherSuites {
-						config.CipherSuites = append(config.CipherSuites, suite.ID)
+						for _, suite := range defaultCipherSuites {
+							config.CipherSuites = append(config.CipherSuites, suite.ID)
+						}
+						// add the weak cipher suites
+						config.CipherSuites = append(config.CipherSuites,
+							tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
+							tls.TLS_RSA_WITH_AES_128_CBC_SHA,
+							tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+						)
 					}
-					// add the weak cipher suites
-					config.CipherSuites = append(config.CipherSuites,
-						tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-						tls.TLS_RSA_WITH_AES_128_CBC_SHA,
-						tls.TLS_RSA_WITH_AES_256_CBC_SHA,
-					)
 				}
 			}
-		}
 
-		res.Transport = &http.Transport{
-			MaxIdleConns:      10,
-			IdleConnTimeout:   30 * time.Second,
-			DisableKeepAlives: true,
-			TLSClientConfig:   config,
+			res.Transport = &http.Transport{
+				MaxIdleConns:      10,
+				IdleConnTimeout:   30 * time.Second,
+				DisableKeepAlives: true,
+				TLSClientConfig:   config,
+			}
 		}
 	} else {
 		res.Transport = cp.Transport

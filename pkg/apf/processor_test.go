@@ -1491,3 +1491,166 @@ func TestProcessGlobalRequestAddressReadError(t *testing.T) {
 	assert.Equal(t, APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST, request.RequestType)
 	assert.NotNil(t, reply)
 }
+
+func TestBuildChannelDataBytes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		recipientChannel uint32
+		data             []byte
+		expectedLen      int
+	}{
+		{
+			name:             "empty data",
+			recipientChannel: 1,
+			data:             []byte{},
+			expectedLen:      9, // header only: type(1) + channel(4) + length(4)
+		},
+		{
+			name:             "single byte data",
+			recipientChannel: 42,
+			data:             []byte{0xAB},
+			expectedLen:      10, // header(9) + data(1)
+		},
+		{
+			name:             "multiple bytes data",
+			recipientChannel: 0x12345678,
+			data:             []byte{0x01, 0x02, 0x03, 0x04, 0x05},
+			expectedLen:      14, // header(9) + data(5)
+		},
+		{
+			name:             "max channel value",
+			recipientChannel: 0xFFFFFFFF,
+			data:             []byte{0xFF},
+			expectedLen:      10,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := BuildChannelDataBytes(tc.recipientChannel, tc.data)
+
+			// Verify length
+			assert.Equal(t, tc.expectedLen, len(result))
+
+			// Verify message type
+			assert.Equal(t, byte(APF_CHANNEL_DATA), result[0])
+
+			// Verify recipient channel (big endian)
+			channel := uint32(result[1])<<24 | uint32(result[2])<<16 | uint32(result[3])<<8 | uint32(result[4])
+			assert.Equal(t, tc.recipientChannel, channel)
+
+			// Verify data length (big endian)
+			dataLen := uint32(result[5])<<24 | uint32(result[6])<<16 | uint32(result[7])<<8 | uint32(result[8])
+			assert.Equal(t, uint32(len(tc.data)), dataLen)
+
+			// Verify data content
+			if len(tc.data) > 0 {
+				assert.Equal(t, tc.data, result[9:])
+			}
+		})
+	}
+}
+
+func TestBuildChannelCloseBytes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		recipientChannel uint32
+	}{
+		{
+			name:             "channel 1",
+			recipientChannel: 1,
+		},
+		{
+			name:             "channel 0",
+			recipientChannel: 0,
+		},
+		{
+			name:             "high channel value",
+			recipientChannel: 0x12345678,
+		},
+		{
+			name:             "max channel value",
+			recipientChannel: 0xFFFFFFFF,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := BuildChannelCloseBytes(tc.recipientChannel)
+
+			// Verify length: type(1) + channel(4) = 5
+			assert.Equal(t, 5, len(result))
+
+			// Verify message type
+			assert.Equal(t, byte(APF_CHANNEL_CLOSE), result[0])
+
+			// Verify recipient channel (big endian)
+			channel := uint32(result[1])<<24 | uint32(result[2])<<16 | uint32(result[3])<<8 | uint32(result[4])
+			assert.Equal(t, tc.recipientChannel, channel)
+		})
+	}
+}
+
+func TestBuildChannelWindowAdjustBytes(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name             string
+		recipientChannel uint32
+		bytesToAdd       uint32
+	}{
+		{
+			name:             "small values",
+			recipientChannel: 1,
+			bytesToAdd:       100,
+		},
+		{
+			name:             "zero bytes to add",
+			recipientChannel: 42,
+			bytesToAdd:       0,
+		},
+		{
+			name:             "large window adjustment",
+			recipientChannel: 0x12345678,
+			bytesToAdd:       0x00010000, // 64KB
+		},
+		{
+			name:             "max values",
+			recipientChannel: 0xFFFFFFFF,
+			bytesToAdd:       0xFFFFFFFF,
+		},
+	}
+
+	for _, tc := range tests {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			result := BuildChannelWindowAdjustBytes(tc.recipientChannel, tc.bytesToAdd)
+
+			// Verify length: type(1) + channel(4) + bytes_to_add(4) = 9
+			assert.Equal(t, 9, len(result))
+
+			// Verify message type
+			assert.Equal(t, byte(APF_CHANNEL_WINDOW_ADJUST), result[0])
+
+			// Verify recipient channel (big endian)
+			channel := uint32(result[1])<<24 | uint32(result[2])<<16 | uint32(result[3])<<8 | uint32(result[4])
+			assert.Equal(t, tc.recipientChannel, channel)
+
+			// Verify bytes to add (big endian)
+			bytesToAdd := uint32(result[5])<<24 | uint32(result[6])<<16 | uint32(result[7])<<8 | uint32(result[8])
+			assert.Equal(t, tc.bytesToAdd, bytesToAdd)
+		})
+	}
+}

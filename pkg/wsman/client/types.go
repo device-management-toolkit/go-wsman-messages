@@ -21,4 +21,6 @@ type Parameters struct {
 	Connection                net.Conn
 	TlsConfig                 *tls.Config
 	AllowInsecureCipherSuites bool
+	IsCIRA                    bool               // Flag to indicate CIRA APF tunnel connection
+	CIRAManager               CIRAChannelManager // Manager for CIRA channel operations
 }
