@@ -8,6 +8,7 @@ package ethernetport
 const (
 	AMTEthernetPortSettings string = "AMT_EthernetPortSettings"
 	ValueNotFound           string = "Value not found in map"
+	SetLinkPreference       string = "SetLinkPreference"
 )
 
 const (

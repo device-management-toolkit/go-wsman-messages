@@ -28,10 +28,11 @@ type (
 	}
 
 	Body struct {
-		XMLName           xml.Name `xml:"Body"`
-		GetAndPutResponse SettingsResponse
-		EnumerateResponse common.EnumerateResponse
-		PullResponse      PullResponse
+		XMLName                   xml.Name `xml:"Body"`
+		GetAndPutResponse         SettingsResponse
+		EnumerateResponse         common.EnumerateResponse
+		PullResponse              PullResponse
+		SetLinkPreferenceResponse SetLinkPreferenceResponse
 	}
 
 	PullResponse struct {
@@ -139,3 +140,17 @@ type PhysicalConnectionType int
 //
 // Values={"SMBUS", "PCIe", "Reserved"}.
 type PhysicalNicMedium int
+
+// SetLinkPreferenceResponse is the response from SetLinkPreference method call.
+type SetLinkPreferenceResponse struct {
+	XMLName     xml.Name `xml:"SetLinkPreference_OUTPUT"`
+	ReturnValue int      `xml:"ReturnValue"`
+}
+
+// SetLinkPreferenceRequest is the input for SetLinkPreference method call.
+type SetLinkPreferenceRequest struct {
+	XMLName        xml.Name `xml:"h:SetLinkPreference_INPUT"`
+	H              string   `xml:"xmlns:h,attr"`
+	LinkPreference int      `xml:"h:LinkPreference"`
+	Timeout        int      `xml:"h:Timeout"`
+}
