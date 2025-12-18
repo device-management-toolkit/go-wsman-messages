@@ -151,6 +151,6 @@ type SetLinkPreferenceResponse struct {
 type SetLinkPreferenceRequest struct {
 	XMLName        xml.Name `xml:"h:SetLinkPreference_INPUT"`
 	H              string   `xml:"xmlns:h,attr"`
-	LinkPreference int      `xml:"h:LinkPreference"`
-	Timeout        int      `xml:"h:Timeout"`
+	LinkPreference uint32   `xml:"h:LinkPreference"`
+	Timeout        uint32   `xml:"h:Timeout"`
 }

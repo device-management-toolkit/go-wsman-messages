@@ -123,7 +123,7 @@ func (s Settings) Put(instanceID string, ethernetPortSettings SettingsRequest) (
 // linkPreference: 1 for ME, 2 for Host.
 // timeout: timeout value in seconds.
 // instanceID: the InstanceID of the AMT_EthernetPortSettings to modify.
-func (s Settings) SetLinkPreference(linkPreference, timeout int, instanceID string) (response Response, err error) {
+func (s Settings) SetLinkPreference(linkPreference, timeout uint32, instanceID string) (response Response, err error) {
 	selector := message.Selector{
 		Name:  "InstanceID",
 		Value: instanceID,
@@ -156,5 +156,5 @@ func (s Settings) SetLinkPreference(linkPreference, timeout int, instanceID stri
 		return response, err
 	}
 
-	return response, err
+	return response, nil
 }
