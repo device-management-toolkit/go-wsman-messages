@@ -13,6 +13,7 @@ import (
 	"fmt"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
@@ -115,4 +116,45 @@ func (s Settings) Put(instanceID string, ethernetPortSettings SettingsRequest) (
 	}
 
 	return response, err
+}
+
+// SetLinkPreference sets the link preference (ME or Host) and timeout on an ethernet port.
+// This is an AMT method call that changes the link preference setting.
+// linkPreference: 1 for ME, 2 for Host.
+// timeout: timeout value in seconds.
+// instanceID: the InstanceID of the AMT_EthernetPortSettings to modify.
+func (s Settings) SetLinkPreference(linkPreference, timeout uint32, instanceID string) (response Response, err error) {
+	selector := message.Selector{
+		Name:  "InstanceID",
+		Value: instanceID,
+	}
+	header := s.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTEthernetPortSettings, SetLinkPreference), AMTEthernetPortSettings, []message.Selector{selector}, "", "")
+
+	request := SetLinkPreferenceRequest{
+		H:              fmt.Sprintf("%s%s", message.AMTSchema, AMTEthernetPortSettings),
+		LinkPreference: linkPreference,
+		Timeout:        timeout,
+	}
+
+	body := s.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(SetLinkPreference), AMTEthernetPortSettings, &request)
+
+	response = Response{
+		Message: &client.Message{
+			XMLInput: s.base.WSManMessageCreator.CreateXML(header, body),
+		},
+	}
+
+	// send the message to AMT
+	err = s.base.Execute(response.Message)
+	if err != nil {
+		return response, err
+	}
+
+	// put the xml response into the go struct
+	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, nil
 }
