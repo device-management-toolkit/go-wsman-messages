@@ -8,7 +8,7 @@
 
 > Disclaimer: Production viable releases are tagged and listed under 'Releases'.  All other check-ins should be considered 'in-development' and should not be used in production
 
-This repository contains a Go library that implements APIs for communicating with Intel® Active Management Technology (AMT) capable platforms. These APIs are based on the AMT SDK documentation, which can be found [here](https://www.intel.com/content/www/us/en/developer/tools/active-management-technology-sdk/overview.html).
+This repository contains a Go library that implements APIs for communicating with Intel® Active Management Technology (AMT) capable platforms. These APIs are based on the AMT SDK documentation, which can be found [here](https://www.intel.com/content/www/us/en/developer/tools/active-management-technology-sdk/overview.html)
 
 ## How to use it
 
