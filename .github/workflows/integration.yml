@@ -66,7 +66,7 @@ jobs:
       - name: Build console
         run: |
           cd console
-          CGO_ENABLED=0 go build -o console ./cmd/app/main.go
+          CGO_ENABLED=0 go build -o console ./cmd/app
 
       - name: Run tests
         run: |
