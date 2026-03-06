@@ -180,6 +180,7 @@ func (c *APFChannel) Close() {
 type APFChannelStore struct {
 	channels      map[uint32]*APFChannel
 	mu            sync.Mutex
+	writeMu       sync.Mutex
 	nextChannelID uint32
 	conn          net.Conn
 }
@@ -239,6 +240,21 @@ func (s *APFChannelStore) SetConnection(conn net.Conn) {
 	defer s.mu.Unlock()
 
 	s.conn = conn
+}
+
+// WriteToConnection writes data to the underlying connection with serialized access.
+// This prevents interleaved APF messages when multiple channels write concurrently.
+func (s *APFChannelStore) WriteToConnection(data []byte) error {
+	s.writeMu.Lock()
+	defer s.writeMu.Unlock()
+
+	if err := s.conn.SetWriteDeadline(time.Now().Add(ciraTimeout)); err != nil {
+		return err
+	}
+
+	_, err := s.conn.Write(data)
+
+	return err
 }
 
 // CloseAll closes all channels in the store.

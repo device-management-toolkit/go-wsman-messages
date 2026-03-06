@@ -97,8 +97,8 @@ func (w WSManMessageCreator) CreateBody(method, wsmanClass string, data interfac
 
 		str.WriteString(string(xmlString))
 	} else {
-		str.WriteString(fmt.Sprintf(`<h:%s xmlns:h="%s%s">`, method, w.ResourceURIBase, wsmanClass))
-		str.WriteString(fmt.Sprintf(`</h:%s>`, method))
+		fmt.Fprintf(&str, `<h:%s xmlns:h="%s%s">`, method, w.ResourceURIBase, wsmanClass)
+		fmt.Fprintf(&str, `</h:%s>`, method)
 	}
 
 	str.WriteString("</Body>")
@@ -119,7 +119,7 @@ func (w *WSManMessageCreator) createSelector(selectorSet []Selector) string {
 	selectors.WriteString("<w:SelectorSet>")
 
 	for _, selector := range selectorSet {
-		selectors.WriteString(fmt.Sprintf(`<w:Selector Name=%q>%s</w:Selector>`, selector.Name, selector.Value))
+		fmt.Fprintf(&selectors, `<w:Selector Name=%q>%s</w:Selector>`, selector.Name, selector.Value)
 	}
 
 	selectors.WriteString("</w:SelectorSet>")
