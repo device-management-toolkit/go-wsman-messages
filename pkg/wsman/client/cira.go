@@ -304,7 +304,6 @@ func (c *CIRATransport) readResponse(channel CIRAChannel) ([]byte, error) {
 			if _, err := conn.Write(adjustMsg); err != nil {
 				logrus.Debugf("CIRA: failed to send window adjust: %v", err)
 			}
-
 			bytesReceived = 0
 		}
 
@@ -321,56 +320,72 @@ func (c *CIRATransport) readResponse(channel CIRAChannel) ([]byte, error) {
 	return nil, errors.New("timeout waiting for response")
 }
 
-// isCompleteHTTPResponse checks if we have received a complete HTTP response.
+// isCompleteHTTPResponse checks if we have received a complete HTTP response
+// by parsing standard HTTP framing (Content-Length or chunked transfer encoding).
 func isCompleteHTTPResponse(data []byte) bool {
-	// Look for end of SOAP envelope which indicates complete response
-	if bytes.Contains(data, []byte("</a:Envelope>")) {
-		return true
-	}
-
-	// Also check for HTML responses (error pages)
-	if bytes.Contains(data, []byte("</html>")) || bytes.Contains(data, []byte("</HTML>")) {
-		return true
-	}
-
-	// Check for chunked transfer encoding completion
-	if bytes.Contains(data, []byte("\r\n0\r\n\r\n")) {
-		return true
-	}
-
-	// For non-chunked responses, try to parse Content-Length
 	headerEnd := bytes.Index(data, []byte("\r\n\r\n"))
 	if headerEnd == -1 {
 		return false
 	}
 
 	headers := string(data[:headerEnd])
-
-	// Look for Content-Length header
 	headersLower := strings.ToLower(headers)
-	clStart := strings.Index(headersLower, "content-length:")
 
+	// Check for no-body status codes (1xx, 204, 304) — complete once headers are received
+	if statusCode := parseHTTPStatusCode(headersLower); statusCode != 0 {
+		if (statusCode >= 100 && statusCode < 200) || statusCode == 204 || statusCode == 304 {
+			return true
+		}
+	}
+
+	if strings.Contains(headersLower, "transfer-encoding: chunked") {
+		return bytes.Contains(data, []byte("\r\n0\r\n\r\n"))
+	}
+
+	clStart := strings.Index(headersLower, "content-length:")
 	if clStart != -1 {
-		// Find the end of this header line (relative to clStart)
 		remaining := headers[clStart:]
 		clEnd := strings.Index(remaining, "\r\n")
 
+		var clValue string
 		if clEnd != -1 {
-			// Extract just the value part (skip "content-length:" which is 15 chars)
-			clValue := remaining[15:clEnd]
+			clValue = remaining[15:clEnd]
+		} else {
+			clValue = remaining[15:]
+		}
 
-			var contentLength int
+		var contentLength int
 
-			if _, err := fmt.Sscanf(clValue, " %d", &contentLength); err == nil {
-				bodyStart := headerEnd + 4
-				bodyLen := len(data) - bodyStart
+		if _, err := fmt.Sscanf(clValue, " %d", &contentLength); err == nil {
+			bodyStart := headerEnd + 4
+			bodyLen := len(data) - bodyStart
 
-				return bodyLen >= contentLength
-			}
+			return bodyLen >= contentLength
 		}
 	}
 
 	return false
+}
+
+// parseHTTPStatusCode extracts the status code from an HTTP status line.
+// Returns 0 if the status line cannot be parsed.
+func parseHTTPStatusCode(headersLower string) int {
+	// Status line: "http/1.1 200 ok"
+	if !strings.HasPrefix(headersLower, "http/") {
+		return 0
+	}
+
+	spaceIdx := strings.Index(headersLower, " ")
+	if spaceIdx == -1 || spaceIdx+4 > len(headersLower) {
+		return 0
+	}
+
+	var code int
+	if _, err := fmt.Sscanf(headersLower[spaceIdx+1:], "%d", &code); err != nil {
+		return 0
+	}
+
+	return code
 }
 
 // sendChannelClose sends APF_CHANNEL_CLOSE to the device.
