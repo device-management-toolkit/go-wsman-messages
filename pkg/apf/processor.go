@@ -686,6 +686,10 @@ func TcpForwardReplySuccess(port uint32) APF_TCP_FORWARD_REPLY_MESSAGE {
 }
 
 func ChannelOpen(senderChannel int) bytes.Buffer {
+	return ChannelOpenPort(senderChannel, 16992)
+}
+
+func ChannelOpenPort(senderChannel int, port uint32) bytes.Buffer {
 	var channelType [15]byte
 
 	copy(channelType[:], []byte(APF_OPEN_CHANNEL_REQUEST_FORWARDED)[:15])
@@ -703,7 +707,7 @@ func ChannelOpen(senderChannel int) bytes.Buffer {
 		InitialWindowSize:         LME_RX_WINDOW_SIZE,
 		ConnectedAddressLength:    3,
 		ConnectedAddress:          address,
-		ConnectedPort:             16992,
+		ConnectedPort:             port,
 		OriginatorIPAddressLength: 3,
 		OriginatorIPAddress:       address,
 		OriginatorPort:            123,

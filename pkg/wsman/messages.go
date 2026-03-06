@@ -13,6 +13,13 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips"
 )
 
+// NewCIRARedirectionMessages creates a Messages instance for raw binary redirection
+// over a CIRA APF tunnel. Only the Client field is set — AMT/CIM/IPS message
+// builders are not needed for redirection.
+func NewCIRARedirectionMessages(manager client.CIRAChannelManager) Messages {
+	return Messages{Client: client.NewCIRARedirectionTarget(manager)}
+}
+
 // NewMessages instantiates a new Messages class with client connection parameters.
 func NewMessages(cp client.Parameters) Messages {
 	var client1 *client.Target

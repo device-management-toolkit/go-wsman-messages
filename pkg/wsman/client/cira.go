@@ -37,6 +37,8 @@ type CIRAChannelManager interface {
 	UnregisterAPFChannel(senderChannel uint32)
 	// GetConnection returns the underlying network connection for writes.
 	GetConnection() net.Conn
+	// WriteToConnection writes data to the underlying connection with serialized access.
+	WriteToConnection(data []byte) error
 }
 
 // CIRAChannel represents an APF channel that can send/receive data.
@@ -209,19 +211,11 @@ func (c *CIRATransport) buildHTTPRequest(req *http.Request) ([]byte, error) {
 func (c *CIRATransport) sendChannelOpen(channel CIRAChannel) error {
 	openMsg := apf.ChannelOpen(int(channel.GetSenderChannel()))
 
-	conn := c.manager.GetConnection()
-	if err := conn.SetWriteDeadline(time.Now().Add(c.timeout)); err != nil {
-		return err
-	}
-
-	_, err := conn.Write(openMsg.Bytes())
-
-	return err
+	return c.manager.WriteToConnection(openMsg.Bytes())
 }
 
 // sendData sends data via APF_CHANNEL_DATA, respecting flow control.
 func (c *CIRATransport) sendData(channel CIRAChannel, data []byte) error {
-	conn := c.manager.GetConnection()
 	offset := 0
 
 	for offset < len(data) {
@@ -250,11 +244,7 @@ func (c *CIRATransport) sendData(channel CIRAChannel, data []byte) error {
 		// Build and send APF_CHANNEL_DATA
 		dataMsg := apf.BuildChannelDataBytes(channel.GetRecipientChannel(), chunk)
 
-		if err := conn.SetWriteDeadline(time.Now().Add(c.timeout)); err != nil {
-			return err
-		}
-
-		if _, err := conn.Write(dataMsg); err != nil {
+		if err := c.manager.WriteToConnection(dataMsg); err != nil {
 			return fmt.Errorf("failed to send CHANNEL_DATA: %w", err)
 		}
 
@@ -269,7 +259,6 @@ func (c *CIRATransport) sendData(channel CIRAChannel, data []byte) error {
 func (c *CIRATransport) readResponse(channel CIRAChannel) ([]byte, error) {
 	var response bytes.Buffer
 
-	conn := c.manager.GetConnection()
 	bytesReceived := uint32(0)
 
 	deadline := time.Now().Add(c.timeout)
@@ -297,13 +286,10 @@ func (c *CIRATransport) readResponse(channel CIRAChannel) ([]byte, error) {
 		if bytesReceived >= apf.LME_RX_WINDOW_SIZE/2 {
 			adjustMsg := apf.BuildChannelWindowAdjustBytes(channel.GetRecipientChannel(), bytesReceived)
 
-			if err := conn.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
-				logrus.Debugf("CIRA: failed to set write deadline for window adjust: %v", err)
-			}
-
-			if _, err := conn.Write(adjustMsg); err != nil {
+			if err := c.manager.WriteToConnection(adjustMsg); err != nil {
 				logrus.Debugf("CIRA: failed to send window adjust: %v", err)
 			}
+
 			bytesReceived = 0
 		}
 
@@ -396,13 +382,7 @@ func (c *CIRATransport) sendChannelClose(channel CIRAChannel) {
 
 	closeMsg := apf.BuildChannelCloseBytes(channel.GetRecipientChannel())
 
-	conn := c.manager.GetConnection()
-
-	if err := conn.SetWriteDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		logrus.Debugf("CIRA: failed to set write deadline for channel close: %v", err)
-	}
-
-	if _, err := conn.Write(closeMsg); err != nil {
+	if err := c.manager.WriteToConnection(closeMsg); err != nil {
 		logrus.Debugf("CIRA: failed to send channel close: %v", err)
 	}
 
