@@ -7,6 +7,7 @@ package config
 type Configuration struct {
 	ID            int              `yaml:"id"`
 	Name          string           `yaml:"name"`
+	Tags          []string         `yaml:"tags"`
 	Configuration RemoteManagement `yaml:"configuration"`
 }
 
@@ -131,6 +132,7 @@ type CIRA struct {
 	MPSUsername            string   `yaml:"mpsUsername"`
 	MPSPassword            string   `yaml:"mpsPassword"`
 	MPSAddress             string   `yaml:"mpsAddress"`
+	MPSPort                int      `yaml:"mpsPort"`
 	MPSCert                string   `yaml:"mpsCert"`
 	EnvironmentDetection   []string `yaml:"environmentDetection"`
 	GenerateRandomPassword bool     `yaml:"generateRandomPassword"`
