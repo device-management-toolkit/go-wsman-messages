@@ -98,7 +98,7 @@ jobs:
           cat test_output.txt | go-junit-report -set-exit-code > junit-${{matrix.os}}-${{matrix.go-version}}-${{github.run_attempt}}.xml
           if grep -qE "^(--- FAIL:|FAIL\t)" test_output.txt; then exit 1; fi
       - name: Upload Coverage Results
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@1af58845a975a7985b0beb0cbe6fbbb71a41dbad # v5.5.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: GitHub Upload Release Artifacts
