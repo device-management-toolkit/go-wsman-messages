@@ -80,7 +80,7 @@ func TestPositiveAMT_TimeSynchronizationService(t *testing.T) {
 						RequestedState:          12,
 						SystemCreationClassName: "CIM_ComputerSystem",
 						SystemName:              "Intel(r) AMT",
-						TimeSource:              1,
+						TimeSource:              0,
 					},
 				},
 			},
@@ -98,7 +98,7 @@ func TestPositiveAMT_TimeSynchronizationService(t *testing.T) {
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					EnumerateResponse: common.EnumerateResponse{
-						EnumerationContext: "3B080000-0000-0000-0000-000000000000",
+						EnumerationContext: "94000000-0000-0000-0000-000000000000",
 					},
 				},
 			},
@@ -128,7 +128,7 @@ func TestPositiveAMT_TimeSynchronizationService(t *testing.T) {
 								RequestedState:          12,
 								SystemCreationClassName: "CIM_ComputerSystem",
 								SystemName:              "Intel(r) AMT",
-								TimeSource:              1,
+								TimeSource:              0,
 							},
 						},
 					},
@@ -229,7 +229,7 @@ func TestNegativeAMT_TimeSynchronizationService(t *testing.T) {
 						RequestedState:          12,
 						SystemCreationClassName: "CIM_ComputerSystem",
 						SystemName:              "Intel(r) AMT",
-						TimeSource:              1,
+						TimeSource:              0,
 					},
 				},
 			},
@@ -247,7 +247,7 @@ func TestNegativeAMT_TimeSynchronizationService(t *testing.T) {
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					EnumerateResponse: common.EnumerateResponse{
-						EnumerationContext: "3B080000-0000-0000-0000-000000000000",
+						EnumerationContext: "94000000-0000-0000-0000-000000000000",
 					},
 				},
 			},
@@ -277,7 +277,7 @@ func TestNegativeAMT_TimeSynchronizationService(t *testing.T) {
 								RequestedState:          12,
 								SystemCreationClassName: "CIM_ComputerSystem",
 								SystemName:              "Intel(r) AMT",
-								TimeSource:              1,
+								TimeSource:              0,
 							},
 						},
 					},
