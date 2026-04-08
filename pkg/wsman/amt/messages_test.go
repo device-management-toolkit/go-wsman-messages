@@ -10,12 +10,16 @@ import (
 	"testing"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/alarmclock"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/asset"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/auditlog"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/authorization"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/boot"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/cryptographiccapabilities"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/environmentdetection"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ethernetport"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/eventlogentry"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/general"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/hdr8021filter"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/kerberos"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/managementpresence"
@@ -26,6 +30,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/redirection"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/remoteaccess"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/setupandconfiguration"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/systempowerscheme"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/timesynchronization"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/tls"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/userinitiatedconnection"
@@ -53,12 +58,28 @@ func TestNewMessages(t *testing.T) {
 		t.Error("AuthorizationService is not initialized")
 	}
 
+	if reflect.DeepEqual(m.AssetTable, asset.Table{}) {
+		t.Error("AssetTable is not initialized")
+	}
+
+	if reflect.DeepEqual(m.AssetTableService, asset.Service{}) {
+		t.Error("AssetTableService is not initialized")
+	}
+
 	if reflect.DeepEqual(m.BootCapabilities, boot.Capabilities{}) {
 		t.Error("BootCapabilities is not initialized")
 	}
 
+	if reflect.DeepEqual(m.CryptographicCapabilities, cryptographiccapabilities.Service{}) {
+		t.Error("CryptographicCapabilities is not initialized")
+	}
+
 	if reflect.DeepEqual(m.BootSettingData, boot.SettingData{}) {
 		t.Error("BootSettingData is not initialized")
+	}
+
+	if reflect.DeepEqual(m.EventLogEntry, eventlogentry.Service{}) {
+		t.Error("EventLogEntry is not initialized")
 	}
 
 	if reflect.DeepEqual(m.EnvironmentDetectionSettingData, environmentdetection.SettingData{}) {
@@ -71,6 +92,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.GeneralSettings, general.Settings{}) {
 		t.Error("GeneralSettings is not initialized")
+	}
+
+	if reflect.DeepEqual(m.Hdr8021Filter, hdr8021filter.Service{}) {
+		t.Error("Hdr8021Filter is not initialized")
 	}
 
 	if reflect.DeepEqual(m.IEEE8021xCredentialContext, ieee8021x.CredentialContext{}) {
@@ -113,6 +138,10 @@ func TestNewMessages(t *testing.T) {
 		t.Error("RedirectionService is not initialized")
 	}
 
+	if reflect.DeepEqual(m.RemoteAccessCapabilities, remoteaccess.Capabilities{}) {
+		t.Error("RemoteAccessCapabilities is not initialized")
+	}
+
 	if reflect.DeepEqual(m.RemoteAccessPolicyAppliesToMPS, remoteaccess.PolicyAppliesToMPS{}) {
 		t.Error("RemoteAccessPolicyAppliesToMPS is not initialized")
 	}
@@ -127,6 +156,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.SetupAndConfigurationService, setupandconfiguration.Service{}) {
 		t.Error("SetupAndConfigurationService is not initialized")
+	}
+
+	if reflect.DeepEqual(m.SystemPowerScheme, systempowerscheme.Service{}) {
+		t.Error("SystemPowerScheme is not initialized")
 	}
 
 	if reflect.DeepEqual(m.TimeSynchronizationService, timesynchronization.Service{}) {

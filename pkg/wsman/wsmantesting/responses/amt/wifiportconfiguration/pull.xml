@@ -11,9 +11,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <a:Header>
         <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
-        <b:RelatesTo>8</b:RelatesTo>
+        <b:RelatesTo>2</b:RelatesTo>
         <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action>
-        <b:MessageID>uuid:00000000-8086-8086-8086-00000000293B</b:MessageID>
+        <b:MessageID>uuid:00000000-8086-8086-8086-00000000028E</b:MessageID>
         <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService</c:ResourceURI>
     </a:Header>
     <a:Body>
@@ -30,7 +30,8 @@
                     <h:RequestedState>12</h:RequestedState>
                     <h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName>
                     <h:SystemName>Intel(r) AMT</h:SystemName>
-                    <h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled>
+                    <h:UEFIWiFiProfileShareEnabled>false</h:UEFIWiFiProfileShareEnabled>
+                    <h:localProfileSynchronizationEnabled>0</h:localProfileSynchronizationEnabled>
                 </h:AMT_WiFiPortConfigurationService>
             </g:Items>
             <g:EndOfSequence></g:EndOfSequence>
