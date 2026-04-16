@@ -11,6 +11,7 @@ import (
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbootreason"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/http"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/optin"
@@ -32,6 +33,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.HostBasedSetupService, hostbasedsetup.Service{}) {
 		t.Error("AuditLog is not initialized")
+	}
+
+	if reflect.DeepEqual(m.HostBootReason, hostbootreason.Service{}) {
+		t.Error("HostBootReason is not initialized")
 	}
 
 	if reflect.DeepEqual(m.AlarmClockOccurrence, alarmclock.Occurrence{}) {

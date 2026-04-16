@@ -10,6 +10,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/alarmclock"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbasedsetup"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/hostbootreason"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/http"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/ips/kvmredirection"
@@ -24,6 +25,7 @@ type Messages struct {
 	wsmanMessageCreator         *message.WSManMessageCreator
 	OptInService                optin.Service
 	HostBasedSetupService       hostbasedsetup.Service
+	HostBootReason              hostbootreason.Service
 	AlarmClockOccurrence        alarmclock.Occurrence
 	IEEE8021xCredentialContext  ieee8021x.CredentialContext
 	IEEE8021xSettings           ieee8021x.Settings
@@ -43,6 +45,7 @@ func NewMessages(client client.WSMan) Messages {
 	}
 	m.OptInService = optin.NewOptInServiceWithClient(wsmanMessageCreator, client)
 	m.HostBasedSetupService = hostbasedsetup.NewHostBasedSetupServiceWithClient(wsmanMessageCreator, client)
+	m.HostBootReason = hostbootreason.NewHostBootReasonWithClient(wsmanMessageCreator, client)
 	m.AlarmClockOccurrence = alarmclock.NewAlarmClockOccurrenceWithClient(wsmanMessageCreator, client)
 	m.IEEE8021xCredentialContext = ieee8021x.NewIEEE8021xCredentialContextWithClient(wsmanMessageCreator, client)
 	m.IEEE8021xSettings = ieee8021x.NewIEEE8021xSettingsWithClient(wsmanMessageCreator, client)
