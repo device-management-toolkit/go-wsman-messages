@@ -31,23 +31,25 @@ func TestProcessChannelOpenFailure(t *testing.T) {
 	t.Parallel()
 
 	data := []byte{0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
-	errorChannel := make(chan error)
-	statusChannel := make(chan bool)
+	// Buffered because nobody's listening and the sends are non-blocking.
+	errorChannel := make(chan error, 1)
+	statusChannel := make(chan bool, 1)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
 
 	session := &Session{
 		ErrorBuffer: errorChannel,
 		Status:      statusChannel,
+		WaitGroup:   wg,
 	}
-	defer close(errorChannel)
-
-	go func() {
-		status := <-statusChannel
-		err := <-errorChannel
-		assert.Error(t, err)
-		assert.False(t, status)
-	}()
 
 	ProcessChannelOpenFailure(data, session)
+
+	wg.Wait()
+
+	assert.False(t, <-statusChannel)
+	assert.Error(t, <-errorChannel)
 }
 
 func TestProcessChannelWindowAdjust(t *testing.T) {
@@ -984,14 +986,16 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		t.Parallel()
 
 		p := NewProcessor(nil)
-		timer := time.NewTimer(1 * time.Second)
-		session := &Session{Timer: timer}
+		session := &Session{}
 		// Valid channel data: type(1) + recipient(4) + len(4) + data
 		data := []byte{APF_CHANNEL_DATA, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0xAB}
 
 		result := p.Process(data, session)
-		assert.Equal(t, 0, result.Len())
-		timer.Stop()
+		// Process now replies with APF_CHANNEL_WINDOW_ADJUST to credit the
+		// sender for the byte we just consumed (9-byte serialized message:
+		// 1 type + 4 recipient channel + 4 bytes-to-add).
+		assert.Equal(t, 9, result.Len())
+		assert.Equal(t, byte(APF_CHANNEL_WINDOW_ADJUST), result.Bytes()[0])
 	})
 
 	t.Run("APF_CHANNEL_DATA invalid via Process", func(t *testing.T) {
