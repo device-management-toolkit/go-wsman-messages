@@ -135,6 +135,7 @@ type BootSettingDataRequest struct {
 	OptionsCleared           bool              `xml:"h:OptionsCleared"`           // Indicates whether the boot options have been cleared by BIOS or not. This property is read only.
 	OwningEntity             string            `xml:"h:OwningEntity"`             // OwningEntity identifies the vendor or organization that defines the contained boot settings.
 	PlatformErase            bool              `xml:"h:PlatformErase"`            // When set to True, sets the boot option to trigger Secure Remote Platform Erase in the next boot.  Note: This command needs to execute over TLS.
+	RPEEnabled               bool              `xml:"h:RPEEnabled"`               // Indicates whether Secure Remote Platform Erase is enabled by the BIOS (read-only).
 	RSEPassword              string            `xml:"h:RSEPassword"`              // SSD password for Remote Secure Erase operation. This is a write-only field, an empty string is returned when instance is read. When writing, an empty string or lack of field will be ignored. The password length is limited to 32 ASCII characters. Note: Customers are recommended to use Secure Remote Platform Erase which is newer and more advanced than Remote Secure Erase.
 	ReflashBIOS              bool              `xml:"h:ReflashBIOS"`              // Required. When True, the Intel® AMT firmware reflashes the BIOS on the next boot cycle. This property can be set to true only when a boot source isn't set (using CIM_BootConfigSetting.ChangeBootOrder method).
 	SecureBootControlEnabled bool              `xml:"h:SecureBootControlEnabled"` // Determines whether Intel AMT is privileged by BIOS to disable secure boot for an AMT triggered boot option. If not, BIOSSecureBoot must be set to TRUE. This property is read only.
@@ -296,6 +297,58 @@ var ParameterDetails = map[ParameterType]struct {
 	OCR_HTTPS_PASSWORD: {
 		Mandatory: false,
 		Comment:   "Optional for HTTPS boot",
+	},
+}
+
+// RPE Parameter Types for Remote Platform Erase.
+const (
+	RPE_DEVICE_BITMASK      ParameterType = 1
+	RPE_PSID                ParameterType = 10
+	RPE_SSD_MASTER_PASSWORD ParameterType = 20
+	RPE_OEM_PARAMETER       ParameterType = 30
+)
+
+// RPE parameter max sizes (in bytes).
+var RPEMaxSizes = map[ParameterType]int{
+	RPE_DEVICE_BITMASK:      4,
+	RPE_PSID:                64,
+	RPE_SSD_MASTER_PASSWORD: 64,
+	RPE_OEM_PARAMETER:       500,
+}
+
+// RPE parameter names for friendly error messages.
+var RPEParameterNames = map[ParameterType]string{
+	RPE_DEVICE_BITMASK:      "Bit mask of devices to clear",
+	RPE_PSID:                "PSID for pyrite drive revert/clear",
+	RPE_SSD_MASTER_PASSWORD: "SSD master password",
+	RPE_OEM_PARAMETER:       "OEM defined additional parameter",
+}
+
+// RPE parameter details for validation rules.
+var RPEParameterDetails = map[ParameterType]struct {
+	Mandatory         bool
+	UsedInUnconfigure bool
+	Comment           string
+}{
+	RPE_DEVICE_BITMASK: {
+		Mandatory:         true,
+		UsedInUnconfigure: true,
+		Comment:           "Bit mask of devices that should be cleared (use the bit mask specified in AMT_BootCapabilities.PlatformErase)",
+	},
+	RPE_PSID: {
+		Mandatory:         false,
+		UsedInUnconfigure: false,
+		Comment:           "PSID used to revert/clear pyrite drive",
+	},
+	RPE_SSD_MASTER_PASSWORD: {
+		Mandatory:         false,
+		UsedInUnconfigure: false,
+		Comment:           "Password used to clear SSD",
+	},
+	RPE_OEM_PARAMETER: {
+		Mandatory:         false,
+		UsedInUnconfigure: false,
+		Comment:           "OEM defined parameters",
 	},
 }
 
