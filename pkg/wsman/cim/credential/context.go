@@ -21,52 +21,33 @@ import (
 	"errors"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewContext returns a new instance of the NewContext struct.
 func NewContextWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Context {
 	return Context{
-		base: message.NewBaseWithClient(wsmanMessageCreator, CIMCredentialContext, client),
+		base.NewService[Response](wsmanMessageCreator, CIMCredentialContext, client),
 	}
 }
 
-// TODO: Figure out how to call GET requiring resourceURIs and Selectors
-
-// Enumerate the instances of this class.
-func (context Context) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: context.base.Enumerate(),
-		},
-	}
-
-	err = context.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Pull instances of this class, following an Enumerate operation.
+// Pull instances of this class, following an Enumerate operation. AMT advances its
+// server-side enumeration cursor across successive Pulls made with the same request
+// XML, so we re-post until EndOfSequence is seen. A safety valve caps iterations in
+// case firmware never terminates the sequence.
 func (context Context) Pull(enumerationContext string) (response Response, err error) {
-	loopMax := 25 // arbitrary number
+	loopMax := 25
 	loopCnt := 0
 
 	response = Response{
 		Message: &client.Message{
-			XMLInput: context.base.Pull(enumerationContext),
+			XMLInput: context.Base.Pull(enumerationContext),
 		},
 	}
 
 	for {
-		err = context.base.Execute(response.Message)
+		err = context.Base.Execute(response.Message)
 		if err != nil {
 			return response, err
 		}
@@ -76,12 +57,12 @@ func (context Context) Pull(enumerationContext string) (response Response, err e
 			return response, err
 		}
 
-		if response.Body.PullResponse.EndOfSequence.Local != "" { // if a value is here then there is no more data to pull
+		if response.Body.PullResponse.EndOfSequence.Local != "" {
 			break
 		}
 
 		loopCnt++
-		if loopCnt == loopMax { // safety valve for bad fw. i.e. no "EndOfSequence" found while pulling
+		if loopCnt == loopMax {
 			err = errors.New("CIM_CredentialContext.Pull() - maximum pull attempts exceeded")
 
 			break
