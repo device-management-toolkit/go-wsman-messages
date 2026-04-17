@@ -378,7 +378,7 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 		session.Timer.Stop()
 	}
 
-	return ChannelClose(closeMessage.SenderChannel)
+	return ChannelClose(session.SenderChannel)
 }
 
 // ProcessGlobalRequest decodes the global request and returns both the decoded info and the reply.
