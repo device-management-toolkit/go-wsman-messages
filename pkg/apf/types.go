@@ -290,14 +290,15 @@ type APF_CHANNEL_OPEN_MESSAGE struct {
 }
 
 type Session struct {
-	SenderChannel    uint32
-	RecipientChannel uint32
-	TXWindow         uint32
-	RXWindow         uint32
-	Tempdata         []byte
-	DataBuffer       chan []byte
-	ErrorBuffer      chan error
-	Status           chan bool
-	Timer            *time.Timer
-	WaitGroup        *sync.WaitGroup
+	SenderChannel      uint32
+	RecipientChannel   uint32
+	TXWindow           uint32
+	RXWindow           uint32
+	Tempdata           []byte
+	DataBuffer         chan []byte
+	ErrorBuffer        chan error
+	Status             chan bool
+	Timer              *time.Timer
+	WaitGroup          *sync.WaitGroup
+	HandshakeConfirmed bool // set after APF_CHANNEL_OPEN_CONFIRMATION; gates the CLOSE ack.
 }
