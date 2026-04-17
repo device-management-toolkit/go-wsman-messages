@@ -5,6 +5,7 @@
 package apf
 
 import (
+	"errors"
 	"sync"
 	"testing"
 	"time"
@@ -69,6 +70,43 @@ func TestProcessChannelClose(t *testing.T) {
 	result := ProcessChannelClose(data, session)
 
 	assert.NotNil(t, result)
+}
+
+func TestProcessChannelCloseFlushesTempdata(t *testing.T) {
+	t.Parallel()
+
+	data := []byte{0x01}
+	session := &Session{
+		DataBuffer: make(chan []byte, 1),
+		Tempdata:   []byte("buffered response"),
+	}
+
+	result := ProcessChannelClose(data, session)
+
+	assert.NotNil(t, result)
+	assert.Nil(t, session.Tempdata)
+
+	select {
+	case flushed := <-session.DataBuffer:
+		assert.Equal(t, []byte("buffered response"), flushed)
+	case <-time.After(time.Second):
+		t.Fatal("expected Tempdata to be delivered to DataBuffer")
+	}
+}
+
+func TestProcessChannelCloseStopsTimer(t *testing.T) {
+	t.Parallel()
+
+	data := []byte{0x01}
+	// Long fire interval so the timer is still active when we stop it.
+	session := &Session{
+		Timer: time.NewTimer(time.Hour),
+	}
+
+	result := ProcessChannelClose(data, session)
+
+	assert.NotNil(t, result)
+	assert.False(t, session.Timer.Stop(), "timer should already be stopped by ProcessChannelClose")
 }
 
 func TestProcessGlobalRequest(t *testing.T) {
@@ -959,7 +997,20 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		assert.Equal(t, 0, result.Len())
 	})
 
-	t.Run("APF_CHANNEL_CLOSE valid via Process", func(t *testing.T) {
+	t.Run("APF_CHANNEL_CLOSE after handshake emits ack", func(t *testing.T) {
+		t.Parallel()
+
+		p := NewProcessor(nil)
+		session := &Session{SenderChannel: 7, HandshakeConfirmed: true}
+		data := make([]byte, 5)
+		data[0] = APF_CHANNEL_CLOSE
+
+		result := p.Process(data, session)
+		assert.Equal(t, 5, result.Len())
+		assert.Equal(t, byte(APF_CHANNEL_CLOSE), result.Bytes()[0])
+	})
+
+	t.Run("APF_CHANNEL_CLOSE before OPEN_CONFIRMATION skips ack", func(t *testing.T) {
 		t.Parallel()
 
 		p := NewProcessor(nil)
@@ -1293,6 +1344,32 @@ func TestProcessChannelDataReadErrors(t *testing.T) {
 		ProcessChannelData(data, session)
 	})
 
+	t.Run("data length read fails", func(t *testing.T) {
+		t.Parallel()
+
+		session := &Session{}
+
+		// 1 byte MessageType + 4 bytes RecipientChannel, nothing left for DataLength.
+		data := []byte{
+			APF_CHANNEL_DATA,
+			0x00, 0x00, 0x00, 0x01,
+		}
+		assert.Nil(t, ProcessChannelData(data, session))
+	})
+
+	t.Run("zero data length returns nil", func(t *testing.T) {
+		t.Parallel()
+
+		session := &Session{}
+
+		data := []byte{
+			APF_CHANNEL_DATA,
+			0x00, 0x00, 0x00, 0x01, // RecipientChannel
+			0x00, 0x00, 0x00, 0x00, // DataLength = 0
+		}
+		assert.Nil(t, ProcessChannelData(data, session))
+	})
+
 	t.Run("missing data buffer", func(t *testing.T) {
 		t.Parallel()
 
@@ -1339,6 +1416,36 @@ func TestProcessChannelOpenFailureReadError(t *testing.T) {
 
 	// Should not panic
 	ProcessChannelOpenFailure(data, session)
+}
+
+func TestProcessChannelOpenFailureNilSession(t *testing.T) {
+	t.Parallel()
+
+	data := []byte{APF_CHANNEL_OPEN_FAILURE}
+
+	// Should not panic when session is nil.
+	ProcessChannelOpenFailure(data, nil)
+}
+
+func TestProcessChannelOpenFailureFullChannelsFallThrough(t *testing.T) {
+	t.Parallel()
+
+	// Pre-fill both channels so the non-blocking sends in ProcessChannelOpenFailure
+	// hit the `default` branch instead of delivering.
+	statusChan := make(chan bool, 1)
+	statusChan <- true
+
+	errChan := make(chan error, 1)
+	errChan <- errors.New("preexisting")
+
+	data := []byte{APF_CHANNEL_OPEN_FAILURE}
+	session := &Session{Status: statusChan, ErrorBuffer: errChan}
+
+	ProcessChannelOpenFailure(data, session)
+
+	// Channels should still hold their original values; nothing was overwritten.
+	assert.Equal(t, 1, len(statusChan))
+	assert.Equal(t, 1, len(errChan))
 }
 
 func TestProcessProtocolVersionReadError(t *testing.T) {
@@ -1430,6 +1537,73 @@ func TestDecodeUserAuthRequestReadMethodNameBytes(t *testing.T) {
 	data := []byte{APF_USERAUTH_REQUEST, 0x00, 0x00, 0x00, 0x01, 'a', 0x00, 0x00, 0x00, 0x01, 'b'}
 	// Method name length = 10, but only provide 5
 	data = append(data, 0x00, 0x00, 0x00, 0x0A, 'c', 'd', 'e', 'f', 'g')
+
+	_, err := p.decodeUserAuthRequest(data)
+	assert.Error(t, err)
+}
+
+// Each of the four tests below exploits the fact that bytes.Reader.Read returns
+// io.EOF even for a zero-length slice once the reader is fully drained. By
+// setting the respective length field to 0 and sizing the buffer so it ends
+// exactly at that point, we hit the Read-error branches that the length-guard
+// checks above would otherwise prevent.
+
+func TestDecodeUserAuthRequestUsernameReadEOFOnDrainedBuffer(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+
+	data := []byte{APF_USERAUTH_REQUEST, 0x00, 0x00, 0x00, 0x00}
+
+	_, err := p.decodeUserAuthRequest(data)
+	assert.Error(t, err)
+}
+
+func TestDecodeUserAuthRequestServiceNameReadEOFOnDrainedBuffer(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+
+	data := []byte{
+		APF_USERAUTH_REQUEST,
+		0x00, 0x00, 0x00, 0x01, 'a', // username
+		0x00, 0x00, 0x00, 0x00, // serviceNameLen = 0; reader drained after this
+	}
+
+	_, err := p.decodeUserAuthRequest(data)
+	assert.Error(t, err)
+}
+
+func TestDecodeUserAuthRequestMethodNameReadEOFOnDrainedBuffer(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+
+	data := []byte{
+		APF_USERAUTH_REQUEST,
+		0x00, 0x00, 0x00, 0x01, 'a', // username
+		0x00, 0x00, 0x00, 0x01, 'b', // service name
+		0x00, 0x00, 0x00, 0x00, // methodNameLen = 0; reader drained after this
+	}
+
+	_, err := p.decodeUserAuthRequest(data)
+	assert.Error(t, err)
+}
+
+func TestDecodeUserAuthRequestPasswordReadEOFOnDrainedBuffer(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+
+	data := []byte{
+		APF_USERAUTH_REQUEST,
+		0x00, 0x00, 0x00, 0x01, 'a', // username
+		0x00, 0x00, 0x00, 0x01, 'b', // service name
+		0x00, 0x00, 0x00, 0x08, // methodNameLen = 8
+		'p', 'a', 's', 's', 'w', 'o', 'r', 'd',
+		0x00,                   // password FALSE byte
+		0x00, 0x00, 0x00, 0x00, // passwordLen = 0; reader drained after this
+	}
 
 	_, err := p.decodeUserAuthRequest(data)
 	assert.Error(t, err)

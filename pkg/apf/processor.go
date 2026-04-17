@@ -228,7 +228,13 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 		log.Debug("received APF_CHANNEL_CLOSE")
 
 		if ValidateChannelClose(data) {
-			ProcessChannelClose(data, session)
+			reply := ProcessChannelClose(data, session)
+			// Skip the ack if we never saw OPEN_CONFIRMATION for this session.
+			if session != nil && session.HandshakeConfirmed {
+				dataToSend = reply
+			} else {
+				log.Debug("APF_CHANNEL_CLOSE received before OPEN_CONFIRMATION; skipping ack")
+			}
 		}
 	case APF_CHANNEL_DATA: // (94) Intel AMT is sending data that we must relay into an LMS TCP connection.
 		log.Debug("received APF_CHANNEL_DATA")
@@ -378,7 +384,7 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 		session.Timer.Stop()
 	}
 
-	return ChannelClose(closeMessage.SenderChannel)
+	return ChannelClose(session.SenderChannel)
 }
 
 // ProcessGlobalRequest decodes the global request and returns both the decoded info and the reply.
@@ -565,6 +571,7 @@ func ProcessChannelOpenConfirmation(data []byte, session *Session) {
 	session.SenderChannel = confirmationMessage.SenderChannel
 	session.RecipientChannel = confirmationMessage.RecipientChannel
 	session.TXWindow = confirmationMessage.InitialWindowSize
+	session.HandshakeConfirmed = true
 	session.WaitGroup.Done()
 }
 
