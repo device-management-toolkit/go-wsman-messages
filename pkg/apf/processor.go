@@ -378,7 +378,7 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 		session.Timer.Stop()
 	}
 
-	return ChannelClose(closeMessage.RecipientChannel)
+	return ChannelClose(closeMessage.SenderChannel)
 }
 
 // ProcessGlobalRequest decodes the global request and returns both the decoded info and the reply.
@@ -499,7 +499,7 @@ func ProcessChannelData(data []byte, session *Session) interface{} {
 	// Reply with APF_CHANNEL_WINDOW_ADJUST to credit the peer for the bytes we
 	// just accepted. Without this, large responses can stall once the peer's
 	// initial send window is exhausted.
-	return ChannelWindowAdjust(channelData.RecipientChannel, channelData.DataLength)
+	return ChannelWindowAdjust(session.SenderChannel, channelData.DataLength)
 }
 
 func ProcessServiceRequest(data []byte) APF_SERVICE_ACCEPT_MESSAGE {
