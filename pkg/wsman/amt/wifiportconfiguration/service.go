@@ -13,6 +13,7 @@ import (
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
@@ -21,91 +22,24 @@ import (
 // NewWiFiPortConfigurationServiceWithClient instantiates a new Service.
 func NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) Service {
 	return Service{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTWiFiPortConfigurationService, client),
+		base.NewService[Response](wsmanMessageCreator, AMTWiFiPortConfigurationService, client),
 	}
 }
 
-// Get retrieves the representation of the instance.
-func (service Service) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Get(nil),
-		},
-	}
-
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (service Service) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Enumerate(),
-		},
-	}
-
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (service Service) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: service.base.Pull(enumerationContext),
-		},
-	}
-
-	// send the message to AMT
-	err = service.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Put will change properties of the selected instance.
+// Put overrides the generic Put because it has a strongly-typed request
+// parameter (value receiver) and post-processes the response to surface a
+// specific error when LocalProfileSynchronizationEnabled is not set.
 func (service Service) Put(wiFiPortConfigurationService WiFiPortConfigurationServiceRequest) (response Response, err error) {
 	// wiFiPortConfigurationService.XMLSchema = "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService"
 	wiFiPortConfigurationService.H = fmt.Sprintf("%s%s", message.AMTSchema, AMTWiFiPortConfigurationService)
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.Put(wiFiPortConfigurationService, false, nil),
+			XMLInput: service.Base.Put(wiFiPortConfigurationService, false, nil),
 		},
 	}
 
 	// send the message to AMT
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -141,7 +75,7 @@ func (service Service) Put(wiFiPortConfigurationService WiFiPortConfigurationSer
 //
 // Values={Completed with No Error, Not Supported, Failed, Invalid Parameter, Invalid Reference, Method Reserved, Vendor Specific}.
 func (service Service) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSettingsRequest, ieee8021xSettingsInput models.IEEE8021xSettings, wifiEndpoint, clientCredential, caCredential string) (response Response, err error) {
-	header := service.base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTWiFiPortConfigurationService, AddWiFiSettings), AMTWiFiPortConfigurationService, nil, "", "")
+	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTWiFiPortConfigurationService, AddWiFiSettings), AMTWiFiPortConfigurationService, nil, "", "")
 	input := AddWiFiSettings_INPUT{
 		WifiEndpoint: WiFiEndpoint{
 			Address: "/wsman",
@@ -211,15 +145,15 @@ func (service Service) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSet
 		}
 	}
 
-	body := service.base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddWiFiSettings), AMTWiFiPortConfigurationService, &input)
+	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddWiFiSettings), AMTWiFiPortConfigurationService, &input)
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: service.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
 	// send the message to AMT
-	err = service.base.Execute(response.Message)
+	err = service.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}

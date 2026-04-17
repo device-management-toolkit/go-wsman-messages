@@ -95,7 +95,7 @@ func TestPositiveAMT_PublicKeyCertificate(t *testing.T) {
 				"",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageEnumerate
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Print("Error")
 					}
 
@@ -299,7 +299,7 @@ func TestNegativeAMT_PublicKeyCertificate(t *testing.T) {
 				"",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Print("Error")
 					}
 

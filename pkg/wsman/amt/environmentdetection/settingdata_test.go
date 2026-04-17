@@ -90,7 +90,7 @@ func TestPositiveAMT_EnvironmentDetectionSettingData(t *testing.T) {
 				wsmantesting.EnumerateBody,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageEnumerate
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Println("Error")
 					}
 
@@ -226,7 +226,7 @@ func TestNegativeAMT_EnvironmentDetectionSettingData(t *testing.T) {
 				wsmantesting.EnumerateBody,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
-					if elementUnderTest.base.WSManMessageCreator == nil {
+					if elementUnderTest.Base.WSManMessageCreator == nil {
 						logrus.Print("Error")
 					}
 

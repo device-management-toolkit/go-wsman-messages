@@ -12,74 +12,36 @@ import (
 	"encoding/xml"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewPublicPrivateKeyPairWithClient instantiates a new KeyPair.
 func NewPublicPrivateKeyPairWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) KeyPair {
 	return KeyPair{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTPublicPrivateKeyPair, client),
+		base.NewService[Response](wsmanMessageCreator, AMTPublicPrivateKeyPair, client),
 	}
 }
 
-// Get retrieves the representation of the instance.
+// Get retrieves the representation of the instance identified by the InstanceID
+// selector. Shadows the generic parameterless Get to preserve the public API.
 func (keyPair KeyPair) Get(instanceID string) (response Response, err error) {
-	selector := message.Selector{
-		Name:  "InstanceID",
-		Value: instanceID,
-	}
-	response = Response{
-		Message: &client.Message{
-			XMLInput: keyPair.base.Get(&selector),
-		},
-	}
-	// send the message to AMT
-	err = keyPair.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
+	return keyPair.GetByInstanceID(instanceID)
 }
 
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (keyPair KeyPair) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: keyPair.base.Enumerate(),
-		},
-	}
-	// send the message to AMT
-	err = keyPair.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
+// Pull overrides the generic Pull to post-process the response into the
+// RefinedPullResponse shape used by callers.
 func (keyPair KeyPair) Pull(enumerationContext string) (response Response, err error) {
 	var refinedOutput []RefinedPublicPrivateKeyPair
 
 	response = Response{
 		Message: &client.Message{
-			XMLInput: keyPair.base.Pull(enumerationContext),
+			XMLInput: keyPair.Base.Pull(enumerationContext),
 		},
 	}
 
 	// send the message to AMT
-	err = keyPair.base.Execute(response.Message)
+	err = keyPair.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -113,11 +75,11 @@ func (keyPair KeyPair) Delete(handle string) (response Response, err error) {
 	}
 	response = Response{
 		Message: &client.Message{
-			XMLInput: keyPair.base.Delete(selector),
+			XMLInput: keyPair.Base.Delete(selector),
 		},
 	}
 	// send the message to AMT
-	err = keyPair.base.Execute(response.Message)
+	err = keyPair.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
