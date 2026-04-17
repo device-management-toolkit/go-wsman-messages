@@ -9,6 +9,7 @@ import (
 	"encoding/xml"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/chassis"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
@@ -16,7 +17,7 @@ import (
 )
 
 type Package struct {
-	base message.Base
+	base.WSManService[Response]
 }
 
 // Response Types.
