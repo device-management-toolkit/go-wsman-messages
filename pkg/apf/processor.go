@@ -13,7 +13,6 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -235,7 +234,9 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 		log.Debug("received APF_CHANNEL_DATA")
 
 		if ValidateChannelData(data) {
-			ProcessChannelData(data, session)
+			if reply := ProcessChannelData(data, session); reply != nil {
+				dataToSend = reply
+			}
 		}
 	case APF_CHANNEL_WINDOW_ADJUST: // 93
 		log.Debug("received APF_CHANNEL_WINDOW_ADJUST")
@@ -361,6 +362,22 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 
 	log.Tracef("%+v", closeMessage)
 
+	// Server-initiated close is the authoritative "response complete" signal
+	// when the HTTP request used Connection: close. Deliver any accumulated
+	// response body to the waiting HTTP client now, rather than relying on an
+	// idle timer.
+	if session != nil && session.DataBuffer != nil && len(session.Tempdata) > 0 {
+		buffered := session.Tempdata
+		session.Tempdata = nil
+		session.DataBuffer <- buffered
+	}
+
+	// Cancel any safety-net idle timer so it doesn't fire after we've already
+	// flushed the response.
+	if session != nil && session.Timer != nil {
+		session.Timer.Stop()
+	}
+
 	return ChannelClose(closeMessage.RecipientChannel)
 }
 
@@ -438,52 +455,51 @@ func ProcessGlobalRequest(data []byte) (GlobalRequest, interface{}) {
 	return request, reply
 }
 
-func ProcessChannelData(data []byte, session *Session) {
+// ProcessChannelData appends the channel data payload to session.Tempdata and
+// returns an APF_CHANNEL_WINDOW_ADJUST_MESSAGE the caller should send back to
+// the peer to replenish its view of our receive window. Returns nil if nothing
+// needs to be sent (e.g. empty payload or malformed message).
+func ProcessChannelData(data []byte, session *Session) interface{} {
 	channelData := APF_CHANNEL_DATA_MESSAGE{}
 	buf2 := bytes.NewBuffer(data)
 
-	err := binary.Read(buf2, binary.BigEndian, &channelData.MessageType)
-	if err != nil {
+	if err := binary.Read(buf2, binary.BigEndian, &channelData.MessageType); err != nil {
 		log.Error(err)
+
+		return nil
 	}
 
-	err = binary.Read(buf2, binary.BigEndian, &channelData.RecipientChannel)
-	if err != nil {
+	if err := binary.Read(buf2, binary.BigEndian, &channelData.RecipientChannel); err != nil {
 		log.Error(err)
+
+		return nil
 	}
 
-	err = binary.Read(buf2, binary.BigEndian, &channelData.DataLength)
-	if err != nil {
+	if err := binary.Read(buf2, binary.BigEndian, &channelData.DataLength); err != nil {
 		log.Error(err)
+
+		return nil
+	}
+
+	if channelData.DataLength == 0 {
+		return nil
 	}
 
 	session.RXWindow = channelData.DataLength
 	dataBuffer := make([]byte, channelData.DataLength)
 
-	err = binary.Read(buf2, binary.BigEndian, &dataBuffer)
-	if err != nil {
+	if err := binary.Read(buf2, binary.BigEndian, &dataBuffer); err != nil {
 		log.Error(err)
+
+		return nil
 	}
 
-	// log.Debug("received APF_CHANNEL_DATA - " + fmt.Sprint(channelData.DataLength))
-	// log.Tracef("%+v", channelData)
-
 	session.Tempdata = append(session.Tempdata, dataBuffer[:channelData.DataLength]...)
-	// var windowAdjust APF_CHANNEL_WINDOW_ADJUST_MESSAGE
-	// if session.RXWindow > 1024 { // TODO: Check this
-	// 	windowAdjust = ChannelWindowAdjust(channelData.RecipientChannel, session.RXWindow)
-	// 	session.RXWindow = 0
-	// }
 
-	// var windowAdjust APF_CHANNEL_WINDOW_ADJUST_MESSAGE
-	// if session.RXWindow > 1024 { // TODO: Check this
-	// 	windowAdjust = ChannelWindowAdjust(channelData.RecipientChannel, session.RXWindow)
-	// 	session.RXWindow = 0
-	// }
-	// // log.Tracef("%+v", session)
-	// return windowAdjust
-	// return windowAdjust
-	session.Timer.Reset(3 * time.Second)
+	// Reply with APF_CHANNEL_WINDOW_ADJUST to credit the peer for the bytes we
+	// just accepted. Without this, large responses can stall once the peer's
+	// initial send window is exhausted.
+	return ChannelWindowAdjust(channelData.RecipientChannel, channelData.DataLength)
 }
 
 func ProcessServiceRequest(data []byte) APF_SERVICE_ACCEPT_MESSAGE {
@@ -562,8 +578,31 @@ func ProcessChannelOpenFailure(data []byte, session *Session) {
 	}
 
 	log.Tracef("%+v", channelOpenFailure)
-	session.Status <- false
-	session.ErrorBuffer <- errors.New("error opening APF channel, reason code: " + fmt.Sprint(channelOpenFailure.ReasonCode))
+
+	if session == nil {
+		return
+	}
+
+	// CIRA wires this up, LME doesn't. Don't block either way.
+	if session.Status != nil {
+		select {
+		case session.Status <- false:
+		default:
+		}
+	}
+
+	if session.ErrorBuffer != nil {
+		openErr := errors.New("error opening APF channel, reason code: " + fmt.Sprint(channelOpenFailure.ReasonCode))
+		select {
+		case session.ErrorBuffer <- openErr:
+		default:
+		}
+	}
+
+	// Wake up RoundTrip so it can go read the bad news.
+	if session.WaitGroup != nil {
+		session.WaitGroup.Done()
+	}
 }
 
 func ProcessProtocolVersion(data []byte) APF_PROTOCOL_VERSION_MESSAGE {
