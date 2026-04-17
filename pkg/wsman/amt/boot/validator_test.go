@@ -435,6 +435,60 @@ func TestNewBoolParameter(t *testing.T) {
 	}
 }
 
+func TestNewUint32Parameter(t *testing.T) {
+	tests := []struct {
+		name      string
+		paramType ParameterType
+		value     uint32
+	}{
+		{
+			name:      "Zero value",
+			paramType: RPE_DEVICE_BITMASK,
+			value:     0,
+		},
+		{
+			name:      "Device bitmask value",
+			paramType: RPE_DEVICE_BITMASK,
+			value:     0x00000003,
+		},
+		{
+			name:      "Max uint32 value",
+			paramType: RPE_DEVICE_BITMASK,
+			value:     0xFFFFFFFF,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			param := NewUint32Parameter(tt.paramType, tt.value)
+
+			if param.Type != tt.paramType {
+				t.Errorf("NewUint32Parameter() type = %v, want %v", param.Type, tt.paramType)
+			}
+
+			if param.Length != 4 {
+				t.Errorf("NewUint32Parameter() length = %v, want 4", param.Length)
+			}
+
+			if len(param.Value) != 4 {
+				t.Fatalf("NewUint32Parameter() value length = %v, want 4", len(param.Value))
+			}
+
+			// Verify little-endian encoding
+			expected := []byte{
+				byte(tt.value),
+				byte(tt.value >> 8),
+				byte(tt.value >> 16),
+				byte(tt.value >> 24),
+			}
+
+			if !bytes.Equal(param.Value, expected) {
+				t.Errorf("NewUint32Parameter() value = %v, want %v", param.Value, expected)
+			}
+		})
+	}
+}
+
 func TestValidateParameters(t *testing.T) {
 	// Valid parameters with network device path
 	validParams := []TLVParameter{

@@ -224,6 +224,18 @@ func NewStringParameter(paramType ParameterType, value string) (TLVParameter, er
 	}, nil
 }
 
+// NewUint32Parameter creates a new parameter with a uint32 value (little-endian).
+func NewUint32Parameter(paramType ParameterType, value uint32) TLVParameter {
+	buf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(buf, value)
+
+	return TLVParameter{
+		Type:   paramType,
+		Length: 4,
+		Value:  buf,
+	}
+}
+
 // NewBoolParameter creates a new parameter with a boolean value.
 func NewBoolParameter(paramType ParameterType, value bool) TLVParameter {
 	var boolValue byte = 0
