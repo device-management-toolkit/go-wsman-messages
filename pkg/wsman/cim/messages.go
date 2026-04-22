@@ -8,6 +8,7 @@ package cim
 
 import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/associatedpower"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
@@ -31,29 +32,30 @@ import (
 )
 
 type Messages struct {
-	wsmanMessageCreator       *message.WSManMessageCreator
-	BIOSElement               bios.Element
-	BootConfigSetting         boot.ConfigSetting
-	BootService               boot.Service
-	BootSourceSetting         boot.SourceSetting
-	Card                      card.Package
-	Chassis                   chassis.Package
-	Chip                      chip.Package
-	ComputerSystemPackage     computer.SystemPackage
-	ConcreteDependency        concrete.Dependency
-	CredentialContext         credential.Context
-	IEEE8021xSettings         ieee8021x.Settings
-	KVMRedirectionSAP         kvm.RedirectionSAP
-	MediaAccessDevice         mediaaccess.Device
-	PhysicalMemory            physical.Memory
-	PhysicalPackage           physical.Package
-	PowerManagementService    power.ManagementService
-	Processor                 processor.Package
-	ServiceAvailableToElement service.AvailableToElement
-	SoftwareIdentity          software.Identity
-	SystemPackaging           system.Package
-	WiFiEndpointSettings      wifi.EndpointSettings
-	WiFiPort                  wifi.Port
+	wsmanMessageCreator              *message.WSManMessageCreator
+	AssociatedPowerManagementService associatedpower.ManagementService
+	BIOSElement                      bios.Element
+	BootConfigSetting                boot.ConfigSetting
+	BootService                      boot.Service
+	BootSourceSetting                boot.SourceSetting
+	Card                             card.Package
+	Chassis                          chassis.Package
+	Chip                             chip.Package
+	ComputerSystemPackage            computer.SystemPackage
+	ConcreteDependency               concrete.Dependency
+	CredentialContext                credential.Context
+	IEEE8021xSettings                ieee8021x.Settings
+	KVMRedirectionSAP                kvm.RedirectionSAP
+	MediaAccessDevice                mediaaccess.Device
+	PhysicalMemory                   physical.Memory
+	PhysicalPackage                  physical.Package
+	PowerManagementService           power.ManagementService
+	Processor                        processor.Package
+	ServiceAvailableToElement        service.AvailableToElement
+	SoftwareIdentity                 software.Identity
+	SystemPackaging                  system.Package
+	WiFiEndpointSettings             wifi.EndpointSettings
+	WiFiPort                         wifi.Port
 }
 
 func NewMessages(client client.WSMan) Messages {
@@ -62,6 +64,7 @@ func NewMessages(client client.WSMan) Messages {
 	m := Messages{
 		wsmanMessageCreator: wsmanMessageCreator,
 	}
+	m.AssociatedPowerManagementService = associatedpower.NewAssociatedPowerManagementServiceWithClient(wsmanMessageCreator, client)
 	m.BIOSElement = bios.NewBIOSElementWithClient(wsmanMessageCreator, client)
 	m.BootConfigSetting = boot.NewBootConfigSettingWithClient(wsmanMessageCreator, client)
 	m.BootService = boot.NewBootServiceWithClient(wsmanMessageCreator, client)
