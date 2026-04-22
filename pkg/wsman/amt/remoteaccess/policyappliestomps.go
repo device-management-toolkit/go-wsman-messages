@@ -23,83 +23,20 @@ import (
 	"encoding/xml"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewRemoteAccessPolicyAppliesToMPSWithClient instantiates a new PolicyAppliesToMPS.
 func NewRemoteAccessPolicyAppliesToMPSWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) PolicyAppliesToMPS {
 	return PolicyAppliesToMPS{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTRemoteAccessPolicyAppliesToMPS, client),
+		base.NewService[Response](wsmanMessageCreator, AMTRemoteAccessPolicyAppliesToMPS, client),
 	}
 }
 
-// Get retrieves the representation of the instance.
-func (policyAppliesToMPS PolicyAppliesToMPS) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: policyAppliesToMPS.base.Get(nil),
-		},
-	}
-	// send the message to AMT
-	err = policyAppliesToMPS.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (policyAppliesToMPS PolicyAppliesToMPS) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: policyAppliesToMPS.base.Enumerate(),
-		},
-	}
-	// send the message to AMT
-	err = policyAppliesToMPS.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (policyAppliesToMPS PolicyAppliesToMPS) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: policyAppliesToMPS.base.Pull(enumerationContext),
-		},
-	}
-	// send the message to AMT
-	err = policyAppliesToMPS.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Put will change properties of the selected instance.
+// Put overrides the generic Put because the target instance must be addressed
+// via two EPR selectors (ManagedElement and PolicySet), which the generic Put
+// does not provide.
 func (policyAppliesToMPS PolicyAppliesToMPS) Put(remoteAccessPolicyAppliesToMPS *RemoteAccessPolicyAppliesToMPSRequest) (response Response, err error) {
 	selectors := []message.Selector{
 		{
@@ -114,11 +51,11 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Put(remoteAccessPolicyAppliesToMPS 
 
 	response = Response{
 		Message: &client.Message{
-			XMLInput: policyAppliesToMPS.base.Put(remoteAccessPolicyAppliesToMPS, true, selectors),
+			XMLInput: policyAppliesToMPS.Base.Put(remoteAccessPolicyAppliesToMPS, true, selectors),
 		},
 	}
 	// send the message to AMT
-	err = policyAppliesToMPS.base.Execute(response.Message)
+	err = policyAppliesToMPS.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -132,16 +69,16 @@ func (policyAppliesToMPS PolicyAppliesToMPS) Put(remoteAccessPolicyAppliesToMPS 
 	return response, err
 }
 
-// Delete removes a the specified instance.
+// Delete removes the specified instance.
 func (policyAppliesToMPS PolicyAppliesToMPS) Delete(handle string) (response Response, err error) {
 	selector := message.Selector{Name: "Name", Value: handle}
 	response = Response{
 		Message: &client.Message{
-			XMLInput: policyAppliesToMPS.base.Delete(selector),
+			XMLInput: policyAppliesToMPS.Base.Delete(selector),
 		},
 	}
 	// send the message to AMT
-	err = policyAppliesToMPS.base.Execute(response.Message)
+	err = policyAppliesToMPS.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}

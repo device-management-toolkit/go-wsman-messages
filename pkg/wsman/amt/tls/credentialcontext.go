@@ -23,89 +23,27 @@ import (
 	"fmt"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 )
 
 // NewTLSCredentialContextWithClient instantiates a new CredentialContext.
 func NewTLSCredentialContextWithClient(wsmanMessageCreator *message.WSManMessageCreator, client client.WSMan) CredentialContext {
 	return CredentialContext{
-		base: message.NewBaseWithClient(wsmanMessageCreator, AMTTLSCredentialContext, client),
+		base.NewService[Response](wsmanMessageCreator, AMTTLSCredentialContext, client),
 	}
 }
 
-// Get retrieves the representation of the instance.
-func (credentialContext CredentialContext) Get() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: credentialContext.base.Get(nil),
-		},
-	}
-	// send the message to AMT
-	err = credentialContext.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Enumerate returns an enumeration context which is used in a subsequent Pull call.
-func (credentialContext CredentialContext) Enumerate() (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: credentialContext.base.Enumerate(),
-		},
-	}
-	// send the message to AMT
-	err = credentialContext.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Pull returns the instances of this class.  An enumeration context provided by the Enumerate call is used as input.
-func (credentialContext CredentialContext) Pull(enumerationContext string) (response Response, err error) {
-	response = Response{
-		Message: &client.Message{
-			XMLInput: credentialContext.base.Pull(enumerationContext),
-		},
-	}
-	// send the message to AMT
-	err = credentialContext.base.Execute(response.Message)
-	if err != nil {
-		return response, err
-	}
-	// put the xml response into the go struct
-	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
-	if err != nil {
-		return response, err
-	}
-
-	return response, err
-}
-
-// Delete removes a the specified instance.
+// Delete removes the specified instance.
 func (credentialContext CredentialContext) Delete(handle string) (response Response, err error) {
 	selector := message.Selector{Name: "Name", Value: handle}
 	response = Response{
 		Message: &client.Message{
-			XMLInput: credentialContext.base.Delete(selector),
+			XMLInput: credentialContext.Base.Delete(selector),
 		},
 	}
 	// send the message to AMT
-	err = credentialContext.base.Execute(response.Message)
+	err = credentialContext.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -120,15 +58,15 @@ func (credentialContext CredentialContext) Delete(handle string) (response Respo
 
 // Creates a new instance of this class.
 func (credentialContext CredentialContext) Create(certHandle string) (response Response, err error) {
-	header := credentialContext.base.WSManMessageCreator.CreateHeader(message.BaseActionsCreate, AMTTLSCredentialContext, nil, "", "")
-	body := fmt.Sprintf(`<Body><h:AMT_TLSCredentialContext xmlns:h="%sAMT_TLSCredentialContext"><h:ElementInContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_PublicKeyCertificate</w:ResourceURI><w:SelectorSet><w:Selector Name="InstanceID">%s</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementInContext><h:ElementProvidingContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_TLSProtocolEndpointCollection</w:ResourceURI><w:SelectorSet><w:Selector Name="ElementName">TLSProtocolEndpointInstances Collection</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementProvidingContext></h:AMT_TLSCredentialContext></Body>`, credentialContext.base.WSManMessageCreator.ResourceURIBase, credentialContext.base.WSManMessageCreator.ResourceURIBase, certHandle, credentialContext.base.WSManMessageCreator.ResourceURIBase)
+	header := credentialContext.Base.WSManMessageCreator.CreateHeader(message.BaseActionsCreate, AMTTLSCredentialContext, nil, "", "")
+	body := fmt.Sprintf(`<Body><h:AMT_TLSCredentialContext xmlns:h="%sAMT_TLSCredentialContext"><h:ElementInContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_PublicKeyCertificate</w:ResourceURI><w:SelectorSet><w:Selector Name="InstanceID">%s</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementInContext><h:ElementProvidingContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_TLSProtocolEndpointCollection</w:ResourceURI><w:SelectorSet><w:Selector Name="ElementName">TLSProtocolEndpointInstances Collection</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementProvidingContext></h:AMT_TLSCredentialContext></Body>`, credentialContext.Base.WSManMessageCreator.ResourceURIBase, credentialContext.Base.WSManMessageCreator.ResourceURIBase, certHandle, credentialContext.Base.WSManMessageCreator.ResourceURIBase)
 	response = Response{
 		Message: &client.Message{
-			XMLInput: credentialContext.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: credentialContext.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 	// send the message to AMT
-	err = credentialContext.base.Execute(response.Message)
+	err = credentialContext.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}
@@ -142,17 +80,19 @@ func (credentialContext CredentialContext) Create(certHandle string) (response R
 	return response, err
 }
 
-// Put will update the certificate when TLS is enabled.
+// Put overrides the generic Put because this method takes a cert handle string
+// (not a struct) and must craft a body containing two EPRs identifying the
+// PublicKeyCertificate and TLSProtocolEndpointCollection instances.
 func (credentialContext CredentialContext) Put(certHandle string) (response Response, err error) {
-	header := credentialContext.base.WSManMessageCreator.CreateHeader(message.BaseActionsPut, AMTTLSCredentialContext, nil, "", "")
-	body := fmt.Sprintf(`<Body><h:AMT_TLSCredentialContext xmlns:h="%sAMT_TLSCredentialContext"><h:ElementInContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_PublicKeyCertificate</w:ResourceURI><w:SelectorSet><w:Selector Name="InstanceID">%s</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementInContext><h:ElementProvidingContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_TLSProtocolEndpointCollection</w:ResourceURI><w:SelectorSet><w:Selector Name="ElementName">TLSProtocolEndpointInstances Collection</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementProvidingContext></h:AMT_TLSCredentialContext></Body>`, credentialContext.base.WSManMessageCreator.ResourceURIBase, credentialContext.base.WSManMessageCreator.ResourceURIBase, certHandle, credentialContext.base.WSManMessageCreator.ResourceURIBase)
+	header := credentialContext.Base.WSManMessageCreator.CreateHeader(message.BaseActionsPut, AMTTLSCredentialContext, nil, "", "")
+	body := fmt.Sprintf(`<Body><h:AMT_TLSCredentialContext xmlns:h="%sAMT_TLSCredentialContext"><h:ElementInContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_PublicKeyCertificate</w:ResourceURI><w:SelectorSet><w:Selector Name="InstanceID">%s</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementInContext><h:ElementProvidingContext><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>%sAMT_TLSProtocolEndpointCollection</w:ResourceURI><w:SelectorSet><w:Selector Name="ElementName">TLSProtocolEndpointInstances Collection</w:Selector></w:SelectorSet></a:ReferenceParameters></h:ElementProvidingContext></h:AMT_TLSCredentialContext></Body>`, credentialContext.Base.WSManMessageCreator.ResourceURIBase, credentialContext.Base.WSManMessageCreator.ResourceURIBase, certHandle, credentialContext.Base.WSManMessageCreator.ResourceURIBase)
 	response = Response{
 		Message: &client.Message{
-			XMLInput: credentialContext.base.WSManMessageCreator.CreateXML(header, body),
+			XMLInput: credentialContext.Base.WSManMessageCreator.CreateXML(header, body),
 		},
 	}
 
-	err = credentialContext.base.Execute(response.Message)
+	err = credentialContext.Base.Execute(response.Message)
 	if err != nil {
 		return response, err
 	}

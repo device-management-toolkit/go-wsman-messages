@@ -10,16 +10,17 @@ import (
 	"strings"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/base"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/client"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 )
 
 type (
 	SettingData struct {
-		base message.Base
+		base.WSManService[Response]
 	}
 	CredentialContext struct {
-		base message.Base
+		base.WSManService[Response]
 	}
 )
 
