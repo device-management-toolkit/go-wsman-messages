@@ -16,12 +16,14 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/computer"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ethernetport"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/redirectionservice"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/system"
@@ -31,29 +33,36 @@ import (
 )
 
 type Messages struct {
-	wsmanMessageCreator       *message.WSManMessageCreator
-	BIOSElement               bios.Element
-	BootConfigSetting         boot.ConfigSetting
-	BootService               boot.Service
-	BootSourceSetting         boot.SourceSetting
-	Card                      card.Package
-	Chassis                   chassis.Package
-	Chip                      chip.Package
-	ComputerSystemPackage     computer.SystemPackage
-	ConcreteDependency        concrete.Dependency
-	CredentialContext         credential.Context
-	IEEE8021xSettings         ieee8021x.Settings
-	KVMRedirectionSAP         kvm.RedirectionSAP
-	MediaAccessDevice         mediaaccess.Device
-	PhysicalMemory            physical.Memory
-	PhysicalPackage           physical.Package
-	PowerManagementService    power.ManagementService
-	Processor                 processor.Package
-	ServiceAvailableToElement service.AvailableToElement
-	SoftwareIdentity          software.Identity
-	SystemPackaging           system.Package
-	WiFiEndpointSettings      wifi.EndpointSettings
-	WiFiPort                  wifi.Port
+	wsmanMessageCreator         *message.WSManMessageCreator
+	BIOSElement                 bios.Element
+	BIOSFeature                 bios.Feature
+	BootConfigSetting           boot.ConfigSetting
+	BootService                 boot.Service
+	BootSourceSetting           boot.SourceSetting
+	Card                        card.Package
+	Chassis                     chassis.Package
+	Chip                        chip.Package
+	ComputerSystemPackage       computer.SystemPackage
+	ConcreteDependency          concrete.Dependency
+	CredentialContext           credential.Context
+	EthernetPort                ethernetport.Port
+	IEEE8021xSettings           ieee8021x.Settings
+	KVMRedirectionSAP           kvm.RedirectionSAP
+	MediaAccessDevice           mediaaccess.Device
+	PhysicalMemory              physical.Memory
+	PhysicalPackage             physical.Package
+	PowerManagementCapabilities power.Capabilities
+	PowerManagementService      power.ManagementService
+	Processor                   processor.Package
+	RedirectionService          redirectionservice.Service
+	ServiceAvailableToElement   service.AvailableToElement
+	SoftwareIdentity            software.Identity
+	SystemPackaging             system.Package
+	WiFiEndpoint                wifi.Endpoint
+	WiFiEndpointCapabilities    wifi.EndpointCapabilities
+	WiFiEndpointSettings        wifi.EndpointSettings
+	WiFiPort                    wifi.Port
+	WiFiPortCapabilities        wifi.PortCapabilities
 }
 
 func NewMessages(client client.WSMan) Messages {
@@ -63,6 +72,7 @@ func NewMessages(client client.WSMan) Messages {
 		wsmanMessageCreator: wsmanMessageCreator,
 	}
 	m.BIOSElement = bios.NewBIOSElementWithClient(wsmanMessageCreator, client)
+	m.BIOSFeature = bios.NewBIOSFeatureWithClient(wsmanMessageCreator, client)
 	m.BootConfigSetting = boot.NewBootConfigSettingWithClient(wsmanMessageCreator, client)
 	m.BootService = boot.NewBootServiceWithClient(wsmanMessageCreator, client)
 	m.BootSourceSetting = boot.NewBootSourceSettingWithClient(wsmanMessageCreator, client)
@@ -72,18 +82,24 @@ func NewMessages(client client.WSMan) Messages {
 	m.ComputerSystemPackage = computer.NewComputerSystemPackageWithClient(wsmanMessageCreator, client)
 	m.ConcreteDependency = concrete.NewDependencyWithClient(wsmanMessageCreator, client)
 	m.CredentialContext = credential.NewContextWithClient(wsmanMessageCreator, client)
+	m.EthernetPort = ethernetport.NewEthernetPortWithClient(wsmanMessageCreator, client)
 	m.IEEE8021xSettings = ieee8021x.NewIEEE8021xSettingsWithClient(wsmanMessageCreator, client)
 	m.KVMRedirectionSAP = kvm.NewKVMRedirectionSAPWithClient(wsmanMessageCreator, client)
 	m.MediaAccessDevice = mediaaccess.NewMediaAccessDeviceWithClient(wsmanMessageCreator, client)
 	m.PhysicalMemory = physical.NewPhysicalMemoryWithClient(wsmanMessageCreator, client)
 	m.PhysicalPackage = physical.NewPhysicalPackageWithClient(wsmanMessageCreator, client)
+	m.PowerManagementCapabilities = power.NewPowerManagementCapabilitiesWithClient(wsmanMessageCreator, client)
 	m.PowerManagementService = power.NewPowerManagementServiceWithClient(wsmanMessageCreator, client)
 	m.Processor = processor.NewProcessorWithClient(wsmanMessageCreator, client)
+	m.RedirectionService = redirectionservice.NewRedirectionServiceWithClient(wsmanMessageCreator, client)
 	m.ServiceAvailableToElement = service.NewServiceAvailableToElementWithClient(wsmanMessageCreator, client)
 	m.SoftwareIdentity = software.NewSoftwareIdentityWithClient(wsmanMessageCreator, client)
 	m.SystemPackaging = system.NewSystemPackageWithClient(wsmanMessageCreator, client)
+	m.WiFiEndpoint = wifi.NewWiFiEndpointWithClient(wsmanMessageCreator, client)
+	m.WiFiEndpointCapabilities = wifi.NewWiFiEndpointCapabilitiesWithClient(wsmanMessageCreator, client)
 	m.WiFiEndpointSettings = wifi.NewWiFiEndpointSettingsWithClient(wsmanMessageCreator, client)
 	m.WiFiPort = wifi.NewWiFiPortWithClient(wsmanMessageCreator, client)
+	m.WiFiPortCapabilities = wifi.NewWiFiPortCapabilitiesWithClient(wsmanMessageCreator, client)
 
 	return m
 }
