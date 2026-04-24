@@ -3,11 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  **********************************************************************/
 
-package associatedpower
+package models
 
-const (
-	CIMAssociatedPowerManagementService string = "CIM_AssociatedPowerManagementService"
-	ValueNotFound                       string = "Value not found in map"
+// Shared DMTF power-state enumerations used by CIM_AssociatedPowerManagementService
+// and any other wrapper that needs to decode power-state integers on the wire.
+// These values follow the canonical DMTF CIM schema (2.49.0).
+
+type (
+	AvailableRequestedPowerStates int
+	PowerState                    int
+	RequestedPowerState           int
+	TransitioningToPowerState     int
 )
 
 const (
@@ -29,7 +35,6 @@ const (
 	AvailableRequestedPowerStatesPowerCycleHardGraceful
 )
 
-// availableRequestedPowerStatesMap is a map of the AvailableRequestedPowerStates enumeration.
 var availableRequestedPowerStatesMap = map[AvailableRequestedPowerStates]string{
 	AvailableRequestedPowerStatesOther:                  "Other",
 	AvailableRequestedPowerStatesOn:                     "On",
@@ -49,7 +54,6 @@ var availableRequestedPowerStatesMap = map[AvailableRequestedPowerStates]string{
 	AvailableRequestedPowerStatesPowerCycleHardGraceful: "PowerCycleHardGraceful",
 }
 
-// String returns a human-readable string representation of the AvailableRequestedPowerStates enumeration.
 func (e AvailableRequestedPowerStates) String() string {
 	if s, ok := availableRequestedPowerStatesMap[e]; ok {
 		return s
@@ -78,7 +82,6 @@ const (
 	PowerStateDiagnosticInterruptINIT
 )
 
-// powerStateMap is a map of the PowerState enumeration.
 var powerStateMap = map[PowerState]string{
 	PowerStateOther:                   "Other",
 	PowerStateOn:                      "On",
@@ -99,7 +102,6 @@ var powerStateMap = map[PowerState]string{
 	PowerStateDiagnosticInterruptINIT: "DiagnosticInterruptINIT",
 }
 
-// String returns a human-readable string representation of the PowerState enumeration.
 func (e PowerState) String() string {
 	if s, ok := powerStateMap[e]; ok {
 		return s
@@ -130,7 +132,6 @@ const (
 	RequestedPowerStateDiagnosticInterruptINIT
 )
 
-// requestedPowerStateMap is a map of the RequestedPowerState enumeration.
 var requestedPowerStateMap = map[RequestedPowerState]string{
 	RequestedPowerStateUnknown:                 "Unknown",
 	RequestedPowerStateOther:                   "Other",
@@ -153,7 +154,6 @@ var requestedPowerStateMap = map[RequestedPowerState]string{
 	RequestedPowerStateDiagnosticInterruptINIT: "DiagnosticInterruptINIT",
 }
 
-// String returns a human-readable string representation of the RequestedPowerState enumeration.
 func (e RequestedPowerState) String() string {
 	if s, ok := requestedPowerStateMap[e]; ok {
 		return s
@@ -184,7 +184,6 @@ const (
 	TransitioningToPowerStateNoChange
 )
 
-// transitioningToPowerStateMap is a map of the TransitioningToPowerState enumeration.
 var transitioningToPowerStateMap = map[TransitioningToPowerState]string{
 	TransitioningToPowerStateOther:                   "Other",
 	TransitioningToPowerStateOn:                      "On",
@@ -207,7 +206,6 @@ var transitioningToPowerStateMap = map[TransitioningToPowerState]string{
 	TransitioningToPowerStateNoChange:                "NoChange",
 }
 
-// String returns a human-readable string representation of the TransitioningToPowerState enumeration.
 func (e TransitioningToPowerState) String() string {
 	if s, ok := transitioningToPowerStateMap[e]; ok {
 		return s

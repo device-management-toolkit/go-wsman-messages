@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
@@ -69,7 +70,7 @@ func TestPositiveCIMAssociatedPowerManagementService(t *testing.T) {
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					AssociatedPowerManagementService: CIM_AssociatedPowerManagementService{
-						AvailableRequestedPowerStates: []AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
+						AvailableRequestedPowerStates: []models.AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
 						PowerState:                    2,
 						ServiceProvided: ServiceProvided{
 							XMLName: xml.Name{Space: "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_AssociatedPowerManagementService", Local: "ServiceProvided"},
@@ -139,7 +140,7 @@ func TestPositiveCIMAssociatedPowerManagementService(t *testing.T) {
 						XMLName: xml.Name{Space: "http://schemas.xmlsoap.org/ws/2004/09/enumeration", Local: "PullResponse"},
 						AssociatedPowerManagementServiceItems: []CIM_AssociatedPowerManagementService{
 							{
-								AvailableRequestedPowerStates: []AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
+								AvailableRequestedPowerStates: []models.AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
 								PowerState:                    2,
 								ServiceProvided: ServiceProvided{
 									XMLName: xml.Name{Space: "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_AssociatedPowerManagementService", Local: "ServiceProvided"},
@@ -224,7 +225,7 @@ func TestNegativeCIMAssociatedPowerManagementService(t *testing.T) {
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					AssociatedPowerManagementService: CIM_AssociatedPowerManagementService{
-						AvailableRequestedPowerStates: []AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
+						AvailableRequestedPowerStates: []models.AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
 						PowerState:                    2,
 					},
 				},
@@ -262,7 +263,7 @@ func TestNegativeCIMAssociatedPowerManagementService(t *testing.T) {
 						XMLName: xml.Name{Space: "http://schemas.xmlsoap.org/ws/2004/09/enumeration", Local: "PullResponse"},
 						AssociatedPowerManagementServiceItems: []CIM_AssociatedPowerManagementService{
 							{
-								AvailableRequestedPowerStates: []AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
+								AvailableRequestedPowerStates: []models.AvailableRequestedPowerStates{10, 8, 5, 11, 4, 7, 14, 12},
 								PowerState:                    2,
 							},
 						},
