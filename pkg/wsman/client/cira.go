@@ -175,11 +175,11 @@ func (c *CIRATransport) buildHTTPRequest(req *http.Request) ([]byte, error) {
 		path = "/wsman"
 	}
 
-	buf.WriteString(fmt.Sprintf("%s %s HTTP/1.1\r\n", req.Method, path))
+	fmt.Fprintf(&buf, "%s %s HTTP/1.1\r\n", req.Method, path)
 
 	// Write headers - Authorization first if present (important for digest auth)
 	if auth := req.Header.Get("Authorization"); auth != "" {
-		buf.WriteString(fmt.Sprintf("Authorization: %s\r\n", auth))
+		fmt.Fprintf(&buf, "Authorization: %s\r\n", auth)
 	}
 
 	// Host header
@@ -188,15 +188,15 @@ func (c *CIRATransport) buildHTTPRequest(req *http.Request) ([]byte, error) {
 		host = req.URL.Host
 	}
 
-	buf.WriteString(fmt.Sprintf("Host: %s\r\n", host))
+	fmt.Fprintf(&buf, "Host: %s\r\n", host)
 
 	// Content-Type header
 	if ct := req.Header.Get("Content-Type"); ct != "" {
-		buf.WriteString(fmt.Sprintf("Content-Type: %s\r\n", ct))
+		fmt.Fprintf(&buf, "Content-Type: %s\r\n", ct)
 	}
 
 	// Content-Length header
-	buf.WriteString(fmt.Sprintf("Content-Length: %d\r\n", len(body)))
+	fmt.Fprintf(&buf, "Content-Length: %d\r\n", len(body))
 
 	// End of headers
 	buf.WriteString("\r\n")
