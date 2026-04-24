@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope"
+	xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+	xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd"
+	xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust"
+	xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+	xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd"
+	xmlns:g="http://schemas.xmlsoap.org/ws/2004/09/enumeration"
+	xmlns:h="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_IPv6PortSettings"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<a:Header>
+		<b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
+		<b:RelatesTo>2</b:RelatesTo>
+		<b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action>
+		<b:MessageID>uuid:00000000-8086-8086-8086-0000000002A3</b:MessageID>
+		<c:ResourceURI>http://intel.com/wbem/wscim/1/ips-schema/1/IPS_IPv6PortSettings</c:ResourceURI>
+	</a:Header>
+	<a:Body>
+		<g:PullResponse>
+			<g:Items>
+				<h:IPS_IPv6PortSettings>
+					<h:CurrentDefaultRouter>::</h:CurrentDefaultRouter>
+					<h:CurrentPrimaryDNS>::</h:CurrentPrimaryDNS>
+					<h:CurrentSecondaryDNS>::</h:CurrentSecondaryDNS>
+					<h:DefaultRouter>::</h:DefaultRouter>
+					<h:ElementName>Intel(r) IPS IPv6 Settings 0</h:ElementName>
+					<h:IPv6Address>::</h:IPv6Address>
+					<h:InstanceID>Intel(r) IPS IPv6 Settings 0</h:InstanceID>
+					<h:InterfaceIDType>0</h:InterfaceIDType>
+					<h:ManualInterfaceID>0000000000000000</h:ManualInterfaceID>
+					<h:PrimaryDNS>::</h:PrimaryDNS>
+					<h:SecondaryDNS>::</h:SecondaryDNS>
+				</h:IPS_IPv6PortSettings>
+			</g:Items>
+			<g:EndOfSequence></g:EndOfSequence>
+		</g:PullResponse>
+	</a:Body>
+</a:Envelope>
