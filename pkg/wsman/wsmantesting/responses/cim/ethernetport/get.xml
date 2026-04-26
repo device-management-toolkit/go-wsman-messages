@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:Envelope xmlns:a="http://www.w3.org/2003/05/soap-envelope" xmlns:b="http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:c="http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:d="http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:e="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:f="http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd" xmlns:g="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_EthernetPort" xmlns:h="http://schemas.dmtf.org/wbem/wscim/1/common" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <a:Header>
+    <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
+    <b:RelatesTo>2</b:RelatesTo>
+    <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/transfer/GetResponse</b:Action>
+    <b:MessageID>uuid:00000000-8086-8086-8086-0000000000BF</b:MessageID>
+    <c:ResourceURI>http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_EthernetPort</c:ResourceURI>
+  </a:Header>
+  <a:Body>
+    <g:CIM_EthernetPort>
+      <g:CreationClassName>CIM_EthernetPort</g:CreationClassName>
+      <g:Description>Wired0</g:Description>
+      <g:DeviceID>Intel(r) AMT Ethernet Port 0</g:DeviceID>
+      <g:ElementName>Intel(r) AMT Ethernet Port</g:ElementName>
+      <g:EnabledDefault>5</g:EnabledDefault>
+      <g:EnabledState>2</g:EnabledState>
+      <g:LinkTechnology>2</g:LinkTechnology>
+      <g:MaxSpeed>2500000000</g:MaxSpeed>
+      <g:NetworkAddresses>48210b50d8c9</g:NetworkAddresses>
+      <g:OperationalStatus>0</g:OperationalStatus>
+      <g:PortType>53</g:PortType>
+      <g:RequestedState>12</g:RequestedState>
+      <g:Speed>1000000000</g:Speed>
+      <g:SystemCreationClassName>CIM_ComputerSystem</g:SystemCreationClassName>
+      <g:SystemName>Intel(r) AMT</g:SystemName>
+    </g:CIM_EthernetPort>
+  </a:Body>
+</a:Envelope>
