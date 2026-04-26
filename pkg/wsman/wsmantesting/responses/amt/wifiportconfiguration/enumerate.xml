@@ -9,14 +9,14 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <a:Header>
         <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
-        <b:RelatesTo>6</b:RelatesTo>
+        <b:RelatesTo>1</b:RelatesTo>
         <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/EnumerateResponse</b:Action>
-        <b:MessageID>uuid:00000000-8086-8086-8086-000000002939</b:MessageID>
+        <b:MessageID>uuid:00000000-8086-8086-8086-00000000028D</b:MessageID>
         <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService</c:ResourceURI>
     </a:Header>
     <a:Body>
         <g:EnumerateResponse>
-            <g:EnumerationContext>71080000-0000-0000-0000-000000000000</g:EnumerationContext>
+            <g:EnumerationContext>95000000-0000-0000-0000-000000000000</g:EnumerationContext>
         </g:EnumerateResponse>
     </a:Body>
 </a:Envelope>

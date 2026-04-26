@@ -13,7 +13,7 @@
         <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
         <b:RelatesTo>2</b:RelatesTo>
         <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/enumeration/PullResponse</b:Action>
-        <b:MessageID>uuid:00000000-8086-8086-8086-0000000001D8</b:MessageID>
+        <b:MessageID>uuid:00000000-8086-8086-8086-000000000285</b:MessageID>
         <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_RemoteAccessService</c:ResourceURI>
     </a:Header>
     <a:Body>
@@ -22,7 +22,9 @@
                 <h:AMT_RemoteAccessService>
                     <h:CreationClassName>AMT_RemoteAccessService</h:CreationClassName>
                     <h:ElementName>Intel(r) AMT Remote Access Service</h:ElementName>
+                    <h:IsRemoteTunnelConnected>false</h:IsRemoteTunnelConnected>
                     <h:Name>Intel(r) AMT Remote Access Service</h:Name>
+                    <h:RemoteTunnelKeepAliveTimeout>4294967295</h:RemoteTunnelKeepAliveTimeout>
                     <h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName>
                     <h:SystemName>Intel(r) AMT</h:SystemName>
                 </h:AMT_RemoteAccessService>
