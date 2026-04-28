@@ -10,9 +10,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <a:Header>
         <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
-        <b:RelatesTo>5</b:RelatesTo>
+        <b:RelatesTo>0</b:RelatesTo>
         <b:Action a:mustUnderstand="true">http://schemas.xmlsoap.org/ws/2004/09/transfer/GetResponse</b:Action>
-        <b:MessageID>uuid:00000000-8086-8086-8086-00000000280B</b:MessageID>
+        <b:MessageID>uuid:00000000-8086-8086-8086-000000000289</b:MessageID>
         <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TimeSynchronizationService</c:ResourceURI>
     </a:Header>
     <a:Body>
@@ -25,7 +25,7 @@
             <g:RequestedState>12</g:RequestedState>
             <g:SystemCreationClassName>CIM_ComputerSystem</g:SystemCreationClassName>
             <g:SystemName>Intel(r) AMT</g:SystemName>
-            <g:TimeSource>1</g:TimeSource>
+            <g:TimeSource>0</g:TimeSource>
         </g:AMT_TimeSynchronizationService>
     </a:Body>
 </a:Envelope>

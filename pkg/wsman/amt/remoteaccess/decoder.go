@@ -8,6 +8,7 @@ package remoteaccess
 // INPUTS constants
 
 const (
+	AMTRemoteAccessCapabilities       string = "AMT_RemoteAccessCapabilities"
 	AMTRemoteAccessPolicyAppliesToMPS string = "AMT_RemoteAccessPolicyAppliesToMPS"
 	AMTRemoteAccessPolicyRule         string = "AMT_RemoteAccessPolicyRule"
 	AMTRemoteAccessService            string = "AMT_RemoteAccessService"
