@@ -8,10 +8,12 @@ package wifi
 import "strings"
 
 const (
-	CIMWiFiEndpoint         string = "CIM_WiFiEndpoint"
-	CIMWiFiEndpointSettings string = "CIM_WiFiEndpointSettings"
-	CIMWiFiPort             string = "CIM_WiFiPort"
-	ValueNotFound           string = "Value not found in map"
+	CIMWiFiEndpoint             string = "CIM_WiFiEndpoint"
+	CIMWiFiEndpointCapabilities string = "CIM_WiFiEndpointCapabilities"
+	CIMWiFiEndpointSettings     string = "CIM_WiFiEndpointSettings"
+	CIMWiFiPort                 string = "CIM_WiFiPort"
+	CIMWiFiPortCapabilities     string = "CIM_WiFiPortCapabilities"
+	ValueNotFound               string = "Value not found in map"
 )
 
 const (

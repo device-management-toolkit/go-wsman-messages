@@ -6,9 +6,10 @@
 package power
 
 const (
-	CIMPowerManagementService string = "CIM_PowerManagementService"
-	RequestPowerStateChange   string = "RequestPowerStateChange"
-	ValueNotFound             string = "Value not found in map"
+	CIMPowerManagementService      string = "CIM_PowerManagementService"
+	CIMPowerManagementCapabilities string = "CIM_PowerManagementCapabilities"
+	RequestPowerStateChange        string = "RequestPowerStateChange"
+	ValueNotFound                  string = "Value not found in map"
 )
 
 // TODO: This list of contants needs to be scrubbed.

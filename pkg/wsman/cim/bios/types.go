@@ -23,10 +23,11 @@ type (
 	}
 
 	Body struct {
-		XMLName           xml.Name `xml:"Body"`
-		GetResponse       BiosElement
-		EnumerateResponse common.EnumerateResponse
-		PullResponse      PullResponse
+		XMLName                xml.Name    `xml:"Body"`
+		BIOSElementGetResponse BiosElement `xml:"CIM_BIOSElement"`
+		BIOSFeatureGetResponse BIOSFeature `xml:"CIM_BIOSFeature"`
+		EnumerateResponse      common.EnumerateResponse
+		PullResponse           PullResponse
 	}
 
 	BiosElement struct {
@@ -47,9 +48,27 @@ type (
 		DateTime string `xml:"Datetime"`
 	}
 
+	BIOSFeature struct {
+		XMLName           xml.Name            `xml:"CIM_BIOSFeature"`
+		Name              string              `xml:"Name"`              // The label by which the object is known.
+		ElementName       string              `xml:"ElementName"`       // A user-friendly name for the object.
+		Characteristics   []string            `xml:"Characteristics"`   // BIOS feature characteristics reported by the device.
+		IdentifyingNumber string              `xml:"IdentifyingNumber"` // Product identifier assigned by the manufacturer.
+		ProductName       string              `xml:"ProductName"`       // Product name of the BIOS feature.
+		Vendor            string              `xml:"Vendor"`            // Vendor of the BIOS feature.
+		Version           string              `xml:"Version"`           // Version of the BIOS feature.
+		OperationalStatus []OperationalStatus `xml:"OperationalStatus"` // Current statuses of the element.
+	}
+
 	PullResponse struct {
 		XMLName          xml.Name      `xml:"PullResponse"`
 		BiosElementItems []BiosElement `xml:"Items>CIM_BIOSElement"`
+		BIOSFeatureItems []BIOSFeature `xml:"Items>CIM_BIOSFeature"`
+	}
+
+	// PutRequest is used to modify a BIOSFeature instance.
+	PutRequest struct {
+		FeatureName string
 	}
 
 	// TargetOperatingSystem is the element's operating system environment.

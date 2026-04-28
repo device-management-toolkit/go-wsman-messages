@@ -22,7 +22,7 @@ func TestJson(t *testing.T) {
 			PullResponse: PullResponse{},
 		},
 	}
-	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiPortGetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"LinkTechnology\":0,\"DeviceID\":\"\",\"CreationClassName\":\"\",\"SystemName\":\"\",\"SystemCreationClassName\":\"\",\"ElementName\":\"\",\"HealthState\":0,\"EnabledState\":0,\"RequestedState\":0,\"PortType\":0,\"PermanentAddress\":\"\"},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"EndpointSettingsItems\":null,\"WiFiPortItems\":null},\"RequestStateChange_OUTPUT\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"ReturnValue\":0,\"ReturnValueStr\":\"\"}}"
+	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiPortGetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"LinkTechnology\":0,\"DeviceID\":\"\",\"CreationClassName\":\"\",\"SystemName\":\"\",\"SystemCreationClassName\":\"\",\"ElementName\":\"\",\"HealthState\":0,\"EnabledState\":0,\"RequestedState\":0,\"PortType\":0,\"PermanentAddress\":\"\"},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiEndpointItems\":null,\"WiFiEndpointCapabilitiesItems\":null,\"WiFiPortCapabilitiesItems\":null,\"EndpointSettingsItems\":null,\"WiFiPortItems\":null},\"RequestStateChange_OUTPUT\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"ReturnValue\":0,\"ReturnValueStr\":\"\"}}"
 	result := response.JSON()
 	assert.Equal(t, expectedResult, result)
 }
@@ -33,7 +33,7 @@ func TestYaml(t *testing.T) {
 			PullResponse: PullResponse{},
 		},
 	}
-	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nwifiportgetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    linktechnology: 0\n    deviceid: \"\"\n    creationclassname: \"\"\n    systemname: \"\"\n    systemcreationclassname: \"\"\n    elementname: \"\"\n    healthstate: 0\n    enabledstate: 0\n    requestedstate: 0\n    porttype: 0\n    permanentaddress: \"\"\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    endpointsettingsitems: []\n    wifiportitems: []\nrequeststatechange_output:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    returnvalue: 0\n    returnvaluestr: \"\"\n"
+	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nwifiportgetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    linktechnology: 0\n    deviceid: \"\"\n    creationclassname: \"\"\n    systemname: \"\"\n    systemcreationclassname: \"\"\n    elementname: \"\"\n    healthstate: 0\n    enabledstate: 0\n    requestedstate: 0\n    porttype: 0\n    permanentaddress: \"\"\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    wifiendpointitems: []\n    wifiendpointcapabilitiesitems: []\n    wifiportcapabilitiesitems: []\n    endpointsettingsitems: []\n    wifiportitems: []\nrequeststatechange_output:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    returnvalue: 0\n    returnvaluestr: \"\"\n"
 	result := response.YAML()
 	assert.Equal(t, expectedResult, result)
 }

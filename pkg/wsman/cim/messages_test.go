@@ -18,11 +18,13 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/computer"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ethernetport"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/redirectionservice"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/system"
@@ -45,6 +47,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.BIOSElement, bios.Element{}) {
 		t.Error("BIOSElement is not initialized")
+	}
+
+	if reflect.DeepEqual(m.BIOSFeature, bios.Feature{}) {
+		t.Error("BIOSFeature is not initialized")
 	}
 
 	if reflect.DeepEqual(m.BootConfigSetting, boot.ConfigSetting{}) {
@@ -83,6 +89,10 @@ func TestNewMessages(t *testing.T) {
 		t.Error("Context is not initialized")
 	}
 
+	if reflect.DeepEqual(m.EthernetPort, ethernetport.Port{}) {
+		t.Error("EthernetPort is not initialized")
+	}
+
 	if reflect.DeepEqual(m.IEEE8021xSettings, ieee8021x.IEEE8021xSettingsRequest{}) {
 		t.Error("IEEE8021xSettings is not initialized")
 	}
@@ -103,12 +113,20 @@ func TestNewMessages(t *testing.T) {
 		t.Error("PhysicalPackage is not initialized")
 	}
 
+	if reflect.DeepEqual(m.PowerManagementCapabilities, power.Capabilities{}) {
+		t.Error("PowerManagementCapabilities is not initialized")
+	}
+
 	if reflect.DeepEqual(m.PowerManagementService, power.ManagementService{}) {
 		t.Error("PowerManagementService is not initialized")
 	}
 
 	if reflect.DeepEqual(m.Processor, processor.Package{}) {
 		t.Error("Processor is not initialized")
+	}
+
+	if reflect.DeepEqual(m.RedirectionService, redirectionservice.Service{}) {
+		t.Error("RedirectionService is not initialized")
 	}
 
 	if reflect.DeepEqual(m.ServiceAvailableToElement, service.AvailableToElement{}) {
@@ -123,11 +141,23 @@ func TestNewMessages(t *testing.T) {
 		t.Error("SystemPackaging is not initialized")
 	}
 
+	if reflect.DeepEqual(m.WiFiEndpoint, wifi.Endpoint{}) {
+		t.Error("WiFiEndpoint is not initialized")
+	}
+
+	if reflect.DeepEqual(m.WiFiEndpointCapabilities, wifi.EndpointCapabilities{}) {
+		t.Error("WiFiEndpointCapabilities is not initialized")
+	}
+
 	if reflect.DeepEqual(m.WiFiEndpointSettings, wifi.EndpointSettings{}) {
 		t.Error("WiFiEndpointSettings is not initialized")
 	}
 
 	if reflect.DeepEqual(m.WiFiPort, wifi.Port{}) {
 		t.Error("WiFiPort is not initialized")
+	}
+
+	if reflect.DeepEqual(m.WiFiPortCapabilities, wifi.PortCapabilities{}) {
+		t.Error("WiFiPortCapabilities is not initialized")
 	}
 }

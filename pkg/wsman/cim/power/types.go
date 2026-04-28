@@ -24,16 +24,28 @@ type (
 		Body    Body           `xml:"Body"`
 	}
 	Body struct {
-		XMLName                         xml.Name            `xml:"Body"`
-		RequestPowerStateChangeResponse PowerActionResponse `xml:"RequestPowerStateChange_OUTPUT"`
-		GetResponse                     PowerManagementService
-		EnumerateResponse               common.EnumerateResponse
-		PullResponse                    PullResponse
+		XMLName                                xml.Name            `xml:"Body"`
+		RequestPowerStateChangeResponse        PowerActionResponse `xml:"RequestPowerStateChange_OUTPUT"`
+		GetResponse                            PowerManagementService
+		PowerManagementCapabilitiesGetResponse PowerManagementCapabilities `xml:"CIM_PowerManagementCapabilities"`
+		EnumerateResponse                      common.EnumerateResponse
+		PullResponse                           PullResponse
 	}
 
 	PullResponse struct {
-		XMLName                     xml.Name                 `xml:"PullResponse"`
-		PowerManagementServiceItems []PowerManagementService `xml:"Items>CIM_PowerManagementService"`
+		XMLName                          xml.Name                      `xml:"PullResponse"`
+		PowerManagementServiceItems      []PowerManagementService      `xml:"Items>CIM_PowerManagementService"`
+		PowerManagementCapabilitiesItems []PowerManagementCapabilities `xml:"Items>CIM_PowerManagementCapabilities"`
+	}
+
+	PowerManagementCapabilities struct {
+		XMLName                       xml.Name `xml:"CIM_PowerManagementCapabilities"`
+		InstanceID                    string   `xml:"InstanceID"`
+		ElementName                   string   `xml:"ElementName"`
+		PowerChangeCapabilities       []int    `xml:"PowerChangeCapabilities,omitempty"`
+		OtherPowerChangeCapabilities  string   `xml:"OtherPowerChangeCapabilities,omitempty"`
+		PowerStatesSupported          []int    `xml:"PowerStatesSupported,omitempty"`
+		RequestedPowerStatesSupported []int    `xml:"RequestedPowerStatesSupported,omitempty"`
 	}
 
 	PowerManagementService struct {

@@ -27,7 +27,7 @@ func TestJson(t *testing.T) {
 			PullResponse: PullResponse{},
 		},
 	}
-	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"RequestPowerStateChangeResponse\":{\"ReturnValue\":0},\"GetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"CreationClassName\":\"\",\"ElementName\":\"\",\"EnabledState\":0,\"Name\":\"\",\"RequestedState\":0,\"SystemCreationClassName\":\"\",\"SystemName\":\"\"},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"PowerManagementServiceItems\":null}}"
+	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"RequestPowerStateChangeResponse\":{\"ReturnValue\":0},\"GetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"CreationClassName\":\"\",\"ElementName\":\"\",\"EnabledState\":0,\"Name\":\"\",\"RequestedState\":0,\"SystemCreationClassName\":\"\",\"SystemName\":\"\"},\"PowerManagementCapabilitiesGetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"InstanceID\":\"\",\"ElementName\":\"\",\"PowerChangeCapabilities\":null,\"OtherPowerChangeCapabilities\":\"\",\"PowerStatesSupported\":null,\"RequestedPowerStatesSupported\":null},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"PowerManagementServiceItems\":null,\"PowerManagementCapabilitiesItems\":null}}"
 	result := response.JSON()
 	assert.Equal(t, expectedResult, result)
 }
@@ -38,7 +38,7 @@ func TestYaml(t *testing.T) {
 			PullResponse: PullResponse{},
 		},
 	}
-	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nrequestpowerstatechangeresponse:\n    returnvalue: 0\ngetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    creationclassname: \"\"\n    elementname: \"\"\n    enabledstate: 0\n    name: \"\"\n    requestedstate: 0\n    systemcreationclassname: \"\"\n    systemname: \"\"\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    powermanagementserviceitems: []\n"
+	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nrequestpowerstatechangeresponse:\n    returnvalue: 0\ngetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    creationclassname: \"\"\n    elementname: \"\"\n    enabledstate: 0\n    name: \"\"\n    requestedstate: 0\n    systemcreationclassname: \"\"\n    systemname: \"\"\npowermanagementcapabilitiesgetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    instanceid: \"\"\n    elementname: \"\"\n    powerchangecapabilities: []\n    otherpowerchangecapabilities: \"\"\n    powerstatessupported: []\n    requestedpowerstatessupported: []\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    powermanagementserviceitems: []\n    powermanagementcapabilitiesitems: []\n"
 	result := response.YAML()
 	assert.Equal(t, expectedResult, result)
 }

@@ -19,10 +19,10 @@ import (
 func TestJson(t *testing.T) {
 	response := Response{
 		Body: Body{
-			GetResponse: BiosElement{},
+			BIOSElementGetResponse: BiosElement{},
 		},
 	}
-	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"GetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"TargetOperatingSystem\":0,\"SoftwareElementID\":\"\",\"SoftwareElementState\":0,\"Name\":\"\",\"OperationalStatus\":null,\"ElementName\":\"\",\"Version\":\"\",\"Manufacturer\":\"\",\"PrimaryBIOS\":false,\"ReleaseDate\":{\"DateTime\":\"\"}},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"BiosElementItems\":null}}"
+	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"BIOSElementGetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"TargetOperatingSystem\":0,\"SoftwareElementID\":\"\",\"SoftwareElementState\":0,\"Name\":\"\",\"OperationalStatus\":null,\"ElementName\":\"\",\"Version\":\"\",\"Manufacturer\":\"\",\"PrimaryBIOS\":false,\"ReleaseDate\":{\"DateTime\":\"\"}},\"BIOSFeatureGetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"Name\":\"\",\"ElementName\":\"\",\"Characteristics\":null,\"IdentifyingNumber\":\"\",\"ProductName\":\"\",\"Vendor\":\"\",\"Version\":\"\",\"OperationalStatus\":null},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"BiosElementItems\":null,\"BIOSFeatureItems\":null}}"
 	result := response.JSON()
 	assert.Equal(t, expectedResult, result)
 }
@@ -30,10 +30,10 @@ func TestJson(t *testing.T) {
 func TestYaml(t *testing.T) {
 	response := Response{
 		Body: Body{
-			GetResponse: BiosElement{},
+			BIOSElementGetResponse: BiosElement{},
 		},
 	}
-	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\ngetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    targetoperatingsystem: 0\n    softwareelementid: \"\"\n    softwareelementstate: 0\n    name: \"\"\n    operationalstatus: []\n    elementname: \"\"\n    version: \"\"\n    manufacturer: \"\"\n    primarybios: false\n    releasedate:\n        datetime: \"\"\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    bioselementitems: []\n"
+	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nbioselementgetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    targetoperatingsystem: 0\n    softwareelementid: \"\"\n    softwareelementstate: 0\n    name: \"\"\n    operationalstatus: []\n    elementname: \"\"\n    version: \"\"\n    manufacturer: \"\"\n    primarybios: false\n    releasedate:\n        datetime: \"\"\nbiosfeaturegetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    name: \"\"\n    elementname: \"\"\n    characteristics: []\n    identifyingnumber: \"\"\n    productname: \"\"\n    vendor: \"\"\n    version: \"\"\n    operationalstatus: []\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    bioselementitems: []\n    biosfeatureitems: []\n"
 	result := response.YAML()
 	assert.Equal(t, expectedResult, result)
 }
@@ -69,7 +69,7 @@ func TestPositiveCIMBIOSElement(t *testing.T) {
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
-					GetResponse: BiosElement{
+					BIOSElementGetResponse: BiosElement{
 						XMLName:               xml.Name{Space: "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BIOSElement", Local: CIMBIOSElement},
 						TargetOperatingSystem: 66,
 						SoftwareElementID:     "QNCFLX70.0054.2020.0810.2227",
@@ -181,7 +181,7 @@ func TestNegativeCIMBIOSElement(t *testing.T) {
 				},
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
-					GetResponse: BiosElement{
+					BIOSElementGetResponse: BiosElement{
 						XMLName:               xml.Name{Space: "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_BIOSElement", Local: CIMBIOSElement},
 						TargetOperatingSystem: 66,
 						SoftwareElementID:     "QNCFLX70.0054.2020.0810.2227",

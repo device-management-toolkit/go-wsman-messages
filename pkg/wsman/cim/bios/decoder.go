@@ -7,6 +7,7 @@ package bios
 
 const (
 	CIMBIOSElement string = "CIM_BIOSElement"
+	CIMBIOSFeature string = "CIM_BIOSFeature"
 	ValueNotFound  string = "Value not found in map"
 )
 
