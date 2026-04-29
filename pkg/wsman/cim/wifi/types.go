@@ -32,9 +32,27 @@ type (
 	}
 
 	PullResponse struct {
-		XMLName               xml.Name                       `xml:"PullResponse"`
-		EndpointSettingsItems []WiFiEndpointSettingsResponse `xml:"Items>CIM_WiFiEndpointSettings"`
-		WiFiPortItems         []WiFiPort                     `xml:"Items>CIM_WiFiPort"`
+		XMLName                       xml.Name                       `xml:"PullResponse"`
+		WiFiEndpointItems             []WiFiEndpoint                 `xml:"Items>CIM_WiFiEndpoint"`
+		WiFiEndpointCapabilitiesItems []WiFiEndpointCapabilities     `xml:"Items>CIM_WiFiEndpointCapabilities"`
+		WiFiPortCapabilitiesItems     []WiFiPortCapabilities         `xml:"Items>CIM_WiFiPortCapabilities"`
+		EndpointSettingsItems         []WiFiEndpointSettingsResponse `xml:"Items>CIM_WiFiEndpointSettings"`
+		WiFiPortItems                 []WiFiPort                     `xml:"Items>CIM_WiFiPort"`
+	}
+
+	WiFiEndpoint struct {
+		XMLName     xml.Name `xml:"CIM_WiFiEndpoint"`
+		ElementName string   `xml:"ElementName"`
+	}
+
+	WiFiEndpointCapabilities struct {
+		XMLName     xml.Name `xml:"CIM_WiFiEndpointCapabilities"`
+		ElementName string   `xml:"ElementName"`
+	}
+
+	WiFiPortCapabilities struct {
+		XMLName     xml.Name `xml:"CIM_WiFiPortCapabilities"`
+		ElementName string   `xml:"ElementName"`
 	}
 
 	WiFiEndpointSettingsResponse struct {
