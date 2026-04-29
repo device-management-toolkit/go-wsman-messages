@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/associatedpower"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
@@ -38,6 +39,10 @@ func TestNewMessages(t *testing.T) {
 
 	if m.wsmanMessageCreator == nil {
 		t.Error("wsmanMessageCreator is not initialized")
+	}
+
+	if reflect.DeepEqual(m.AssociatedPowerManagementService, associatedpower.ManagementService{}) {
+		t.Error("AssociatedPowerManagementService is not initialized")
 	}
 
 	if reflect.DeepEqual(m.BIOSElement, bios.Element{}) {

@@ -8,6 +8,7 @@ package cim
 
 import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/associatedpower"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
@@ -33,36 +34,37 @@ import (
 )
 
 type Messages struct {
-	wsmanMessageCreator         *message.WSManMessageCreator
-	BIOSElement                 bios.Element
-	BIOSFeature                 bios.Feature
-	BootConfigSetting           boot.ConfigSetting
-	BootService                 boot.Service
-	BootSourceSetting           boot.SourceSetting
-	Card                        card.Package
-	Chassis                     chassis.Package
-	Chip                        chip.Package
-	ComputerSystemPackage       computer.SystemPackage
-	ConcreteDependency          concrete.Dependency
-	CredentialContext           credential.Context
-	EthernetPort                ethernetport.Port
-	IEEE8021xSettings           ieee8021x.Settings
-	KVMRedirectionSAP           kvm.RedirectionSAP
-	MediaAccessDevice           mediaaccess.Device
-	PhysicalMemory              physical.Memory
-	PhysicalPackage             physical.Package
-	PowerManagementCapabilities power.Capabilities
-	PowerManagementService      power.ManagementService
-	Processor                   processor.Package
-	RedirectionService          redirectionservice.Service
-	ServiceAvailableToElement   service.AvailableToElement
-	SoftwareIdentity            software.Identity
-	SystemPackaging             system.Package
-	WiFiEndpoint                wifi.Endpoint
-	WiFiEndpointCapabilities    wifi.EndpointCapabilities
-	WiFiEndpointSettings        wifi.EndpointSettings
-	WiFiPort                    wifi.Port
-	WiFiPortCapabilities        wifi.PortCapabilities
+	wsmanMessageCreator              *message.WSManMessageCreator
+	AssociatedPowerManagementService associatedpower.ManagementService
+	BIOSElement                      bios.Element
+	BIOSFeature                      bios.Feature
+	BootConfigSetting                boot.ConfigSetting
+	BootService                      boot.Service
+	BootSourceSetting                boot.SourceSetting
+	Card                             card.Package
+	Chassis                          chassis.Package
+	Chip                             chip.Package
+	ComputerSystemPackage            computer.SystemPackage
+	ConcreteDependency               concrete.Dependency
+	CredentialContext                credential.Context
+	EthernetPort                     ethernetport.Port
+	IEEE8021xSettings                ieee8021x.Settings
+	KVMRedirectionSAP                kvm.RedirectionSAP
+	MediaAccessDevice                mediaaccess.Device
+	PhysicalMemory                   physical.Memory
+	PhysicalPackage                  physical.Package
+	PowerManagementCapabilities      power.Capabilities
+	PowerManagementService           power.ManagementService
+	Processor                        processor.Package
+	RedirectionService               redirectionservice.Service
+	ServiceAvailableToElement        service.AvailableToElement
+	SoftwareIdentity                 software.Identity
+	SystemPackaging                  system.Package
+	WiFiEndpoint                     wifi.Endpoint
+	WiFiEndpointCapabilities         wifi.EndpointCapabilities
+	WiFiEndpointSettings             wifi.EndpointSettings
+	WiFiPort                         wifi.Port
+	WiFiPortCapabilities             wifi.PortCapabilities
 }
 
 func NewMessages(client client.WSMan) Messages {
@@ -71,6 +73,7 @@ func NewMessages(client client.WSMan) Messages {
 	m := Messages{
 		wsmanMessageCreator: wsmanMessageCreator,
 	}
+	m.AssociatedPowerManagementService = associatedpower.NewAssociatedPowerManagementServiceWithClient(wsmanMessageCreator, client)
 	m.BIOSElement = bios.NewBIOSElementWithClient(wsmanMessageCreator, client)
 	m.BIOSFeature = bios.NewBIOSFeatureWithClient(wsmanMessageCreator, client)
 	m.BootConfigSetting = boot.NewBootConfigSettingWithClient(wsmanMessageCreator, client)
