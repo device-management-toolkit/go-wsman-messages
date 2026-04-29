@@ -84,7 +84,8 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 						RequestedState:                     12,
 						SystemCreationClassName:            "CIM_ComputerSystem",
 						SystemName:                         "Intel(r) AMT",
-						LocalProfileSynchronizationEnabled: 1,
+						UEFIWiFiProfileShareEnabled:        false,
+						LocalProfileSynchronizationEnabled: 0,
 					},
 				},
 			},
@@ -103,7 +104,7 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 				Body{
 					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
 					EnumerateResponse: common.EnumerateResponse{
-						EnumerationContext: "71080000-0000-0000-0000-000000000000",
+						EnumerationContext: "95000000-0000-0000-0000-000000000000",
 					},
 				},
 			},
@@ -136,7 +137,8 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 								RequestedState:                     12,
 								SystemCreationClassName:            "CIM_ComputerSystem",
 								SystemName:                         "Intel(r) AMT",
-								LocalProfileSynchronizationEnabled: 1,
+								UEFIWiFiProfileShareEnabled:        false,
+								LocalProfileSynchronizationEnabled: 0,
 							},
 						},
 					},

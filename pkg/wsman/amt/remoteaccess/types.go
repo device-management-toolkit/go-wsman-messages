@@ -29,6 +29,7 @@ type (
 	}
 	Body struct {
 		XMLName                                   xml.Name `xml:"Body"`
+		RemoteAccessCapabilitiesGetResponse       RemoteAccessCapabilitiesResponse
 		RemoteAccessServiceGetResponse            RemoteAccessServiceResponse
 		RemoteAccessPolicyRuleGetResponse         RemoteAccessPolicyRuleResponse
 		RemoteAccessPolicyAppliesToMPSGetResponse RemoteAccessPolicyAppliesToMPSResponse
@@ -36,6 +37,16 @@ type (
 		PullResponse                              PullResponse
 		AddMpServerResponse                       AddMpServerResponse
 		AddRemotePolicyRuleResponse               AddRemoteAccessPolicyRuleResponse
+	}
+	RemoteAccessCapabilitiesResponse struct {
+		XMLName                  xml.Name `xml:"AMT_RemoteAccessCapabilities"`
+		ElementName              string   `xml:"ElementName,omitempty"`
+		InstanceID               string   `xml:"InstanceID,omitempty"`
+		LastRemoteAccessTrigger  string   `xml:"LastRemoteAccessTrigger,omitempty"`
+		MaxMpsPerPolicy          int      `xml:"MaxMpsPerPolicy,omitempty"`          // Maximum number of MPS entries per policy
+		MaxTotalMpServers        int      `xml:"MaxTotalMpServers,omitempty"`        // Maximum number of total MPS servers
+		MaxTotalPolicies         int      `xml:"MaxTotalPolicies,omitempty"`         // Maximum number of total remote access policies
+		MaxTotalProxyEntryPoints int      `xml:"MaxTotalProxyEntryPoints,omitempty"` // Maximum number of total proxy entry points
 	}
 	RemoteAccessServiceResponse struct {
 		XMLName                      xml.Name `xml:"AMT_RemoteAccessService"`
@@ -45,7 +56,7 @@ type (
 		SystemCreationClassName      string   `xml:"SystemCreationClassName,omitempty"`      // The CreationClassName of the scoping System.
 		SystemName                   string   `xml:"SystemName,omitempty"`                   // The Name of the scoping System.
 		IsRemoteTunnelConnected      bool     `xml:"IsRemoteTunnelConnected,omitempty"`      // Reflects the connection status of the remote tunnel. Supported starting from Intel CSME 17.
-		RemoteTunnelKeepAliveTimeout int      `xml:"RemoteTunnelKeepAliveTimeout,omitempty"` // Reflects the keep-alive timeout value of the remote tunnel (in seconds). Supported starting from Intel CSME 17.
+		RemoteTunnelKeepAliveTimeout uint32   `xml:"RemoteTunnelKeepAliveTimeout,omitempty"` // Reflects the keep-alive timeout value of the remote tunnel (in seconds). Supported starting from Intel CSME 17.
 	}
 	RemoteAccessPolicyRuleResponse struct {
 		XMLName                 xml.Name `xml:"AMT_RemoteAccessPolicyRule"`
@@ -66,10 +77,11 @@ type (
 		PolicySet      PolicySetResponse      `xml:"PolicySet"`      // The Remote Access policy rule that is currently applied to the MpServer.
 	}
 	PullResponse struct {
-		XMLName               xml.Name                                 `xml:"PullResponse"`
-		RemoteAccessItems     []RemoteAccessServiceResponse            `xml:"Items>AMT_RemoteAccessService"`
-		RemotePolicyRuleItems []RemoteAccessPolicyRuleResponse         `xml:"Items>AMT_RemoteAccessPolicyRule"`
-		PolicyAppliesItems    []RemoteAccessPolicyAppliesToMPSResponse `xml:"Items>AMT_RemoteAccessPolicyAppliesToMPS"`
+		XMLName                       xml.Name                                 `xml:"PullResponse"`
+		RemoteAccessCapabilitiesItems []RemoteAccessCapabilitiesResponse       `xml:"Items>AMT_RemoteAccessCapabilities"`
+		RemoteAccessItems             []RemoteAccessServiceResponse            `xml:"Items>AMT_RemoteAccessService"`
+		RemotePolicyRuleItems         []RemoteAccessPolicyRuleResponse         `xml:"Items>AMT_RemoteAccessPolicyRule"`
+		PolicyAppliesItems            []RemoteAccessPolicyAppliesToMPSResponse `xml:"Items>AMT_RemoteAccessPolicyAppliesToMPS"`
 	}
 	AddMpServerResponse struct {
 		XMLName     xml.Name    `xml:"AddMpServer_OUTPUT"`
