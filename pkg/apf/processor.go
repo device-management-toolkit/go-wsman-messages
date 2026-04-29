@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -367,6 +368,18 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 	}
 
 	log.Tracef("%+v", closeMessage)
+	if session.CloseAck != nil {
+		select {
+		case session.CloseAck <- closeMessage.RecipientChannel:
+		default:
+		}
+	}
+	// Only close StreamDataBuffer if this close is for our active channel (match on our RecipientChannel)
+	// This prevents stale CHANNEL_CLOSE messages for old channels from killing the current TLS stream
+	if session.StreamDataBuffer != nil && session.RecipientChannel == closeMessage.RecipientChannel {
+		close(session.StreamDataBuffer)
+		session.StreamDataBuffer = nil
+	}
 
 	// Server-initiated close is the authoritative "response complete" signal
 	// when the HTTP request used Connection: close. Deliver any accumulated
@@ -500,7 +513,17 @@ func ProcessChannelData(data []byte, session *Session) interface{} {
 		return nil
 	}
 
+	if session.StreamDataBuffer != nil {
+		chunk := append([]byte(nil), dataBuffer[:channelData.DataLength]...)
+		session.StreamDataBuffer <- chunk
+
+		return ChannelWindowAdjust(session.SenderChannel, channelData.DataLength)
+	}
+
 	session.Tempdata = append(session.Tempdata, dataBuffer[:channelData.DataLength]...)
+	if session.Timer != nil {
+		session.Timer.Reset(3 * time.Second)
+	}
 
 	// Reply with APF_CHANNEL_WINDOW_ADJUST to credit the peer for the bytes we
 	// just accepted. Without this, large responses can stall once the peer's
@@ -565,14 +588,22 @@ func ProcessChannelOpenConfirmation(data []byte, session *Session) {
 
 	log.Tracef("%+v", confirmationMessage)
 	// replySuccess := ChannelOpenReplySuccess(confirmationMessage.RecipientChannel, confirmationMessage.SenderChannel)
-
 	log.Trace("our channel: "+fmt.Sprint(confirmationMessage.RecipientChannel), " AMT's channel: "+fmt.Sprint(confirmationMessage.SenderChannel))
 	log.Trace("initial window: " + fmt.Sprint(confirmationMessage.InitialWindowSize))
+
 	session.SenderChannel = confirmationMessage.SenderChannel
 	session.RecipientChannel = confirmationMessage.RecipientChannel
 	session.TXWindow = confirmationMessage.InitialWindowSize
 	session.HandshakeConfirmed = true
-	session.WaitGroup.Done()
+	if session.WaitGroup != nil {
+		session.WaitGroup.Done()
+	}
+	if session.Status != nil {
+		select {
+		case session.Status <- true:
+		default:
+		}
+	}
 }
 
 func ProcessChannelOpenFailure(data []byte, session *Session) {

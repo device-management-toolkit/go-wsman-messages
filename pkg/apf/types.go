@@ -296,6 +296,8 @@ type Session struct {
 	RXWindow           uint32
 	Tempdata           []byte
 	DataBuffer         chan []byte
+	StreamDataBuffer   chan []byte
+	CloseAck           chan uint32
 	ErrorBuffer        chan error
 	Status             chan bool
 	Timer              *time.Timer
