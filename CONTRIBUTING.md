@@ -6,7 +6,7 @@ Thank you for your interest in contributing. This document covers the local work
 
 ### Prerequisites
 
-- Go **1.25** (see `go.mod`). The CI matrix exercises Linux and Windows; write platform-agnostic code, particularly in `pkg/wsman/local/`.
+- Go **1.25** (see `go.mod`). The CI matrix exercises Linux and Windows; write platform-agnostic code.
 - `gofumpt` — `go install mvdan.cc/gofumpt@latest`. **Must be run before `golangci-lint --fix`** (see workflow below); otherwise `golangci-lint --fix` and `gofumpt` produce conflicting edits that corrupt formatting.
 - `golangci-lint` v2 — either install locally per the [official instructions](https://golangci-lint.run/welcome/install/) or invoke via Docker (`docker run --rm -v "$(pwd):/app" -w /app golangci/golangci-lint:latest golangci-lint run -v`). The repo's `.golangci.yml` registers `gofmt`, `gofumpt`, `goimports`, and `gci` under `formatters`, so a verification-only `golangci-lint run` enforces formatting **and** linting in one shot.
 
@@ -102,7 +102,6 @@ The conventional scopes used in this repo are listed below. `.github/commitlint.
 - **ips**: A change or addition to an IPS class under `pkg/wsman/ips/`.
 - **apf**: A change or addition to the Asynchronous Protocol Framework (`pkg/apf/`).
 - **client**: A change to the transport layer (`pkg/wsman/client/`).
-- **local**: A change to the LMS/LME local-host transport (`pkg/wsman/local/`).
 - **deps**: A change or addition to dependencies (primarily used by dependabot).
 - **deps-dev**: A change or addition to developer dependencies (primarily used by dependabot).
 - **gh-actions**: A change or addition to GitHub Actions workflows.
