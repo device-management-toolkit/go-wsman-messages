@@ -6,13 +6,13 @@ The filename is historical; the content is tool-neutral and applies to any AI co
 
 ## Overview
 
-`github.com/device-management-toolkit/go-wsman-messages/v2` is a Go library that constructs WS-Management (WSMAN) SOAP envelopes addressed to Intel® Active Management Technology (AMT) firmware, sends them over the appropriate transport (HTTP Digest, TLS, raw TCP for redirection, or a local LMS/LME socket on the managed host), and unmarshals the AMT response into typed Go structs. It is the Go-side analogue of the TypeScript [`@device-management-toolkit/wsman-messages`](https://github.com/device-management-toolkit/wsman-messages) library, but unlike that one it owns the **transport** as well as the **envelope** — callers hand it a `client.Parameters` and get back parsed data, not strings.
+`github.com/device-management-toolkit/go-wsman-messages/v2` is a Go library that constructs WS-Management (WSMAN) SOAP envelopes addressed to Intel® Active Management Technology (AMT) firmware, sends them over the appropriate transport (HTTP Digest, TLS, or raw TCP for redirection / CIRA tunnels), and unmarshals the AMT response into typed Go structs. It is the Go-side analogue of the TypeScript [`@device-management-toolkit/wsman-messages`](https://github.com/device-management-toolkit/wsman-messages) library, but unlike that one it owns the **transport** as well as the **envelope** — callers hand it a `client.Parameters` and get back parsed data, not strings.
 
 Public surface is the `wsman.Messages` struct (`pkg/wsman/messages.go`), which embeds three namespace sub-Messages: `AMT`, `CIM`, `IPS`. Consumers — [`rpc-go`](https://github.com/device-management-toolkit/rpc-go) (the in-host RPC client) and [`console`](https://github.com/device-management-toolkit/console) — construct one of these and call e.g. `m.AMT.GeneralSettings.Get()`. Full AMT SDK reference: <https://www.intel.com/content/www/us/en/developer/tools/active-management-technology-sdk/overview.html>.
 
 ## Commands
 
-- `go test ./...` — runs the full suite. The fast path during development. CI uses `go test -covermode=atomic -coverprofile=coverage.out -race -v ./...`; run with `-race` locally before opening a PR if you touched the `client` or `local` packages.
+- `go test ./...` — runs the full suite. The fast path during development. CI uses `go test -covermode=atomic -coverprofile=coverage.out -race -v ./...`; run with `-race` locally before opening a PR if you touched `pkg/wsman/client/` or `pkg/apf/` (anywhere goroutines or shared connection state are in play).
 - Single package: `go test ./pkg/wsman/amt/alarmclock/...`. Single test: `go test ./pkg/wsman/amt/alarmclock -run TestPositiveAMT_AlarmClockService`. Add `-v` to see sub-test names.
 - **Formatting + lint workflow (order matters):**
   1. `gofumpt -l -w -extra ./` — **run this first.** Install with `go install mvdan.cc/gofumpt@latest`.
@@ -25,7 +25,7 @@ Public surface is the `wsman.Messages` struct (`pkg/wsman/messages.go`), which e
 - `go vet ./...` — runs in CI under the `formatting` job alongside the gofmt check.
 - `go install github.com/jstemmer/go-junit-report/v2@latest` — required only if you want to reproduce the CI's JUnit-formatted test output locally; not needed for normal development.
 
-Toolchain: Go **1.25** (`go.mod`). CI builds on `windows-2019`, `windows-2022`, `ubuntu-22.04`, `ubuntu-20.04` — write platform-agnostic code, especially in `pkg/wsman/local/` where the LMS socket transport has Windows- and Linux-specific paths.
+Toolchain: Go **1.25** (`go.mod`). CI builds on `windows-2019`, `windows-2022`, `ubuntu-22.04`, `ubuntu-20.04` — write platform-agnostic code.
 
 ### Test coverage policy
 
@@ -45,7 +45,7 @@ Coverage is the primary quality gate for this library because every exported mes
 ```
 pkg/
   amterror/       — AMT-specific HTTP / SOAP fault decoding shared by client and services
-  apf/            — Asynchronous Protocol Framework: bytestream framing used by CIRA tunnels and the LME local transport
+  apf/            — Asynchronous Protocol Framework: bytestream framing used by CIRA tunnels
   common/         — Cross-namespace XML response shapes (EnumerateResponse, PullResponse envelope wrappers)
   config/         — YAML-tagged remote-management Configuration / RemoteManagement structs (provisioning input schema)
   security/       — Encrypt/decrypt helpers and OS-keyring-backed (`go-keyring`) Storage for secret material
@@ -56,7 +56,6 @@ pkg/
     base/         — generic WSManService[T] used by every service; the Go equivalent of the JS Base class
     client/       — HTTP Digest + TLS + raw-TCP transports, CIRA channel wiring
     common/       — cross-namespace response models (EnumerateResponse, PullResponse)
-    local/        — LMS/LME local-host transport (probes LMS, falls back to LME over APF)
     wsmantesting/ — MockClient + ExpectedResponse helper + recorded XML response fixtures
 internal/
   message/        — WSManMessageCreator (XML envelope assembly) and message.Base (low-level Get/Put/Enum/Pull primitives); not part of the public API
@@ -96,7 +95,7 @@ func (s WSManService[T]) Put(request any) (T, error)    // PUT with namespace-in
 
 `Get`/`Enumerate`/`Pull`/`Put` build the XML via `message.Base`, execute it through the supplied `client.WSMan`, then `xml.Unmarshal` the response into `T`. They also use reflection to inject `*client.Message` into a `Message` field on `T` (so callers can inspect the raw XML in/out) and, for `Put`, to set an `H` field on the request struct to the right schema prefix (`AMTSchema + AMT_GeneralSettings`, etc.). This is the Go analogue of the TypeScript library's `Base` class — services should reuse these whenever the operation shape matches.
 
-For methods AMT doesn't model as plain Get/Put (`AddAlarm`, `RequestStateChange`, custom subscriptions, etc.), the service builds the body by hand using `s.Base.WSManMessageCreator.CreateHeader(...)` + a `strings.Builder` body + `CreateXML(header, body)`, then calls `s.Base.Execute(msg)`. See `pkg/wsman/amt/alarmclock/service.go` for a worked example.
+For methods AMT models with `*_INPUT` shapes that `base.WSManService[T]` doesn't expose directly, prefer a helper inside `internal/message/` (next to `CreateBody` / `createCommonBodyPull` / `createCommonBodyRequestStateChange`) over open-coding `<Body>` in the service. The existing custom-method services (`alarmclock.AddAlarm`, `cim/boot.SetBootConfigRole`, `remoteaccess.AddRemoteAccessPolicyRule`, etc.) inline `<Body>` with a `strings.Builder` — that's the legacy pattern; new code shouldn't copy it (see Implementation guidelines below).
 
 ### XML assembly (`internal/message/`)
 
@@ -128,16 +127,6 @@ Three concrete implementations:
 - `WsmanTCP` (`wsman_tcp.go`) — TCP transport used for KVM / serial-over-LAN / storage-redirection. Constructed via `NewWsmanTCP(Parameters)` when `Parameters.IsRedirection` is set. `NewMessages` in `pkg/wsman/messages.go` picks between the two automatically.
 - `CIRARedirectionTarget` (`cira_redirection.go`) — wraps a `CIRAChannelManager` to ship raw redirection bytes through an existing CIRA APF tunnel. Constructed via the top-level `wsman.NewCIRARedirectionMessages(manager)`; this path **does not** instantiate the AMT/CIM/IPS message builders, because redirection is a binary stream, not a WSMAN message bus.
 
-### Local-host transport (`pkg/wsman/local/`)
-
-`pkg/wsman/local/` is the in-host transport for tools running on the managed device itself (e.g. `rpc-go`). It targets either the LMS (Local Manageability Service) loopback socket on port 16992/16993 or, when LMS isn't running, falls back to LME (Local Management Engine) over an APF channel. Selection is driven by `Options.Kind`:
-
-- `KindLMS` — open LMS only, return verbatim error on failure.
-- `KindLME` — open LME, run the APF init handshake, return the connection.
-- `KindAuto` — probe LMS first, fall back to LME *only on the plain (16992) path*; the TLS (16993) path cannot be forwarded over APF, so a TLS LMS failure surfaces verbatim.
-
-The package exposes a `Connection` interface that `pkg/wsman/client` can wrap via `AsRoundTripper` and feed to the HTTP path. See `pkg/wsman/local/local.go` for the constructor doc comments — they explain the rpc-go-compatibility constraints in detail and should be the source of truth when extending this code.
-
 ### Test harness (`pkg/wsman/wsmantesting/`)
 
 - `MockClient` implements `client.WSMan` by reading the response XML from disk: `../../wsmantesting/responses/<PackageUnderTest>/<lowercase-CurrentMessage>.xml`. The relative path means tests must run from inside the service's own directory (the standard `go test ./...` flow does this).
@@ -150,7 +139,7 @@ AMT firmware parses envelopes with a fixed schema; whitespace, namespace prefix,
 
 ### Authoring a new service / message
 
-1. Create `pkg/wsman/<ns>/<class>/` with `decoder.go` (constants and return-value maps), `types.go` (response/body shapes), `marshal.go` (`.JSON()`/`.YAML()` boilerplate copied from a neighbour), and `service.go`.
+1. Create `pkg/wsman/<ns>/<class>/` with `decoder.go` (constants and return-value maps), `decoder_test.go` (lookup tests), `types.go` (response/body shapes), `marshal.go` (`.JSON()`/`.YAML()` boilerplate copied from a neighbour), and `service.go`.
 2. In `service.go`, declare `type Service struct { base.WSManService[Response] }` and `NewServiceWithClient(creator, client)` that calls `base.NewService[Response](creator, "<NamespacePrefix>_<ClassName>", client)`. For Get / Enumerate / Pull / Put you're done — `WSManService` provides them.
 3. For Get / Enumerate / Pull / Put / Delete / RequestStateChange, use the helpers on `base.WSManService[T]` (or, for shapes that base doesn't expose, `s.Base` from `internal/message`'s `Base`). **For custom `*_INPUT` methods, add a new helper to `internal/message/` (or `pkg/wsman/base/`) and call it from the service** — do not open-code `<Body>...</Body>` in `service.go`. The handful of services that currently do (`alarmclock.AddAlarm`, `cim/boot.SetBootConfigRole`, `remoteaccess.AddRemoteAccessPolicyRule`, etc.) are legacy from before the generic helpers existed; they're tech debt, not the pattern for new code. Never inline `<Envelope>` or `<Header>` literals either.
 4. Add the service to the namespace `messages.go` `Messages` struct **and** its `NewMessages` constructor. Both must list the service or consumers can't reach it.
@@ -171,7 +160,7 @@ This library is published as a Go module and consumed by first-party Go projects
 - **Never inline `<Envelope>`, `<Header>`, or `<Body>` literals in new service code.** `<Envelope>` lives in `WSManMessageCreator.XMLCommonPrefix/End`, `<Header>` is built by `WSManMessageCreator.CreateHeader`, and `<Body>` is owned by `internal/message/` — `DeleteBody` / `EnumerateBody` / `GetBody` constants plus the `CreateBody` / `createCommonBodyPull` / `createCommonBodyRequestStateChange` helpers, surfaced through `base.WSManService[T]`. Standard operations (Get / Enumerate / Pull / Put / Delete / RequestStateChange) are already covered. For a **custom** `*_INPUT` method where no helper exists, add a new helper to `internal/message/` (or `pkg/wsman/base/`) and call it from the service; do not open-code `<Body>...</Body>` in the service file. The eight files that currently inline `<Body>` (`pkg/wsman/amt/{alarmclock,boot/settingdata,remoteaccess,tls/credentialcontext}/…`, `pkg/wsman/cim/{boot/service,boot/configsetting,power/managementservice}/…`, `pkg/wsman/ips/power/managementservice`) are legacy that predates the generic helpers — treat them as tech debt to migrate, not patterns to copy.
 - **Return `error`, never `panic`, on AMT or transport failures.** AMT faults come back as `amterror.AMTError`-typed values; wrap with `fmt.Errorf("...: %w", err)` so `errors.Is` / `errors.As` work end-to-end. The `errorlint` linter enforces this.
 - **Don't add `init()` functions or package-level mutable state.** `gochecknoinits` and `goconst` are enabled. If you need configurable behaviour, expose it through a struct field on the service or a `client.Parameters` field, not a global.
-- **Keep `pkg/wsman/amt`, `pkg/wsman/cim`, `pkg/wsman/ips` parallel.** Same per-class file layout (`decoder.go`/`types.go`/`marshal.go`/`service.go`/`*_test.go`), same constructor naming (`New<Class>WithClient`), same wiring pattern in `messages.go`. Consumers and test fixtures both depend on this regularity — diverging in one namespace breaks the muscle memory and forces them to learn three APIs.
+- **Keep `pkg/wsman/amt`, `pkg/wsman/cim`, `pkg/wsman/ips` parallel.** Same per-class file layout (`decoder.go`/`decoder_test.go`/`types.go`/`marshal.go`/`service.go`/`service_test.go`), same constructor naming (`New<Class>WithClient`), same wiring pattern in `messages.go`. Consumers and test fixtures both depend on this regularity — diverging in one namespace breaks the muscle memory and forces them to learn three APIs.
 - **Preserve doc comments on enum-style types.** `type ReturnValue int` and the string-map lookups in each `decoder.go` are the only place firmware-side integer semantics are documented. Don't drop or paraphrase them.
 - **Honor `internal/message/` boundaries.** That package is internal on purpose; if a service needs a helper, add it to `pkg/wsman/base` rather than re-exporting from `internal/`.
 - **Keep PRs small and scoped to one concern.** Don't bundle a new IPS message with a refactor to `client/` and a `gofumpt` sweep — they belong in separate PRs so the diff that changes wire format can be reviewed in isolation. This library ships to fleets of in-field devices via `rpc-go`; reviewers need to see envelope-affecting changes clearly.
@@ -180,4 +169,4 @@ This library is published as a Go module and consumed by first-party Go projects
 
 ## Commit conventions (see CONTRIBUTING.md)
 
-Format: `<type>(<scope>): <subject>` with body and optional footer. Types: `feat | fix | docs | style | refactor | perf | test | build | ci | chore | revert`. The conventional scopes used in this repo (matching the historical `git log` — not currently enforced by `.github/commitlint.config.cjs`, which only sets `body-max-line-length` and `subject-case`): `amt`, `cim`, `ips`, `apf`, `client`, `local`, `deps`, `deps-dev`, `gh-actions`. Sub-scopes are permitted (e.g. `feat(amt/boot): …`). Reviewers may request you align with this list during review. The lint config caps `body-max-line-length` at 200; `CONTRIBUTING.md` asks contributors to keep all lines around 72 chars for readability in git tooling. The footer must reference a GitHub issue with a closing keyword (`Closes: #1234` / `Fixes: #1234` / `Resolves: #1234`).
+Format: `<type>(<scope>): <subject>` with body and optional footer. Types: `feat | fix | docs | style | refactor | perf | test | build | ci | chore | revert`. The conventional scopes used in this repo (matching the historical `git log` — not currently enforced by `.github/commitlint.config.cjs`, which only sets `body-max-line-length` and `subject-case`): `amt`, `cim`, `ips`, `apf`, `client`, `deps`, `deps-dev`, `gh-actions`. Sub-scopes are permitted (e.g. `feat(amt/boot): …`). Reviewers may request you align with this list during review. The lint config caps `body-max-line-length` at 200; `CONTRIBUTING.md` asks contributors to keep all lines around 72 chars for readability in git tooling. The footer must reference a GitHub issue with a closing keyword (`Closes: #1234` / `Fixes: #1234` / `Resolves: #1234`).
