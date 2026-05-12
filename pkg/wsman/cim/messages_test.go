@@ -19,6 +19,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ethernetport"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/fan"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
@@ -92,6 +93,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.EthernetPort, ethernetport.Port{}) {
 		t.Error("EthernetPort is not initialized")
+	}
+
+	if reflect.DeepEqual(m.Fan, fan.Device{}) {
+		t.Error("Fan is not initialized")
 	}
 
 	if reflect.DeepEqual(m.IEEE8021xSettings, ieee8021x.IEEE8021xSettingsRequest{}) {
