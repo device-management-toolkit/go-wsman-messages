@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/associatedpower"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/battery"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
@@ -19,12 +20,14 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ethernetport"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/fan"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/physical"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/redirectionservice"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/sensor"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/system"
@@ -43,6 +46,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.AssociatedPowerManagementService, associatedpower.ManagementService{}) {
 		t.Error("AssociatedPowerManagementService is not initialized")
+	}
+
+	if reflect.DeepEqual(m.Battery, battery.Package{}) {
+		t.Error("Battery is not initialized")
 	}
 
 	if reflect.DeepEqual(m.BIOSElement, bios.Element{}) {
@@ -93,6 +100,10 @@ func TestNewMessages(t *testing.T) {
 		t.Error("EthernetPort is not initialized")
 	}
 
+	if reflect.DeepEqual(m.Fan, fan.Device{}) {
+		t.Error("Fan is not initialized")
+	}
+
 	if reflect.DeepEqual(m.IEEE8021xSettings, ieee8021x.IEEE8021xSettingsRequest{}) {
 		t.Error("IEEE8021xSettings is not initialized")
 	}
@@ -127,6 +138,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.RedirectionService, redirectionservice.Service{}) {
 		t.Error("RedirectionService is not initialized")
+	}
+
+	if reflect.DeepEqual(m.Sensor, sensor.Package{}) {
+		t.Error("Sensor is not initialized")
 	}
 
 	if reflect.DeepEqual(m.ServiceAvailableToElement, service.AvailableToElement{}) {
