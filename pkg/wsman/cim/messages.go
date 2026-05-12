@@ -18,6 +18,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ethernetport"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/fan"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
@@ -48,6 +49,7 @@ type Messages struct {
 	ConcreteDependency               concrete.Dependency
 	CredentialContext                credential.Context
 	EthernetPort                     ethernetport.Port
+	Fan                              fan.Device
 	IEEE8021xSettings                ieee8021x.Settings
 	KVMRedirectionSAP                kvm.RedirectionSAP
 	MediaAccessDevice                mediaaccess.Device
@@ -86,6 +88,7 @@ func NewMessages(client client.WSMan) Messages {
 	m.ConcreteDependency = concrete.NewDependencyWithClient(wsmanMessageCreator, client)
 	m.CredentialContext = credential.NewContextWithClient(wsmanMessageCreator, client)
 	m.EthernetPort = ethernetport.NewEthernetPortWithClient(wsmanMessageCreator, client)
+	m.Fan = fan.NewFanWithClient(wsmanMessageCreator, client)
 	m.IEEE8021xSettings = ieee8021x.NewIEEE8021xSettingsWithClient(wsmanMessageCreator, client)
 	m.KVMRedirectionSAP = kvm.NewKVMRedirectionSAPWithClient(wsmanMessageCreator, client)
 	m.MediaAccessDevice = mediaaccess.NewMediaAccessDeviceWithClient(wsmanMessageCreator, client)
