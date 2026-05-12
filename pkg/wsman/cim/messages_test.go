@@ -25,6 +25,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/redirectionservice"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/sensor"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/system"
@@ -127,6 +128,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.RedirectionService, redirectionservice.Service{}) {
 		t.Error("RedirectionService is not initialized")
+	}
+
+	if reflect.DeepEqual(m.Sensor, sensor.Package{}) {
+		t.Error("Sensor is not initialized")
 	}
 
 	if reflect.DeepEqual(m.ServiceAvailableToElement, service.AvailableToElement{}) {
