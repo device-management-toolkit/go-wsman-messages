@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/associatedpower"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/battery"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
@@ -45,6 +46,10 @@ func TestNewMessages(t *testing.T) {
 
 	if reflect.DeepEqual(m.AssociatedPowerManagementService, associatedpower.ManagementService{}) {
 		t.Error("AssociatedPowerManagementService is not initialized")
+	}
+
+	if reflect.DeepEqual(m.Battery, battery.Package{}) {
+		t.Error("Battery is not initialized")
 	}
 
 	if reflect.DeepEqual(m.BIOSElement, bios.Element{}) {
