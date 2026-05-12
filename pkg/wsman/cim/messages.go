@@ -9,6 +9,7 @@ package cim
 import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/associatedpower"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/battery"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/bios"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/boot"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/card"
@@ -36,6 +37,7 @@ import (
 type Messages struct {
 	wsmanMessageCreator              *message.WSManMessageCreator
 	AssociatedPowerManagementService associatedpower.ManagementService
+	Battery                          battery.Package
 	BIOSElement                      bios.Element
 	BIOSFeature                      bios.Feature
 	BootConfigSetting                boot.ConfigSetting
@@ -74,6 +76,7 @@ func NewMessages(client client.WSMan) Messages {
 		wsmanMessageCreator: wsmanMessageCreator,
 	}
 	m.AssociatedPowerManagementService = associatedpower.NewAssociatedPowerManagementServiceWithClient(wsmanMessageCreator, client)
+	m.Battery = battery.NewBatteryWithClient(wsmanMessageCreator, client)
 	m.BIOSElement = bios.NewBIOSElementWithClient(wsmanMessageCreator, client)
 	m.BIOSFeature = bios.NewBIOSFeatureWithClient(wsmanMessageCreator, client)
 	m.BootConfigSetting = boot.NewBootConfigSettingWithClient(wsmanMessageCreator, client)
