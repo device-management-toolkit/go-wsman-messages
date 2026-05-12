@@ -19,6 +19,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/concrete"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/credential"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ethernetport"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/fan"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/ieee8021x"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/kvm"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/mediaaccess"
@@ -26,6 +27,7 @@ import (
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/power"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/processor"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/redirectionservice"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/sensor"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/service"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/software"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/system"
@@ -50,6 +52,7 @@ type Messages struct {
 	ConcreteDependency               concrete.Dependency
 	CredentialContext                credential.Context
 	EthernetPort                     ethernetport.Port
+	Fan                              fan.Device
 	IEEE8021xSettings                ieee8021x.Settings
 	KVMRedirectionSAP                kvm.RedirectionSAP
 	MediaAccessDevice                mediaaccess.Device
@@ -59,6 +62,7 @@ type Messages struct {
 	PowerManagementService           power.ManagementService
 	Processor                        processor.Package
 	RedirectionService               redirectionservice.Service
+	Sensor                           sensor.Package
 	ServiceAvailableToElement        service.AvailableToElement
 	SoftwareIdentity                 software.Identity
 	SystemPackaging                  system.Package
@@ -89,6 +93,7 @@ func NewMessages(client client.WSMan) Messages {
 	m.ConcreteDependency = concrete.NewDependencyWithClient(wsmanMessageCreator, client)
 	m.CredentialContext = credential.NewContextWithClient(wsmanMessageCreator, client)
 	m.EthernetPort = ethernetport.NewEthernetPortWithClient(wsmanMessageCreator, client)
+	m.Fan = fan.NewFanWithClient(wsmanMessageCreator, client)
 	m.IEEE8021xSettings = ieee8021x.NewIEEE8021xSettingsWithClient(wsmanMessageCreator, client)
 	m.KVMRedirectionSAP = kvm.NewKVMRedirectionSAPWithClient(wsmanMessageCreator, client)
 	m.MediaAccessDevice = mediaaccess.NewMediaAccessDeviceWithClient(wsmanMessageCreator, client)
@@ -98,6 +103,7 @@ func NewMessages(client client.WSMan) Messages {
 	m.PowerManagementService = power.NewPowerManagementServiceWithClient(wsmanMessageCreator, client)
 	m.Processor = processor.NewProcessorWithClient(wsmanMessageCreator, client)
 	m.RedirectionService = redirectionservice.NewRedirectionServiceWithClient(wsmanMessageCreator, client)
+	m.Sensor = sensor.NewSensorWithClient(wsmanMessageCreator, client)
 	m.ServiceAvailableToElement = service.NewServiceAvailableToElementWithClient(wsmanMessageCreator, client)
 	m.SoftwareIdentity = software.NewSoftwareIdentityWithClient(wsmanMessageCreator, client)
 	m.SystemPackaging = system.NewSystemPackageWithClient(wsmanMessageCreator, client)
