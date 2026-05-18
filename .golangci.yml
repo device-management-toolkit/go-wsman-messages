@@ -9,7 +9,6 @@ linters:
     - exhaustive
     - forbidigo
     - gochecknoinits
-    - goconst
     - godot
     - gomodguard
     - goprintffuncname
@@ -82,6 +81,7 @@ linters:
       - linters:
           - err113
           - funlen
+          - goconst
         path: (.+)_test.go
     paths:
       - docs
