@@ -27,8 +27,7 @@ func NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator *message.WSMa
 }
 
 // Put overrides the generic Put because it has a strongly-typed request
-// parameter (value receiver) and post-processes the response to surface a
-// specific error when LocalProfileSynchronizationEnabled is not set.
+// parameter that is passed by value.
 func (service Service) Put(wiFiPortConfigurationService WiFiPortConfigurationServiceRequest) (response Response, err error) {
 	// wiFiPortConfigurationService.XMLSchema = "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService"
 	wiFiPortConfigurationService.H = fmt.Sprintf("%s%s", message.AMTSchema, AMTWiFiPortConfigurationService)
@@ -48,10 +47,6 @@ func (service Service) Put(wiFiPortConfigurationService WiFiPortConfigurationSer
 	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
 	if err != nil {
 		return response, err
-	}
-
-	if response.Body.WiFiPortConfigurationService.LocalProfileSynchronizationEnabled == 0 {
-		err = errors.New("failed to enable wifi local profile synchronization")
 	}
 
 	return response, err
