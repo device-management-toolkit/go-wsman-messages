@@ -177,7 +177,7 @@ type (
 		LocalProfileSynchronizationEnabled LocalProfileSynchronizationEnabled `xml:"h:localProfileSynchronizationEnabled"`        // Administrator's policy regarding enablement of local profile synchronization.Remote profile synchronization is always enabled.
 		LastConnectedSsidUnderMeControl    string                             `xml:"h:LastConnectedSsidUnderMeControl,omitempty"` // The SSID of the Wireless network that was last connected in ME Control state
 		NoHostCsmeSoftwarePolicy           NoHostCsmeSoftwarePolicy           `xml:"h:NoHostCsmeSoftwarePolicy,omitempty"`        // Setting Policy regarding no HOST CSME software.
-		UEFIWiFiProfileShareEnabled        bool                               `xml:"h:UEFIWiFiProfileShareEnabled,omitempty"`     // Enables or disables UEFI/CSME Wi-Fi Profile Sharing. The feature is available from Intel® CSME 16.0. The feature can be disabled even if the value of AMT_BootCapabilities.UEFIWiFiCoExistenceAndProfileShare is False.
+		UEFIWiFiProfileShareEnabled        bool                               `xml:"h:UEFIWiFiProfileShareEnabled"`               // Enables or disables UEFI/CSME Wi-Fi Profile Sharing. The feature is available from Intel® CSME 16.0. The feature can be disabled even if the value of AMT_BootCapabilities.UEFIWiFiCoExistenceAndProfileShare is False.
 	}
 
 	// a Reference to an AMT_PublicKeyCertificate, which represents the CA certificate.
