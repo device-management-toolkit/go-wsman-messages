@@ -17,6 +17,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -73,6 +74,11 @@ type Target struct {
 }
 
 const timeout = 10 * time.Second
+
+var (
+	resourceURIRegex = regexp.MustCompile(`<[^>]*ResourceURI[^>]*>\s*([^<\s]+)\s*</[^>]*ResourceURI>`)
+	actionRegex      = regexp.MustCompile(`<[^>]*Action[^>]*>\s*([^<\s]+)\s*</[^>]*Action>`)
+)
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -223,6 +229,8 @@ func (t *Target) GetServerCertificate() (*tls.Certificate, error) {
 // Post overrides http.Client's Post method.
 func (t *Target) Post(msg string) (response []byte, err error) {
 	msgBody := []byte(msg)
+	requestService, requestAction := extractWSMANSummary(msg)
+	logWSMANRequestSummary(requestService, requestAction)
 
 	var auth string
 
@@ -288,6 +296,8 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 	defer res.Body.Close()
 
 	response, err = io.ReadAll(res.Body)
+	responseService, responseAction := extractWSMANSummary(string(response))
+	logWSMANResponseSummary(requestService, requestAction, responseService, responseAction, res.StatusCode)
 
 	if t.logAMTMessages {
 		logrus.Trace(string(response))
@@ -310,6 +320,80 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 	}
 
 	return response, nil
+}
+
+func logWSMANRequestSummary(service, action string) {
+	if service == "" && action == "" {
+		return
+	}
+
+	logrus.Debugf("wsman request: service=%s action=%s", fallbackValue(service), fallbackValue(action))
+}
+
+func logWSMANResponseSummary(requestService, requestAction, responseService, responseAction string, statusCode int) {
+	service := responseService
+	action := responseAction
+
+	if service == "" {
+		service = requestService
+	}
+
+	if action == "" {
+		action = requestAction
+	}
+
+	if service == "" && action == "" {
+		return
+	}
+
+	logrus.Debugf("wsman response: service=%s action=%s http_status=%d", fallbackValue(service), fallbackValue(action), statusCode)
+}
+
+func extractWSMANSummary(message string) (service, action string) {
+	service = extractWSMANServiceName(message)
+	action = extractWSMANActionName(message)
+
+	return service, action
+}
+
+func extractWSMANServiceName(message string) string {
+	matches := resourceURIRegex.FindStringSubmatch(message)
+	if len(matches) < 2 {
+		return ""
+	}
+
+	return suffixToken(matches[1])
+}
+
+func extractWSMANActionName(message string) string {
+	matches := actionRegex.FindStringSubmatch(message)
+	if len(matches) < 2 {
+		return ""
+	}
+
+	return suffixToken(matches[1])
+}
+
+func suffixToken(value string) string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return ""
+	}
+
+	tokens := strings.Split(trimmed, "/")
+	if len(tokens) == 0 {
+		return trimmed
+	}
+
+	return tokens[len(tokens)-1]
+}
+
+func fallbackValue(value string) string {
+	if value == "" {
+		return "unknown"
+	}
+
+	return value
 }
 
 // ProxyURL sets proxy address for the underlying Transport if supported.

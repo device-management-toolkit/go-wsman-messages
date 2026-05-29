@@ -484,3 +484,45 @@ func TestClient_GetServerCertificate(t *testing.T) {
 		t.Error("Expected a server certificate, but none was captured")
 	}
 }
+
+func TestExtractWSMANSummary(t *testing.T) {
+	t.Parallel()
+
+	request := `<s:Envelope><s:Header><a:Action>http://schemas.xmlsoap.org/ws/2004/09/enumeration/Enumerate</a:Action><w:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_SetupAndConfigurationService</w:ResourceURI></s:Header></s:Envelope>`
+
+	service, action := extractWSMANSummary(request)
+
+	if service != "AMT_SetupAndConfigurationService" {
+		t.Fatalf("expected service AMT_SetupAndConfigurationService, got %s", service)
+	}
+
+	if action != "Enumerate" {
+		t.Fatalf("expected action Enumerate, got %s", action)
+	}
+}
+
+func TestExtractWSMANSummaryResponse(t *testing.T) {
+	t.Parallel()
+
+	response := `<a:Envelope><a:Header><b:Action>http://schemas.xmlsoap.org/ws/2004/09/transfer/GetResponse</b:Action><c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_SetupAndConfigurationService</c:ResourceURI></a:Header></a:Envelope>`
+
+	service, action := extractWSMANSummary(response)
+
+	if service != "AMT_SetupAndConfigurationService" {
+		t.Fatalf("expected service AMT_SetupAndConfigurationService, got %s", service)
+	}
+
+	if action != "GetResponse" {
+		t.Fatalf("expected action GetResponse, got %s", action)
+	}
+}
+
+func TestExtractWSMANSummaryNoData(t *testing.T) {
+	t.Parallel()
+
+	service, action := extractWSMANSummary("not xml")
+
+	if service != "" || action != "" {
+		t.Fatalf("expected empty service and action, got service=%s action=%s", service, action)
+	}
+}
