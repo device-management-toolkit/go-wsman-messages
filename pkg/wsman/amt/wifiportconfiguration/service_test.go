@@ -258,6 +258,48 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 					},
 				},
 			},
+			{
+				"should not return error when Put response local profile sync is disabled",
+				AMTWiFiPortConfigurationService,
+				wsmantesting.Put,
+				"<h:AMT_WiFiPortConfigurationService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:RequestedState>12</h:RequestedState><h:EnabledState>5</h:EnabledState><h:HealthState>5</h:HealthState><h:ElementName>Intel(r) AMT WiFiPort Configuration Service</h:ElementName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName><h:CreationClassName>AMT_WiFiPortConfigurationService</h:CreationClassName><h:Name>Intel(r) AMT WiFi Port Configuration Service</h:Name><h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled><h:UEFIWiFiProfileShareEnabled>false</h:UEFIWiFiProfileShareEnabled></h:AMT_WiFiPortConfigurationService>",
+				"",
+				func() (Response, error) {
+					client.CurrentMessage = "PutLocalProfileSyncDisabled"
+					wifiConfiguration := WiFiPortConfigurationServiceRequest{
+						RequestedState:                     12,
+						EnabledState:                       5,
+						HealthState:                        5,
+						ElementName:                        "Intel(r) AMT WiFiPort Configuration Service",
+						SystemCreationClassName:            "CIM_ComputerSystem",
+						SystemName:                         "Intel(r) AMT",
+						CreationClassName:                  "AMT_WiFiPortConfigurationService",
+						Name:                               "Intel(r) AMT WiFi Port Configuration Service",
+						LocalProfileSynchronizationEnabled: 1,
+						LastConnectedSsidUnderMeControl:    "",
+						NoHostCsmeSoftwarePolicy:           0,
+					}
+
+					return elementUnderTest.Put(wifiConfiguration)
+				},
+				Body{
+					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
+					WiFiPortConfigurationService: WiFiPortConfigurationServiceResponse{
+						XMLName:                            xml.Name{Space: fmt.Sprintf("%s%s", message.AMTSchema, AMTWiFiPortConfigurationService), Local: AMTWiFiPortConfigurationService},
+						CreationClassName:                  "AMT_WiFiPortConfigurationService",
+						ElementName:                        "Intel(r) AMT WiFiPort Configuration Service",
+						EnabledState:                       5,
+						HealthState:                        5,
+						LastConnectedSsidUnderMeControl:    "",
+						Name:                               "Intel(r) AMT WiFi Port Configuration Service",
+						NoHostCsmeSoftwarePolicy:           0,
+						RequestedState:                     12,
+						SystemCreationClassName:            "CIM_ComputerSystem",
+						SystemName:                         "Intel(r) AMT",
+						LocalProfileSynchronizationEnabled: 0,
+					},
+				},
+			},
 			// WIFI PORT CONFIGURATION SERVICE
 			// {
 			// 	"should return a valid amt_WiFiPortConfigurationService ADD_WIFI_SETTINGS wsman message",
