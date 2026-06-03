@@ -220,7 +220,7 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 				"should create a valid AMT_WiFiPortConfigurationService Put wsman message",
 				AMTWiFiPortConfigurationService,
 				wsmantesting.Put,
-				"<h:AMT_WiFiPortConfigurationService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:RequestedState>12</h:RequestedState><h:EnabledState>5</h:EnabledState><h:HealthState>5</h:HealthState><h:ElementName>Intel(r) AMT WiFiPort Configuration Service</h:ElementName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName><h:CreationClassName>AMT_WiFiPortConfigurationService</h:CreationClassName><h:Name>Intel(r) AMT WiFi Port Configuration Service</h:Name><h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled></h:AMT_WiFiPortConfigurationService>",
+				"<h:AMT_WiFiPortConfigurationService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:RequestedState>12</h:RequestedState><h:EnabledState>5</h:EnabledState><h:HealthState>5</h:HealthState><h:ElementName>Intel(r) AMT WiFiPort Configuration Service</h:ElementName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName><h:CreationClassName>AMT_WiFiPortConfigurationService</h:CreationClassName><h:Name>Intel(r) AMT WiFi Port Configuration Service</h:Name><h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled><h:UEFIWiFiProfileShareEnabled>false</h:UEFIWiFiProfileShareEnabled></h:AMT_WiFiPortConfigurationService>",
 				"",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessagePut
