@@ -104,44 +104,10 @@ func (service Service) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSet
 		input.IEEE8021xSettings = &ieee8021xSettingsInput
 		input.IEEE8021xSettings.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_IEEE8021xSettings"
 
-		input.CACredential = &CACredentialRequest{
-			H:       "http://schemas.xmlsoap.org/ws/2004/08/addressing",
-			Address: "default",
-			ReferenceParameters: ReferenceParameters{
-				H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-				ResourceURI: "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_PublicKeyCertificate",
-				SelectorSet: SelectorSet{
-					H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-					Selector: []Selector{
-						{
-							H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-							Name:  "InstanceID",
-							Value: caCredential,
-						},
-					},
-				},
-			},
-		}
+		input.CACredential = newCredentialRef(caCredential)
 
 		if clientCredential != "" {
-			input.ClientCredential = &ClientCredentialRequest{
-				H:       "http://schemas.xmlsoap.org/ws/2004/08/addressing",
-				Address: "default",
-				ReferenceParameters: ReferenceParameters{
-					H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-					ResourceURI: "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_PublicKeyCertificate",
-					SelectorSet: SelectorSet{
-						H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-						Selector: []Selector{
-							{
-								H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-								Name:  "InstanceID",
-								Value: clientCredential,
-							},
-						},
-					},
-				},
-			}
+			input.ClientCredential = newClientCredentialRef(clientCredential)
 		}
 	}
 
@@ -171,6 +137,89 @@ func (service Service) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSet
 	return response, err
 }
 
+// UpdateWiFiSettings Atomically updates the referenced instance of CIM_WifiEndpointSettings from the embedded
+// instance of CIM_WiFiEndPointSettings and updates the referenced instance of CIM_IEEE8021xSettings from the
+// embedded instance of CIM_IEEE8021xSettings.
+//
+// The profile name can't be updated
+//
+// Additional Notes:
+//
+// 1) 'UpdateWiFiSettings' in Intel AMT Release 6.0 and later releases is permitted only to
+// 'ADMIN_SECURITY_ADMINISTRATION_REALM' and 'ADMIN_SECURITY_LOCAL_SYSTEM_REALM '
+//
+// 2) When selecting the value EAP-TLS or EAP-FAST/TLS in AuthenticationProtocol property in
+// IEEE8021xSettings - ClientCredential is mandatory.
+//
+// ValueMap={0, 1, 2, 3, 4, .., 32768..65535}
+//
+// Values={Completed with No Error, Not Supported, Failed, Invalid Parameter, Invalid Reference,
+// Method Reserved, Vendor Specific}.
+func (service Service) UpdateWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSettingsRequest, ieee8021xSettingsInput models.IEEE8021xSettings, clientCredential, caCredential string) (response Response, err error) {
+	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTWiFiPortConfigurationService, UpdateWiFiSettings), AMTWiFiPortConfigurationService, nil, "", "")
+	input := UpdateWiFiSettings_INPUT{
+		WiFiEndpointSettings: WiFiEndpointSettings{
+			Address: "/wsman",
+			ReferenceParameters: ReferenceParameters{
+				H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+				ResourceURI: fmt.Sprintf("%s%s", message.CIMSchema, wifi.CIMWiFiEndpointSettings),
+				SelectorSet: SelectorSet{
+					H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+					Selector: []Selector{
+						{
+							H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+							Name:  "InstanceID",
+							Value: wifiEndpointSettings.InstanceID,
+						},
+					},
+				},
+			},
+		},
+		WiFiEndpointSettingsInput: wifiEndpointSettings,
+	}
+
+	input.WiFiEndpointSettingsInput.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings"
+
+	if wifiEndpointSettings.AuthenticationMethod == wifi.AuthenticationMethodWPAIEEE8021x ||
+		wifiEndpointSettings.AuthenticationMethod == wifi.AuthenticationMethodWPA2IEEE8021x {
+		input.IEEE8021xSettings = &ieee8021xSettingsInput
+		input.IEEE8021xSettings.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_IEEE8021xSettings"
+
+		if caCredential != "" {
+			input.CACredential = newCredentialRef(caCredential)
+		}
+
+		if clientCredential != "" {
+			input.ClientCredential = newClientCredentialRef(clientCredential)
+		}
+	}
+
+	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(UpdateWiFiSettings), AMTWiFiPortConfigurationService, &input)
+	response = Response{
+		Message: &client.Message{
+			XMLInput: service.Base.WSManMessageCreator.CreateXML(header, body),
+		},
+	}
+
+	// send the message to AMT
+	err = service.Base.Execute(response.Message)
+	if err != nil {
+		return response, err
+	}
+
+	// put the xml response into the go struct
+	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
+	if err != nil {
+		return response, err
+	}
+
+	if response.Body.UpdateWiFiSettingsOutput.ReturnValue != 0 {
+		err = generateErrorMessage("updatewifisettings", response.Body.UpdateWiFiSettingsOutput.ReturnValue)
+	}
+
+	return response, err
+}
+
 // generateErrorMessage returns an error message based on the return value.
 func generateErrorMessage(call string, returnValue ReturnValue) error {
 	ErrCallFailure := errors.New(call + " failed")
@@ -178,7 +227,37 @@ func generateErrorMessage(call string, returnValue ReturnValue) error {
 	return fmt.Errorf("%w: returned %d", ErrCallFailure, returnValue)
 }
 
-// TODO: Add UpdateWiFiSettings
+func newCredentialRef(instanceID string) *CACredentialRequest {
+	return &CACredentialRequest{
+		H:       "http://schemas.xmlsoap.org/ws/2004/08/addressing",
+		Address: "default",
+		ReferenceParameters: ReferenceParameters{
+			H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+			ResourceURI: "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_PublicKeyCertificate",
+			SelectorSet: SelectorSet{
+				H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+				Selector: []Selector{
+					{
+						H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+						Name:  "InstanceID",
+						Value: instanceID,
+					},
+				},
+			},
+		},
+	}
+}
+
+func newClientCredentialRef(instanceID string) *ClientCredentialRequest {
+	credentialRef := newCredentialRef(instanceID)
+
+	return &ClientCredentialRequest{
+		H:                   credentialRef.H,
+		Address:             credentialRef.Address,
+		ReferenceParameters: credentialRef.ReferenceParameters,
+	}
+}
+
 // TODO: Add DeleteAllITProfiles
 // TODO: Add DeleteAllUserProfiles
 // TODO: Add SetApplicationRequestedRfKill
