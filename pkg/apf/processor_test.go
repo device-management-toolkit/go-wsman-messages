@@ -1022,6 +1022,41 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		assert.Equal(t, 0, result.Len())
 	})
 
+	t.Run("APF_CHANNEL_CLOSE before OPEN_CONFIRMATION keeps tunnel stream open", func(t *testing.T) {
+		t.Parallel()
+
+		p := NewProcessor(nil)
+		stream := make(chan []byte, 1)
+		// Tunnel enabled (StreamDataBuffer set) but channel not yet confirmed, so
+		// RecipientChannel is still its zero value 0. A stale CLOSE for channel 0
+		// must NOT close the stream.
+		session := &Session{StreamDataBuffer: stream, RecipientChannel: 0, HandshakeConfirmed: false}
+		data := make([]byte, 5)
+		data[0] = APF_CHANNEL_CLOSE
+
+		p.Process(data, session)
+		assert.NotNil(t, session.StreamDataBuffer, "stale CLOSE before confirmation must not close the tunnel stream")
+
+		select {
+		case _, ok := <-stream:
+			assert.True(t, ok, "tunnel stream channel must not be closed by a stale CLOSE")
+		default:
+		}
+	})
+
+	t.Run("APF_CHANNEL_CLOSE after confirmation closes matching tunnel stream", func(t *testing.T) {
+		t.Parallel()
+
+		p := NewProcessor(nil)
+		stream := make(chan []byte, 1)
+		session := &Session{StreamDataBuffer: stream, RecipientChannel: 0, HandshakeConfirmed: true}
+		data := make([]byte, 5)
+		data[0] = APF_CHANNEL_CLOSE
+
+		p.Process(data, session)
+		assert.Nil(t, session.StreamDataBuffer, "confirmed CLOSE matching the active channel must close the tunnel stream")
+	})
+
 	t.Run("APF_CHANNEL_CLOSE invalid via Process", func(t *testing.T) {
 		t.Parallel()
 
@@ -1139,7 +1174,7 @@ func TestProcessGlobalRequestCancelTcpForward(t *testing.T) {
 
 	request, reply := ProcessGlobalRequest(data)
 	assert.Equal(t, APF_GLOBAL_REQUEST_STR_TCP_FORWARD_CANCEL_REQUEST, request.RequestType)
-	assert.Equal(t, APF_REQUEST_SUCCESS, reply)
+	assert.Equal(t, uint8(APF_REQUEST_SUCCESS), reply)
 }
 
 func TestProcessGlobalRequestZeroStringLength(t *testing.T) {
