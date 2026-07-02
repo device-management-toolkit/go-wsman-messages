@@ -263,9 +263,9 @@ func (as Service) SetAdminAclEntryEx(username, digestPassword string) (response 
 	return response, err
 }
 
-func (as Service) AddUserAclEntryEx(digestUsername string, digestPassword string, accessPermission int, realms []int) (response Response, err error){
-	header := as.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTAuthorizationService, AddUserAclEntryEx), AMTAuthorizationService, nil, "", "")
-	body := as.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddUserAclEntryEx), AMTAuthorizationService, &SAddUserAclEntryEx_INPUT{Username: digestUsername, DigestPassword: digestPassword, AccessPermission: accessPermission, Realms: realms})
+func (as Service) AddUserAclEntryEx(digestUsername string, digestPassword string, accessPermission AccessPermission, realms []RealmValues) (response Response, err error){
+	header := as.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTAuthorizationService, AddUserACLEntryEx), AMTAuthorizationService, nil, "", "")
+	body := as.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddUserACLEntryEx), AMTAuthorizationService, &AddUserAclEntryEx_INPUT{DigestUsername: digestUsername, DigestPassword: digestPassword, AccessPermission: accessPermission, Realms: realms})
 	response = Response{
 		Message: &client.Message{
 			XMLInput: as.Base.WSManMessageCreator.CreateXML(header, body),
