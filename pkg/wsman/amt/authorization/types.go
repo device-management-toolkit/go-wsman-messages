@@ -110,7 +110,7 @@ type (
 		Username       string   `xml:"h:Username"`       // Username for access control. Contains 7-bit ASCII characters. String length is limited to 16 characters. Username cannot be an empty string.
 		DigestPassword string   `xml:"h:DigestPassword"` // An MD5 Hash of these parameters concatenated together (Username + ":" + DigestRealm + ":" + Password). The DigestRealm is a field in AMT_GeneralSettings
 	}
-	AddUserAclEntry_INPUT struct {
+	AddUserAclEntryEx_INPUT struct {
 		XMLName          xml.Name         `xml:"h:AddUserAclEntryEx_INPUT"`
 		H                string           `xml:"xmlns:h,attr"`
 		Handle           int              `xml:"h:Handle,omitempty"`              // Contains a creation handle.
