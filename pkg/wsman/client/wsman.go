@@ -97,7 +97,7 @@ func NewWsman(cp Parameters) *Target {
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
 	}
-	runTimeout := time.Second*max(10, cp.Timeout)
+	runTimeout := time.Duration(max(10,cp.Timeout)) * time.Second
 	res.Timeout = runTimeout
 
 	if cp.Transport == nil {
