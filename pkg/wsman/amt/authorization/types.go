@@ -71,7 +71,10 @@ type AccessPermission int
 //
 // Values={InvalidRealm, ReservedRealm0, RedirectionRealm, PTAdministrationRealm, HardwareAssetRealm, RemoteControlRealm, StorageRealm, EventManagerRealm, StorageAdminRealm, AgentPresenceLocalRealm, AgentPresenceRemoteRealm, CircuitBreakerRealm, NetworkTimeRealm, GeneralInfoRealm, FirmwareUpdateRealm, EITRealm, LocalUN, EndpointAccessControlRealm, EndpointAccessControlAdminRealm, EventLogReaderRealm, AuditLogRealm, ACLRealm, ReservedRealm1, ReservedRealm2, LocalSystemRealm, Reserved}.
 type RealmValues int
-
+// ValueMap={0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, ..}
+//
+// Values={InvalidRealm, ReservedRealm0, RedirectionRealm, PTAdministrationRealm, HardwareAssetRealm, RemoteControlRealm, StorageRealm, EventManagerRealm, StorageAdminRealm, AgentPresenceLocalRealm, AgentPresenceRemoteRealm, CircuitBreakerRealm, NetworkTimeRealm, GeneralInfoRealm, FirmwareUpdateRealm, EITRealm, LocalUN, EndpointAccessControlRealm, EndpointAccessControlAdminRealm, EventLogReaderRealm, AuditLogRealm, ACLRealm, ReservedRealm1, ReservedRealm2, LocalSystemRealm, Reserved}.
+type Realms int
 // INPUTS
 // Request Types.
 type (
@@ -110,15 +113,15 @@ type (
 		Username       string   `xml:"h:Username"`       // Username for access control. Contains 7-bit ASCII characters. String length is limited to 16 characters. Username cannot be an empty string.
 		DigestPassword string   `xml:"h:DigestPassword"` // An MD5 Hash of these parameters concatenated together (Username + ":" + DigestRealm + ":" + Password). The DigestRealm is a field in AMT_GeneralSettings
 	}
-	AddUserAclEntry_INPUT struct {
+	AddUserAclEntryEx_INPUT struct {
 		XMLName          xml.Name         `xml:"h:AddUserAclEntryEx_INPUT"`
 		H                string           `xml:"xmlns:h,attr"`
 		Handle           int              `xml:"h:Handle,omitempty"`              // Contains a creation handle.
 		DigestUsername   string           `xml:"h:DigestUsername"`                // Username for access control. Contains 7-bit ASCII characters. String length is limited to 16 characters. Username cannot be an empty string.
 		DigestPassword   string           `xml:"h:DigestPassword"`                // An MD5 Hash of these parameters concatenated together (Username + ":" + DigestRealm + ":" + Password). The DigestRealm is a field in AMT_GeneralSettings
 		AccessPermission AccessPermission `xml:"h:AccessPermission"`              // Indicates whether the User is allowed to access Intel® AMT from the Network or Local Interfaces. Note: this definition is restricted by the Default Interface Access Permissions of each Realm.
-		Realms           []RealmValues    `xml:"h:Realms>h:RealmValue,omitempty"` // Array of interface names the ACL entry is allowed to access.
-		KerberosUserSid  string           `xml:"h:KerberosUserSid"`               // Descriptor for user (SID) which is authenticated using the Kerberos Authentication. Byte array, specifying the Security Identifier (SID) according to the Kerberos specification. Current requirements imply that SID should be not smaller than 1 byte length and no longer than 28 bytes. SID length should also be a multiplicand of 4.
+		Realms           []RealmValues   `xml:"h:Realms,omitempty"` // Array of interface names the ACL entry is allowed to access.
+		KerberosUserSid  string           `xml:"h:KerberosUserSid,omitempty"`               // Descriptor for user (SID) which is authenticated using the Kerberos Authentication. Byte array, specifying the Security Identifier (SID) according to the Kerberos specification. Current requirements imply that SID should be not smaller than 1 byte length and no longer than 28 bytes. SID length should also be a multiplicand of 4.
 	}
 	UpdateUserAclEntry struct {
 		XMLName          xml.Name         `xml:"h:UpdateUserAclEntry_INPUT"`
