@@ -8,6 +8,7 @@ package client
 import (
 	"crypto/tls"
 	"net"
+	"time"
 	"net/http"
 )
 
@@ -28,5 +29,5 @@ type Parameters struct {
 	AllowInsecureCipherSuites bool
 	IsCIRA                    bool               // Flag to indicate CIRA APF tunnel connection
 	CIRAManager               CIRAChannelManager // Manager for CIRA channel operations
-	Timeout					  int
+	Timeout					  time.Duration
 }
