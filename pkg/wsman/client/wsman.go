@@ -72,7 +72,6 @@ type Target struct {
 	tlsConfig          *tls.Config
 }
 
-const timeout = 10 * time.Second
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -98,8 +97,8 @@ func NewWsman(cp Parameters) *Target {
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
 	}
-
-	res.Timeout = timeout
+	runTimeout := time.Second*max(10, cp.Timeout)
+	res.Timeout = runTimeout
 
 	if cp.Transport == nil {
 		// Use CIRATransport for CIRA APF tunnel connections
