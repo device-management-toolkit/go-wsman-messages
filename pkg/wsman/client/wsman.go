@@ -70,6 +70,7 @@ type Target struct {
 	InsecureSkipVerify bool
 	PinnedCert         string
 	tlsConfig          *tls.Config
+	Timeout            time.Duration
 }
 
 
@@ -96,6 +97,7 @@ func NewWsman(cp Parameters) *Target {
 		InsecureSkipVerify: cp.SelfSignedAllowed,
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
+		Timeout:			cp.Timeout,
 	}
 	runTimeout := time.Duration(max(10,cp.Timeout)) * time.Second
 	res.Timeout = runTimeout
