@@ -54,7 +54,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 			action           string
 			body             string
 			responseFunc     func() (Response, error)
-			expectedResponse interface{}
+			expectedResponse any
 		}{
 			{
 				"should create a valid AMT_AuthorizationService Get wsman message",
@@ -240,7 +240,7 @@ func TestNegativeAMT_AuthorizationService(t *testing.T) {
 			body             string
 			extraHeader      string
 			responseFunc     func() (Response, error)
-			expectedResponse interface{}
+			expectedResponse any
 		}{
 			{
 				"should create an invalid AMT_EthernetPortSettings Get wsman message",

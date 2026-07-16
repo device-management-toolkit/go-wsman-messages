@@ -72,7 +72,6 @@ type Target struct {
 	tlsConfig          *tls.Config
 }
 
-
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
 	port := NonTLSPort
@@ -97,7 +96,7 @@ func NewWsman(cp Parameters) *Target {
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
 	}
-	runTimeout := time.Duration(max(10,cp.Timeout)) * time.Second
+	runTimeout := time.Duration(max(10, cp.Timeout)) * time.Second
 	res.Timeout = runTimeout
 
 	if cp.Transport == nil {
