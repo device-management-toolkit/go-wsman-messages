@@ -99,7 +99,9 @@ func (service Service) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSet
 		input.IEEE8021xSettings = &ieee8021xSettingsInput
 		input.IEEE8021xSettings.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_IEEE8021xSettings"
 
-		input.CACredential = newCredentialRef(caCredential)
+		if caCredential != "" {
+			input.CACredential = newCredentialRef(caCredential)
+		}
 
 		if clientCredential != "" {
 			input.ClientCredential = newClientCredentialRef(clientCredential)
