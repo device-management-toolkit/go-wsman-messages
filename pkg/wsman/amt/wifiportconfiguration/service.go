@@ -73,40 +73,18 @@ func (service Service) AddWiFiSettings(wifiEndpointSettings wifi.WiFiEndpointSet
 	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTWiFiPortConfigurationService, AddWiFiSettings), AMTWiFiPortConfigurationService, nil, "", "")
 	input := AddWiFiSettings_INPUT{
 		WifiEndpoint: WiFiEndpoint{
-			Address: "/wsman",
-			ReferenceParameters: ReferenceParameters{
-				H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-				ResourceURI: fmt.Sprintf("%s%s", message.CIMSchema, wifi.CIMWiFiEndpoint),
-				SelectorSet: SelectorSet{
-					H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-					Selector: []Selector{
-						{
-							H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-							Name:  "Name",
-							Value: wifiEndpoint,
-						},
-					},
-				},
-			},
+			Address:             "/wsman",
+			ReferenceParameters: newReferenceParameters(fmt.Sprintf("%s%s", message.CIMSchema, wifi.CIMWiFiEndpoint), "Name", wifiEndpoint),
 		},
 		WiFiEndpointSettings: wifiEndpointSettings,
 	}
 
 	input.WiFiEndpointSettings.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings"
 
-	if wifiEndpointSettings.AuthenticationMethod == wifi.AuthenticationMethodWPAIEEE8021x ||
-		wifiEndpointSettings.AuthenticationMethod == wifi.AuthenticationMethodWPA2IEEE8021x {
-		input.IEEE8021xSettings = &ieee8021xSettingsInput
-		input.IEEE8021xSettings.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_IEEE8021xSettings"
-
-		if caCredential != "" {
-			input.CACredential = newCredentialRef(caCredential)
-		}
-
-		if clientCredential != "" {
-			input.ClientCredential = newClientCredentialRef(clientCredential)
-		}
-	}
+	credentials := newIEEE8021xCredentials(wifiEndpointSettings.AuthenticationMethod, ieee8021xSettingsInput, clientCredential, caCredential)
+	input.IEEE8021xSettings = credentials.IEEE8021xSettings
+	input.ClientCredential = credentials.ClientCredential
+	input.CACredential = credentials.CACredential
 
 	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(AddWiFiSettings), AMTWiFiPortConfigurationService, &input)
 	response = Response{
@@ -156,40 +134,18 @@ func (service Service) UpdateWiFiSettings(wifiEndpointSettings wifi.WiFiEndpoint
 	header := service.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTWiFiPortConfigurationService, UpdateWiFiSettings), AMTWiFiPortConfigurationService, nil, "", "")
 	input := UpdateWiFiSettings_INPUT{
 		WiFiEndpointSettings: WiFiEndpointSettings{
-			Address: "/wsman",
-			ReferenceParameters: ReferenceParameters{
-				H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-				ResourceURI: fmt.Sprintf("%s%s", message.CIMSchema, wifi.CIMWiFiEndpointSettings),
-				SelectorSet: SelectorSet{
-					H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-					Selector: []Selector{
-						{
-							H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
-							Name:  "InstanceID",
-							Value: wifiEndpointSettings.InstanceID,
-						},
-					},
-				},
-			},
+			Address:             "/wsman",
+			ReferenceParameters: newReferenceParameters(fmt.Sprintf("%s%s", message.CIMSchema, wifi.CIMWiFiEndpointSettings), "InstanceID", wifiEndpointSettings.InstanceID),
 		},
 		WiFiEndpointSettingsInput: wifiEndpointSettings,
 	}
 
 	input.WiFiEndpointSettingsInput.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings"
 
-	if wifiEndpointSettings.AuthenticationMethod == wifi.AuthenticationMethodWPAIEEE8021x ||
-		wifiEndpointSettings.AuthenticationMethod == wifi.AuthenticationMethodWPA2IEEE8021x {
-		input.IEEE8021xSettings = &ieee8021xSettingsInput
-		input.IEEE8021xSettings.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_IEEE8021xSettings"
-
-		if caCredential != "" {
-			input.CACredential = newCredentialRef(caCredential)
-		}
-
-		if clientCredential != "" {
-			input.ClientCredential = newClientCredentialRef(clientCredential)
-		}
-	}
+	credentials := newIEEE8021xCredentials(wifiEndpointSettings.AuthenticationMethod, ieee8021xSettingsInput, clientCredential, caCredential)
+	input.IEEE8021xSettings = credentials.IEEE8021xSettings
+	input.ClientCredential = credentials.ClientCredential
+	input.CACredential = credentials.CACredential
 
 	body := service.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(UpdateWiFiSettings), AMTWiFiPortConfigurationService, &input)
 	response = Response{
@@ -253,6 +209,60 @@ func newClientCredentialRef(instanceID string) *ClientCredentialRequest {
 		Address:             credentialRef.Address,
 		ReferenceParameters: credentialRef.ReferenceParameters,
 	}
+}
+
+// newReferenceParameters builds the ReferenceParameters block (ResourceURI plus a single
+// Name/Value selector) shared by the WiFiEndpoint reference used by AddWiFiSettings and the
+// WiFiEndpointSettings reference used by UpdateWiFiSettings.
+func newReferenceParameters(resourceURI, selectorName, selectorValue string) ReferenceParameters {
+	return ReferenceParameters{
+		H:           "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+		ResourceURI: resourceURI,
+		SelectorSet: SelectorSet{
+			H: "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+			Selector: []Selector{
+				{
+					H:     "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd",
+					Name:  selectorName,
+					Value: selectorValue,
+				},
+			},
+		},
+	}
+}
+
+// ieee8021xCredentials holds the optional IEEE 802.1x settings and credential references shared
+// by AddWiFiSettings and UpdateWiFiSettings. All three fields are nil unless the given
+// authentication method is one of the IEEE 802.1x variants.
+type ieee8021xCredentials struct {
+	IEEE8021xSettings *models.IEEE8021xSettings
+	ClientCredential  *ClientCredentialRequest
+	CACredential      *CACredentialRequest
+}
+
+// newIEEE8021xCredentials builds the IEEE 802.1x settings and optional client/CA credential
+// references shared by AddWiFiSettings and UpdateWiFiSettings. clientCredential and caCredential
+// are both optional and must stay gated on a non-empty value here: an empty credential would
+// still produce a <ClientCredential>/<CACredential> reference with a blank InstanceID selector,
+// which AMT firmware rejects as an invalid reference.
+func newIEEE8021xCredentials(authenticationMethod wifi.AuthenticationMethod, ieee8021xSettingsInput models.IEEE8021xSettings, clientCredential, caCredential string) ieee8021xCredentials {
+	if authenticationMethod != wifi.AuthenticationMethodWPAIEEE8021x && authenticationMethod != wifi.AuthenticationMethodWPA2IEEE8021x {
+		return ieee8021xCredentials{}
+	}
+
+	ieee8021xSettingsInput.H = "http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_IEEE8021xSettings"
+
+	credentials := ieee8021xCredentials{IEEE8021xSettings: &ieee8021xSettingsInput}
+
+	if clientCredential != "" {
+		credentials.ClientCredential = newClientCredentialRef(clientCredential)
+	}
+
+	if caCredential != "" {
+		credentials.CACredential = newCredentialRef(caCredential)
+	}
+
+	return credentials
 }
 
 // TODO: Add DeleteAllITProfiles
