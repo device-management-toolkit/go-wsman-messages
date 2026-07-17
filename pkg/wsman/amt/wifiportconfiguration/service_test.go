@@ -110,6 +110,114 @@ func TestUpdateWiFiSettings_OmitsCACredentialWhenEmpty(t *testing.T) {
 	assert.Equal(t, ReturnValueCompletedNoError, response.Body.UpdateWiFiSettingsOutput.ReturnValue)
 }
 
+func TestAddWiFiSettings(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "AddWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+	expectedXMLInput := wsmantesting.ExpectedResponse(
+		0,
+		resourceURIBase,
+		AMTWiFiPortConfigurationService,
+		methods.GenerateAction(AMTWiFiPortConfigurationService, AddWiFiSettings),
+		"",
+		"<h:AddWiFiSettings_INPUT xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:WiFiEndpoint><a:Address>/wsman</a:Address><a:ReferenceParameters xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\"><c:ResourceURI>http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpoint</c:ResourceURI><c:SelectorSet xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\"><c:Selector xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\" Name=\"Name\">WiFi Endpoint 0</c:Selector></c:SelectorSet></a:ReferenceParameters></h:WiFiEndpoint><h:WiFiEndpointSettingsInput xmlns:q=\"http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings\"><q:ElementName>home</q:ElementName><q:InstanceID>Intel(r) AMT:WiFi Endpoint Settings home</q:InstanceID><q:AuthenticationMethod>6</q:AuthenticationMethod><q:EncryptionMethod>4</q:EncryptionMethod><q:SSID>admin</q:SSID><q:Priority>1</q:Priority><q:PSKPassPhrase>password123</q:PSKPassPhrase></h:WiFiEndpointSettingsInput></h:AddWiFiSettings_INPUT>",
+	)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2PSK,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+		PSKPassPhrase:        "password123",
+	}
+
+	response, err := elementUnderTest.AddWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"WiFi Endpoint 0",
+		"",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedXMLInput, response.XMLInput)
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.AddWiFiSettingsOutput.ReturnValue)
+}
+
+// TestAddWiFiSettings_OmitsCACredentialWhenEmpty is a regression test: AddWiFiSettings used to send
+// an empty <h:CACredential> reference (with a blank InstanceID selector) whenever an IEEE 802.1x
+// profile was added without a CA certificate, even though the CA certificate is optional. AMT
+// firmware rejects the invalid reference, so every "add" of a new 802.1x profile without a CA cert
+// failed. UpdateWiFiSettings already gated this correctly; AddWiFiSettings must match.
+func TestAddWiFiSettings_OmitsCACredentialWhenEmpty(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "AddWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2IEEE8021x,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+	}
+
+	response, err := elementUnderTest.AddWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"WiFi Endpoint 0",
+		"client-cert-id",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.NotContains(t, response.XMLInput, "<h:CACredential>")
+	assert.Contains(t, response.XMLInput, "<h:ClientCredential ")
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.AddWiFiSettingsOutput.ReturnValue)
+}
+
+// TestAddWiFiSettings_IncludesCACredentialWhenProvided guards the other direction: when a CA
+// certificate handle is supplied, it must still be included in the request.
+func TestAddWiFiSettings_IncludesCACredentialWhenProvided(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "AddWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2IEEE8021x,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+	}
+
+	response, err := elementUnderTest.AddWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"WiFi Endpoint 0",
+		"",
+		"ca-cert-id",
+	)
+	assert.NoError(t, err)
+	assert.Contains(t, response.XMLInput, "<h:CACredential ")
+	assert.NotContains(t, response.XMLInput, "<h:ClientCredential>")
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.AddWiFiSettingsOutput.ReturnValue)
+}
+
 func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 	messageID := 0
 	resourceURIBase := wsmantesting.AMTResourceURIBase
@@ -300,23 +408,6 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 					},
 				},
 			},
-			// WIFI PORT CONFIGURATION SERVICE
-			// {
-			// 	"should return a valid amt_WiFiPortConfigurationService ADD_WIFI_SETTINGS wsman message",
-			// 	AMT_WiFiPortConfigurationService,
-			// 	`http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService/AddWiFiSettings`, `<h:AddWiFiSettings_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService"><h:WiFiEndpoint><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpoint</w:ResourceURI><w:SelectorSet><w:Selector Name="Name">WiFi Endpoint 0</w:Selector></w:SelectorSet></a:ReferenceParameters></h:WiFiEndpoint><h:WiFiEndpointSettingsInput xmlns:q="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings"><q:ElementName>home</q:ElementName><q:InstanceID>Intel(r) AMT:WiFi Endpoint Settings home</q:InstanceID><q:AuthenticationMethod>6</q:AuthenticationMethod><q:EncryptionMethod>4</q:EncryptionMethod><q:SSID>admin</q:SSID><q:Priority>1</q:Priority><q:PSKPassPhrase>p&#39;ass&lt;&gt;&amp;&#34;code</q:PSKPassPhrase></h:WiFiEndpointSettingsInput></h:AddWiFiSettings_INPUT>`,
-			// 	"",
-			// 	func() (Response, error) {
-			// 		client.CurrentMessage = "AddWiFiSettings"
-			// 		wifiEndpointSettings := wifi.WiFiEndpointSettings_INPUT{}
-			// 		ieee8021xSettings := &models.IEEE8021xSettings{}
-			// 		wifiEndpoint := "t"
-			// 		clientCredential := "t"
-			// 		caCredential := "t"
-			// 		return elementUnderTest.AddWiFiSettings(wifiEndpointSettings, ieee8021xSettings, wifiEndpoint, clientCredential, caCredential)
-			// 	},
-			// 	Body{},
-			// },
 		}
 
 		for _, test := range tests {
