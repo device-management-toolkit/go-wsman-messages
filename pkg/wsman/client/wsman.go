@@ -64,6 +64,7 @@ type Target struct {
 	useDigest          bool
 	logAMTMessages     bool
 	challenge          *AuthChallenge
+	challengeMu        sync.Mutex
 	conn               net.Conn
 	bufferPool         sync.Pool
 	UseTLS             bool
@@ -72,7 +73,62 @@ type Target struct {
 	tlsConfig          *tls.Config
 }
 
-const timeout = 10 * time.Second
+const timeout = 20 * time.Second
+
+// isTransientTransportError reports whether err is a recoverable transport error.
+func isTransientTransportError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+
+	errText := strings.ToLower(err.Error())
+
+	return strings.Contains(errText, "connection reset by peer") ||
+		strings.Contains(errText, "bad record mac") ||
+		strings.Contains(errText, "tls: internal error") ||
+		strings.Contains(errText, "broken pipe")
+}
+
+// retryOnTransient retries req once on transient transport errors.
+func (t *Target) retryOnTransient(req *http.Request, origErr error) (*http.Response, error) {
+	if !isTransientTransportError(origErr) {
+		return nil, origErr
+	}
+
+	if tr, ok := t.Transport.(*http.Transport); ok {
+		tr.CloseIdleConnections()
+	}
+
+	if req.GetBody == nil {
+		return nil, origErr
+	}
+
+	retryBody, bodyErr := req.GetBody()
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+
+	retryReq, reqErr := http.NewRequest(req.Method, req.URL.String(), retryBody)
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	retryReq.Header = req.Header.Clone()
+	retryReq.GetBody = req.GetBody
+
+	res, err := t.Do(retryReq)
+	if err != nil {
+		logrus.WithError(err).Warn("wsman transient retry failed")
+
+		return nil, err
+	}
+
+	return res, nil
+}
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -153,9 +209,10 @@ func NewWsman(cp Parameters) *Target {
 			}
 
 			res.Transport = &http.Transport{
-				MaxIdleConns:      10,
-				IdleConnTimeout:   30 * time.Second,
-				DisableKeepAlives: true,
+				MaxIdleConns:      7,
+				MaxConnsPerHost:   7,
+				IdleConnTimeout:   60 * time.Second,
+				DisableKeepAlives: false,
 				TLSClientConfig:   config,
 			}
 		}
@@ -171,6 +228,9 @@ func NewWsman(cp Parameters) *Target {
 }
 
 func (t *Target) IsAuthenticated() bool {
+	t.challengeMu.Lock()
+	defer t.challengeMu.Unlock()
+
 	return t.challenge != nil && t.challenge.Realm != ""
 }
 
@@ -235,12 +295,16 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 	if t.username != "" && t.password != "" {
 		if t.useDigest {
+			t.challengeMu.Lock()
 			auth, err = t.challenge.authorize("POST", "/wsman")
+			hasRealm := t.challenge.Realm != ""
+			t.challengeMu.Unlock()
+
 			if err != nil {
 				return nil, fmt.Errorf("failed digest auth %w", err)
 			}
 
-			if t.challenge.Realm != "" {
+			if hasRealm {
 				req.Header.Set("Authorization", auth)
 			}
 		} else {
@@ -250,21 +314,39 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 	req.Header.Add("content-type", ContentType)
 
+	// GetBody enables auto-retry on stale keep-alive connections.
+	req.GetBody = func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(msgBody)), nil
+	}
+
 	if t.logAMTMessages {
 		logrus.Trace(msg)
 	}
 
 	res, err := t.Do(req)
 	if err != nil {
-		return nil, err
+		res, err = t.retryOnTransient(req, err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if t.useDigest && res.StatusCode == 401 {
-		if err := t.challenge.parseChallenge(res.Header.Get("WWW-Authenticate")); err != nil {
-			return nil, err
+		_, _ = io.Copy(io.Discard, res.Body)
+		_ = res.Body.Close()
+
+		t.challengeMu.Lock()
+		parseErr := t.challenge.parseChallenge(res.Header.Get("WWW-Authenticate"))
+
+		if parseErr == nil {
+			auth, err = t.challenge.authorize("POST", "/wsman")
+		}
+		t.challengeMu.Unlock()
+
+		if parseErr != nil {
+			return nil, parseErr
 		}
 
-		auth, err = t.challenge.authorize("POST", "/wsman")
 		if err != nil {
 			return nil, fmt.Errorf("failed digest auth %w", err)
 		}
@@ -278,10 +360,16 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 		req.Header.Set("Authorization", auth)
 		req.Header.Add("content-type", ContentType)
+		req.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(bytes.NewReader(msgBody)), nil
+		}
 
 		res, err = t.Do(req)
-		if err != nil && err.Error() != io.EOF.Error() {
-			return nil, err
+		if err != nil {
+			res, err = t.retryOnTransient(req, err)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
