@@ -33,6 +33,10 @@ const (
 	RedirectionTLSPort    = "16995"
 	RedirectionNonTLSPort = "16994"
 	WSManPath             = "/wsman"
+	timeout               = 30 * time.Second
+	idleConnTimeout       = 90 * time.Second // keeps sockets warm as long as AMT holds them open
+	maxConcurrentPosts    = 2                // caps simultaneous WSMAN Posts to match AMT firmware capacity
+	maxTransientRetries   = 3
 )
 
 type Message struct {
@@ -62,6 +66,9 @@ type Target struct {
 	useDigest          bool
 	logAMTMessages     bool
 	challenge          *AuthChallenge
+	challengeMu        sync.Mutex // serializes access to challenge digest state
+	primeMu            sync.Mutex // single-flights the initial cold-wake auth handshake
+	sem                chan struct{}
 	conn               net.Conn
 	bufferPool         sync.Pool
 	UseTLS             bool
@@ -74,6 +81,101 @@ type Target struct {
 // field on Target would shadow the embedded http.Client.Timeout and leave
 // requests with no deadline, so the promoted field is set directly.
 const minTimeout = 10 * time.Second
+
+// hostSems limits concurrency per device, shared across all Targets for a host.
+var (
+	hostSemsMu sync.Mutex
+	hostSems   = make(map[string]chan struct{})
+)
+
+// hostSemaphore returns the shared concurrency limiter for an endpoint.
+func hostSemaphore(endpoint string) chan struct{} {
+	hostSemsMu.Lock()
+	defer hostSemsMu.Unlock()
+
+	if sem, ok := hostSems[endpoint]; ok {
+		return sem
+	}
+
+	sem := make(chan struct{}, maxConcurrentPosts)
+	hostSems[endpoint] = sem
+
+	return sem
+}
+
+// isTransientTransportError reports whether err is a recoverable transport error.
+func isTransientTransportError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+
+	errText := strings.ToLower(err.Error())
+
+	return strings.Contains(errText, "connection reset by peer") ||
+		strings.Contains(errText, "bad record mac") ||
+		strings.Contains(errText, "tls: internal error") ||
+		strings.Contains(errText, "broken pipe")
+}
+
+// retryOnTransient retries req on transient transport errors until deadline.
+func (t *Target) retryOnTransient(msgBody []byte, origReq *http.Request, origErr error, deadline time.Time) (*http.Response, error) {
+	if !isTransientTransportError(origErr) {
+		return nil, origErr
+	}
+
+	authenticated := t.useDigest && origReq.Header.Get("Authorization") != ""
+
+	lastErr := origErr
+
+	for attempt := 1; attempt <= maxTransientRetries; attempt++ {
+		// All attempts share one budget so a Post cannot hold its slot for
+		// maxTransientRetries * timeout.
+		if time.Now().After(deadline) {
+			return nil, lastErr
+		}
+
+		if tr, ok := t.Transport.(*http.Transport); ok {
+			tr.CloseIdleConnections()
+		}
+
+		retryReq, reqErr := t.newPostRequest(msgBody)
+		if reqErr != nil {
+			return nil, reqErr
+		}
+
+		retryReq.Header = origReq.Header.Clone()
+
+		if authenticated {
+			auth, ok, authErr := t.digestAuthHeader()
+			if authErr != nil {
+				return nil, fmt.Errorf("failed digest auth %w", authErr)
+			}
+
+			if ok {
+				retryReq.Header.Set("Authorization", auth)
+			}
+		}
+
+		res, err := t.Do(retryReq)
+		if err == nil {
+			return res, nil
+		}
+
+		lastErr = err
+
+		logrus.WithError(err).Warnf("wsman transient retry %d/%d failed", attempt, maxTransientRetries)
+
+		if !isTransientTransportError(err) {
+			return nil, err
+		}
+	}
+
+	return nil, lastErr
+}
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -99,6 +201,7 @@ func NewWsman(cp Parameters) *Target {
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
 		Client:             http.Client{Timeout: max(minTimeout, cp.Timeout)},
+		sem:                hostSemaphore(cp.Target + ":" + port),
 	}
 
 	if cp.Transport == nil {
@@ -138,9 +241,9 @@ func NewWsman(cp Parameters) *Target {
 			}
 
 			res.Transport = &http.Transport{
-				MaxIdleConns:      10,
-				IdleConnTimeout:   30 * time.Second,
-				DisableKeepAlives: true,
+				MaxIdleConns:      maxConcurrentPosts,
+				IdleConnTimeout:   idleConnTimeout,
+				DisableKeepAlives: false,
 				TLSClientConfig:   config,
 			}
 		}
@@ -156,6 +259,9 @@ func NewWsman(cp Parameters) *Target {
 }
 
 func (t *Target) IsAuthenticated() bool {
+	t.challengeMu.Lock()
+	defer t.challengeMu.Unlock()
+
 	return t.challenge != nil && t.challenge.Realm != ""
 }
 
@@ -208,27 +314,92 @@ func (t *Target) GetServerCertificate() (*tls.Certificate, error) {
 	return capturedCert, nil
 }
 
+// digestAuthHeader builds a Digest Authorization header under lock.
+func (t *Target) digestAuthHeader() (auth string, ok bool, err error) {
+	t.challengeMu.Lock()
+	defer t.challengeMu.Unlock()
+
+	if t.challenge.Realm == "" {
+		return "", false, nil
+	}
+
+	auth, err = t.challenge.authorize("POST", "/wsman")
+	if err != nil {
+		return "", false, err
+	}
+
+	return auth, true, nil
+}
+
+// primeChallenge parses a 401 challenge and resets nc counter when nonce changes.
+func (t *Target) primeChallenge(header string) error {
+	t.challengeMu.Lock()
+	defer t.challengeMu.Unlock()
+
+	prevNonce := t.challenge.Nonce
+
+	if err := t.challenge.parseChallenge(header); err != nil {
+		return err
+	}
+
+	if t.challenge.Nonce != prevNonce {
+		t.challenge.NonceCount = 0
+	}
+
+	return nil
+}
+
+func (t *Target) newPostRequest(msgBody []byte) (*http.Request, error) {
+	req, err := http.NewRequest("POST", t.endpoint, bytes.NewReader(msgBody))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("content-type", ContentType)
+	// GetBody enables auto-retry on stale keep-alive connections.
+	req.GetBody = func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(msgBody)), nil
+	}
+
+	return req, nil
+}
+
 // Post overrides http.Client's Post method.
 func (t *Target) Post(msg string) (response []byte, err error) {
+	// Bound concurrent Posts to match AMT firmware connection capacity.
+	if t.sem != nil {
+		t.sem <- struct{}{}
+		defer func() { <-t.sem }()
+	}
+
+	// Single-flight the first authentication handshake when digest is enabled.
+	if t.useDigest && !t.IsAuthenticated() {
+		t.primeMu.Lock()
+		if t.IsAuthenticated() {
+			t.primeMu.Unlock()
+		} else {
+			defer t.primeMu.Unlock()
+		}
+	}
+
+	// Cap the whole Post, retries included, so a slot is never held for longer.
+	deadline := time.Now().Add(timeout)
+
 	msgBody := []byte(msg)
 
-	var auth string
-
-	bodyReader := bytes.NewReader(msgBody)
-
-	req, err := http.NewRequest("POST", t.endpoint, bodyReader)
+	req, err := t.newPostRequest(msgBody)
 	if err != nil {
 		return nil, err
 	}
 
 	if t.username != "" && t.password != "" {
 		if t.useDigest {
-			auth, err = t.challenge.authorize("POST", "/wsman")
-			if err != nil {
-				return nil, fmt.Errorf("failed digest auth %w", err)
+			auth, ok, authErr := t.digestAuthHeader()
+			if authErr != nil {
+				return nil, fmt.Errorf("failed digest auth %w", authErr)
 			}
 
-			if t.challenge.Realm != "" {
+			if ok {
 				req.Header.Set("Authorization", auth)
 			}
 		} else {
@@ -236,40 +407,44 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 		}
 	}
 
-	req.Header.Add("content-type", ContentType)
-
 	if t.logAMTMessages {
 		logrus.Trace(msg)
 	}
 
 	res, err := t.Do(req)
 	if err != nil {
-		return nil, err
+		res, err = t.retryOnTransient(msgBody, req, err, deadline)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if t.useDigest && res.StatusCode == 401 {
-		if err := t.challenge.parseChallenge(res.Header.Get("WWW-Authenticate")); err != nil {
-			return nil, err
+		_, _ = io.Copy(io.Discard, res.Body)
+		_ = res.Body.Close()
+
+		if parseErr := t.primeChallenge(res.Header.Get("WWW-Authenticate")); parseErr != nil {
+			return nil, parseErr
 		}
 
-		auth, err = t.challenge.authorize("POST", "/wsman")
-		if err != nil {
-			return nil, fmt.Errorf("failed digest auth %w", err)
+		auth, _, authErr := t.digestAuthHeader()
+		if authErr != nil {
+			return nil, fmt.Errorf("failed digest auth %w", authErr)
 		}
 
-		bodyReader = bytes.NewReader(msgBody)
-
-		req, err = http.NewRequest("POST", t.endpoint, bodyReader)
+		req, err = t.newPostRequest(msgBody)
 		if err != nil {
 			return nil, err
 		}
 
 		req.Header.Set("Authorization", auth)
-		req.Header.Add("content-type", ContentType)
 
 		res, err = t.Do(req)
-		if err != nil && err.Error() != io.EOF.Error() {
-			return nil, err
+		if err != nil {
+			res, err = t.retryOnTransient(msgBody, req, err, deadline)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
