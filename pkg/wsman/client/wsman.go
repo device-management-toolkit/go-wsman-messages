@@ -73,7 +73,62 @@ type Target struct {
 	tlsConfig          *tls.Config
 }
 
-const timeout = 30 * time.Second
+const timeout = 20 * time.Second
+
+// isTransientTransportError reports whether err is a recoverable transport error.
+func isTransientTransportError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+
+	errText := strings.ToLower(err.Error())
+
+	return strings.Contains(errText, "connection reset by peer") ||
+		strings.Contains(errText, "bad record mac") ||
+		strings.Contains(errText, "tls: internal error") ||
+		strings.Contains(errText, "broken pipe")
+}
+
+// retryOnTransient retries req once on transient transport errors.
+func (t *Target) retryOnTransient(req *http.Request, origErr error) (*http.Response, error) {
+	if !isTransientTransportError(origErr) {
+		return nil, origErr
+	}
+
+	if tr, ok := t.Transport.(*http.Transport); ok {
+		tr.CloseIdleConnections()
+	}
+
+	if req.GetBody == nil {
+		return nil, origErr
+	}
+
+	retryBody, bodyErr := req.GetBody()
+	if bodyErr != nil {
+		return nil, bodyErr
+	}
+
+	retryReq, reqErr := http.NewRequest(req.Method, req.URL.String(), retryBody)
+	if reqErr != nil {
+		return nil, reqErr
+	}
+
+	retryReq.Header = req.Header.Clone()
+	retryReq.GetBody = req.GetBody
+
+	res, err := t.Do(retryReq)
+	if err != nil {
+		logrus.WithError(err).Warn("wsman transient retry failed")
+
+		return nil, err
+	}
+
+	return res, nil
+}
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -154,8 +209,9 @@ func NewWsman(cp Parameters) *Target {
 			}
 
 			res.Transport = &http.Transport{
-				MaxIdleConns:      10,
-				IdleConnTimeout:   30 * time.Second,
+				MaxIdleConns:      7,
+				MaxConnsPerHost:   7,
+				IdleConnTimeout:   60 * time.Second,
 				DisableKeepAlives: false,
 				TLSClientConfig:   config,
 			}
@@ -269,7 +325,10 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 	res, err := t.Do(req)
 	if err != nil {
-		return nil, err
+		res, err = t.retryOnTransient(req, err)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if t.useDigest && res.StatusCode == 401 {
@@ -301,10 +360,16 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 		req.Header.Set("Authorization", auth)
 		req.Header.Add("content-type", ContentType)
+		req.GetBody = func() (io.ReadCloser, error) {
+			return io.NopCloser(bytes.NewReader(msgBody)), nil
+		}
 
 		res, err = t.Do(req)
-		if err != nil && err.Error() != io.EOF.Error() {
-			return nil, err
+		if err != nil {
+			res, err = t.retryOnTransient(req, err)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
