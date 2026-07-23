@@ -64,6 +64,7 @@ type Target struct {
 	useDigest          bool
 	logAMTMessages     bool
 	challenge          *AuthChallenge
+	challengeMu        sync.Mutex
 	conn               net.Conn
 	bufferPool         sync.Pool
 	UseTLS             bool
@@ -72,7 +73,7 @@ type Target struct {
 	tlsConfig          *tls.Config
 }
 
-const timeout = 10 * time.Second
+const timeout = 30 * time.Second
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -155,7 +156,7 @@ func NewWsman(cp Parameters) *Target {
 			res.Transport = &http.Transport{
 				MaxIdleConns:      10,
 				IdleConnTimeout:   30 * time.Second,
-				DisableKeepAlives: true,
+				DisableKeepAlives: false,
 				TLSClientConfig:   config,
 			}
 		}
@@ -171,6 +172,9 @@ func NewWsman(cp Parameters) *Target {
 }
 
 func (t *Target) IsAuthenticated() bool {
+	t.challengeMu.Lock()
+	defer t.challengeMu.Unlock()
+
 	return t.challenge != nil && t.challenge.Realm != ""
 }
 
@@ -235,12 +239,16 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 	if t.username != "" && t.password != "" {
 		if t.useDigest {
+			t.challengeMu.Lock()
 			auth, err = t.challenge.authorize("POST", "/wsman")
+			hasRealm := t.challenge.Realm != ""
+			t.challengeMu.Unlock()
+
 			if err != nil {
 				return nil, fmt.Errorf("failed digest auth %w", err)
 			}
 
-			if t.challenge.Realm != "" {
+			if hasRealm {
 				req.Header.Set("Authorization", auth)
 			}
 		} else {
@@ -249,6 +257,11 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 	}
 
 	req.Header.Add("content-type", ContentType)
+
+	// GetBody enables auto-retry on stale keep-alive connections.
+	req.GetBody = func() (io.ReadCloser, error) {
+		return io.NopCloser(bytes.NewReader(msgBody)), nil
+	}
 
 	if t.logAMTMessages {
 		logrus.Trace(msg)
@@ -260,11 +273,21 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 	}
 
 	if t.useDigest && res.StatusCode == 401 {
-		if err := t.challenge.parseChallenge(res.Header.Get("WWW-Authenticate")); err != nil {
-			return nil, err
+		_, _ = io.Copy(io.Discard, res.Body)
+		_ = res.Body.Close()
+
+		t.challengeMu.Lock()
+		parseErr := t.challenge.parseChallenge(res.Header.Get("WWW-Authenticate"))
+
+		if parseErr == nil {
+			auth, err = t.challenge.authorize("POST", "/wsman")
+		}
+		t.challengeMu.Unlock()
+
+		if parseErr != nil {
+			return nil, parseErr
 		}
 
-		auth, err = t.challenge.authorize("POST", "/wsman")
 		if err != nil {
 			return nil, fmt.Errorf("failed digest auth %w", err)
 		}
