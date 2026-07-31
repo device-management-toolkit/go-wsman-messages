@@ -17,6 +17,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ErrChannelOpenFailure is delivered on the session ErrorBuffer when AMT
+// rejects an APF_CHANNEL_OPEN with an APF_CHANNEL_OPEN_FAILURE. Callers can
+// match it with errors.Is to distinguish a channel-open rejection (often a
+// transient firmware tcpip-forward teardown/re-advertise race) from other
+// transport errors and retry the open.
+var ErrChannelOpenFailure = errors.New("error opening APF channel")
+
 // Processor handles APF protocol messages with optional callbacks.
 type Processor struct {
 	handler Handler
@@ -368,6 +375,22 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 
 	log.Tracef("%+v", closeMessage)
 
+	if session != nil && session.CloseAck != nil {
+		select {
+		case session.CloseAck <- closeMessage.RecipientChannel:
+		default:
+		}
+	}
+
+	// Gate on HandshakeConfirmed so a stale CLOSE for channel 0 cannot tear
+	// down a freshly opened tunnel whose RecipientChannel is still the zero
+	// default before its OPEN_CONFIRMATION arrives.
+	if session != nil && session.StreamDataBuffer != nil && session.HandshakeConfirmed &&
+		session.RecipientChannel == closeMessage.RecipientChannel {
+		close(session.StreamDataBuffer)
+		session.StreamDataBuffer = nil
+	}
+
 	// Server-initiated close is the authoritative "response complete" signal
 	// when the HTTP request used Connection: close. Deliver any accumulated
 	// response body to the waiting HTTP client now, rather than relying on an
@@ -454,7 +477,12 @@ func ProcessGlobalRequest(data []byte) (GlobalRequest, interface{}) {
 		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_REQUEST:
 			reply = TcpForwardReplySuccess(tcpForwardRequest.Port)
 		case APF_GLOBAL_REQUEST_STR_TCP_FORWARD_CANCEL_REQUEST:
-			reply = APF_REQUEST_SUCCESS
+			// SSH_MSG_REQUEST_SUCCESS for a cancel carries no port payload, so
+			// it is a single message-type byte. The untyped APF_REQUEST_SUCCESS
+			// constant defaults to int, which binary.Write rejects as not
+			// fixed-size; emit a uint8 so the reply actually serializes and is
+			// sent back to AMT (it sets WantReply on these requests).
+			reply = uint8(APF_REQUEST_SUCCESS)
 		}
 	}
 
@@ -498,6 +526,21 @@ func ProcessChannelData(data []byte, session *Session) interface{} {
 		log.Error(err)
 
 		return nil
+	}
+
+	if session.StreamDataBuffer != nil {
+		// Non-blocking: if the tunnel consumer has gone away, drop the chunk
+		// rather than stalling the processor loop. Consumers are expected to
+		// provide a buffered channel sized to their workload.
+		select {
+		case session.StreamDataBuffer <- dataBuffer[:channelData.DataLength]:
+		default:
+			log.Warn("StreamDataBuffer full; dropping APF channel data chunk")
+		}
+
+		// Still credit the peer so it can keep sending. Without this AMT's
+		// send window depletes mid-TLS-handshake and the channel stalls.
+		return ChannelWindowAdjust(session.SenderChannel, channelData.DataLength)
 	}
 
 	session.Tempdata = append(session.Tempdata, dataBuffer[:channelData.DataLength]...)
@@ -572,7 +615,17 @@ func ProcessChannelOpenConfirmation(data []byte, session *Session) {
 	session.RecipientChannel = confirmationMessage.RecipientChannel
 	session.TXWindow = confirmationMessage.InitialWindowSize
 	session.HandshakeConfirmed = true
-	session.WaitGroup.Done()
+
+	if session.WaitGroup != nil {
+		session.WaitGroup.Done()
+	}
+
+	if session.Status != nil {
+		select {
+		case session.Status <- true:
+		default:
+		}
+	}
 }
 
 func ProcessChannelOpenFailure(data []byte, session *Session) {
@@ -599,7 +652,7 @@ func ProcessChannelOpenFailure(data []byte, session *Session) {
 	}
 
 	if session.ErrorBuffer != nil {
-		openErr := errors.New("error opening APF channel, reason code: " + fmt.Sprint(channelOpenFailure.ReasonCode))
+		openErr := fmt.Errorf("%w, reason code: %d", ErrChannelOpenFailure, channelOpenFailure.ReasonCode)
 		select {
 		case session.ErrorBuffer <- openErr:
 		default:

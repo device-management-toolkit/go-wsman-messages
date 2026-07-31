@@ -10,6 +10,7 @@ package wifiportconfiguration
 const (
 	AMTWiFiPortConfigurationService string = "AMT_WiFiPortConfigurationService"
 	AddWiFiSettings                 string = "AddWiFiSettings"
+	UpdateWiFiSettings              string = "UpdateWiFiSettings"
 	ValueNotFound                   string = "Value not found in map"
 )
 

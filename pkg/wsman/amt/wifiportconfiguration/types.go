@@ -36,6 +36,7 @@ type (
 		PullResponse                 PullResponse
 		EnumerateResponse            common.EnumerateResponse
 		AddWiFiSettingsOutput        AddWiFiSettings_OUTPUT
+		UpdateWiFiSettingsOutput     UpdateWiFiSettings_OUTPUT
 	}
 	WiFiPortConfigurationServiceResponse struct {
 		XMLName                            xml.Name                           `xml:"AMT_WiFiPortConfigurationService"`
@@ -66,6 +67,17 @@ type (
 
 		// ClientCredential     *ClientCredential         `xml:"g:ClientCredential,omitempty"`
 		// CACredential         *CACredential             `xml:"g:CACredential,omitempty"`
+		ReturnValue ReturnValue `xml:"ReturnValue"`
+	}
+
+	// ValueMap={0, 1, 2, 3, 4, .., 32768..65535}
+	//
+	// Values={Completed with No Error, Not Supported, Failed, Invalid Parameter, Invalid Reference, Method Reserved, Vendor Specific}.
+	UpdateWiFiSettings_OUTPUT struct {
+		XMLName xml.Name `xml:"UpdateWiFiSettings_OUTPUT"`
+		// not concerned with these entries on OUTPUT
+
+		// IEEE8021xSettings    *IEEE8021xSettingsRef `xml:"g:IEEE8021xSettings,omitempty"`
 		ReturnValue ReturnValue `xml:"ReturnValue"`
 	}
 )
@@ -163,6 +175,16 @@ type (
 		ClientCredential     *ClientCredentialRequest  `xml:"h:ClientCredential,omitempty"`
 		CACredential         *CACredentialRequest      `xml:"h:CACredential,omitempty"`
 	}
+
+	UpdateWiFiSettings_INPUT struct {
+		XMLName                   xml.Name `xml:"h:UpdateWiFiSettings_INPUT"`
+		H                         string   `xml:"xmlns:h,attr"`
+		WiFiEndpointSettings      WiFiEndpointSettings
+		WiFiEndpointSettingsInput wifi.WiFiEndpointSettingsRequest
+		IEEE8021xSettings         *models.IEEE8021xSettings `xml:"h:IEEE8021xSettingsInput,omitempty"`
+		ClientCredential          *ClientCredentialRequest  `xml:"h:ClientCredential,omitempty"`
+		CACredential              *CACredentialRequest      `xml:"h:CACredential,omitempty"`
+	}
 	WiFiPortConfigurationServiceRequest struct {
 		XMLName                            xml.Name                           `xml:"h:AMT_WiFiPortConfigurationService"`
 		H                                  string                             `xml:"xmlns:h,attr"`
@@ -177,7 +199,7 @@ type (
 		LocalProfileSynchronizationEnabled LocalProfileSynchronizationEnabled `xml:"h:localProfileSynchronizationEnabled"`        // Administrator's policy regarding enablement of local profile synchronization.Remote profile synchronization is always enabled.
 		LastConnectedSsidUnderMeControl    string                             `xml:"h:LastConnectedSsidUnderMeControl,omitempty"` // The SSID of the Wireless network that was last connected in ME Control state
 		NoHostCsmeSoftwarePolicy           NoHostCsmeSoftwarePolicy           `xml:"h:NoHostCsmeSoftwarePolicy,omitempty"`        // Setting Policy regarding no HOST CSME software.
-		UEFIWiFiProfileShareEnabled        bool                               `xml:"h:UEFIWiFiProfileShareEnabled,omitempty"`     // Enables or disables UEFI/CSME Wi-Fi Profile Sharing. The feature is available from Intel® CSME 16.0. The feature can be disabled even if the value of AMT_BootCapabilities.UEFIWiFiCoExistenceAndProfileShare is False.
+		UEFIWiFiProfileShareEnabled        bool                               `xml:"h:UEFIWiFiProfileShareEnabled"`               // Enables or disables UEFI/CSME Wi-Fi Profile Sharing. The feature is available from Intel® CSME 16.0. The feature can be disabled even if the value of AMT_BootCapabilities.UEFIWiFiCoExistenceAndProfileShare is False.
 	}
 
 	// a Reference to an AMT_PublicKeyCertificate, which represents the CA certificate.
@@ -220,6 +242,13 @@ type (
 // The endpoint to associate the new settings with.
 type WiFiEndpoint struct {
 	XMLName             xml.Name            `xml:"h:WiFiEndpoint,omitempty"`
+	Address             string              `xml:"a:Address,omitempty"`
+	ReferenceParameters ReferenceParameters `xml:"a:ReferenceParameters,omitempty"`
+}
+
+// The endpoint settings instance to update.
+type WiFiEndpointSettings struct {
+	XMLName             xml.Name            `xml:"h:WiFiEndpointSettings,omitempty"`
 	Address             string              `xml:"a:Address,omitempty"`
 	ReferenceParameters ReferenceParameters `xml:"a:ReferenceParameters,omitempty"`
 }

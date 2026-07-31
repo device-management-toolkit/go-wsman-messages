@@ -129,7 +129,7 @@ func TestPositiveAMT_TLSSettingData(t *testing.T) {
 				AMTTLSSettingData,
 				wsmantesting.Put,
 				"<w:SelectorSet><w:Selector Name=\"InstanceID\">Intel(r) AMT 802.3 TLS Settings</w:Selector></w:SelectorSet>",
-				"<h:AMT_TLSSettingData xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TLSSettingData\"><h:ElementName>Intel(r) AMT 802.3 TLS Settings</h:ElementName><h:InstanceID>Intel(r) AMT 802.3 TLS Settings</h:InstanceID><h:MutualAuthentication>false</h:MutualAuthentication><h:Enabled>true</h:Enabled><h:AcceptNonSecureConnections>false</h:AcceptNonSecureConnections><h:NonSecureConnectionsSupported>false</h:NonSecureConnectionsSupported></h:AMT_TLSSettingData>",
+				"<h:AMT_TLSSettingData xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TLSSettingData\"><h:ElementName>Intel(r) AMT 802.3 TLS Settings</h:ElementName><h:InstanceID>Intel(r) AMT 802.3 TLS Settings</h:InstanceID><h:MutualAuthentication>false</h:MutualAuthentication><h:Enabled>true</h:Enabled><h:AcceptNonSecureConnections>false</h:AcceptNonSecureConnections></h:AMT_TLSSettingData>",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessagePut
 					tlsSettingData := SettingDataRequest{
@@ -274,7 +274,7 @@ func TestNegativeAMT_TLSSettingData(t *testing.T) {
 				AMTTLSSettingData,
 				wsmantesting.Put,
 				"<w:SelectorSet><w:Selector Name=\"InstanceID\">Intel(r) AMT 802.3 TLS Settings</w:Selector></w:SelectorSet>",
-				"<h:AMT_TLSSettingData xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TLSSettingData\"><h:ElementName>Intel(r) AMT 802.3 TLS Settings</h:ElementName><h:InstanceID>Intel(r) AMT 802.3 TLS Settings</h:InstanceID><h:MutualAuthentication>false</h:MutualAuthentication><h:Enabled>true</h:Enabled><h:AcceptNonSecureConnections>false</h:AcceptNonSecureConnections><h:NonSecureConnectionsSupported>false</h:NonSecureConnectionsSupported></h:AMT_TLSSettingData>",
+				"<h:AMT_TLSSettingData xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_TLSSettingData\"><h:ElementName>Intel(r) AMT 802.3 TLS Settings</h:ElementName><h:InstanceID>Intel(r) AMT 802.3 TLS Settings</h:InstanceID><h:MutualAuthentication>false</h:MutualAuthentication><h:Enabled>true</h:Enabled><h:AcceptNonSecureConnections>false</h:AcceptNonSecureConnections></h:AMT_TLSSettingData>",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 					tlsSettingData := SettingDataRequest{

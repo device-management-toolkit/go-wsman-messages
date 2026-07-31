@@ -13,6 +13,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/amt/methods"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/models"
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/cim/wifi"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
@@ -23,7 +26,7 @@ func TestJson(t *testing.T) {
 			WiFiPortConfigurationService: WiFiPortConfigurationServiceResponse{},
 		},
 	}
-	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiPortConfigurationService\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"RequestedState\":0,\"EnabledState\":0,\"HealthState\":0,\"ElementName\":\"\",\"SystemCreationClassName\":\"\",\"SystemName\":\"\",\"CreationClassName\":\"\",\"Name\":\"\",\"LocalProfileSynchronizationEnabled\":0,\"LastConnectedSsidUnderMeControl\":\"\",\"NoHostCsmeSoftwarePolicy\":0,\"UEFIWiFiProfileShareEnabled\":false},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiPortConfigurationItems\":null},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"AddWiFiSettingsOutput\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"ReturnValue\":0}}"
+	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiPortConfigurationService\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"RequestedState\":0,\"EnabledState\":0,\"HealthState\":0,\"ElementName\":\"\",\"SystemCreationClassName\":\"\",\"SystemName\":\"\",\"CreationClassName\":\"\",\"Name\":\"\",\"LocalProfileSynchronizationEnabled\":0,\"LastConnectedSsidUnderMeControl\":\"\",\"NoHostCsmeSoftwarePolicy\":0,\"UEFIWiFiProfileShareEnabled\":false},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"WiFiPortConfigurationItems\":null},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"AddWiFiSettingsOutput\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"ReturnValue\":0},\"UpdateWiFiSettingsOutput\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"ReturnValue\":0}}"
 	result := response.JSON()
 	assert.Equal(t, expectedResult, result)
 }
@@ -34,9 +37,185 @@ func TestYaml(t *testing.T) {
 			WiFiPortConfigurationService: WiFiPortConfigurationServiceResponse{},
 		},
 	}
-	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nwifiportconfigurationservice:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    requestedstate: 0\n    enabledstate: 0\n    healthstate: 0\n    elementname: \"\"\n    systemcreationclassname: \"\"\n    systemname: \"\"\n    creationclassname: \"\"\n    name: \"\"\n    localprofilesynchronizationenabled: 0\n    lastconnectedssidundermecontrol: \"\"\n    nohostcsmesoftwarepolicy: 0\n    uefiwifiprofileshareenabled: false\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    wifiportconfigurationitems: []\nenumerateresponse:\n    enumerationcontext: \"\"\naddwifisettingsoutput:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    returnvalue: 0\n"
+	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\nwifiportconfigurationservice:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    requestedstate: 0\n    enabledstate: 0\n    healthstate: 0\n    elementname: \"\"\n    systemcreationclassname: \"\"\n    systemname: \"\"\n    creationclassname: \"\"\n    name: \"\"\n    localprofilesynchronizationenabled: 0\n    lastconnectedssidundermecontrol: \"\"\n    nohostcsmesoftwarepolicy: 0\n    uefiwifiprofileshareenabled: false\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    wifiportconfigurationitems: []\nenumerateresponse:\n    enumerationcontext: \"\"\naddwifisettingsoutput:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    returnvalue: 0\nupdatewifisettingsoutput:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    returnvalue: 0\n"
 	result := response.YAML()
 	assert.Equal(t, expectedResult, result)
+}
+
+func TestUpdateWiFiSettings(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "UpdateWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+	expectedXMLInput := wsmantesting.ExpectedResponse(
+		0,
+		resourceURIBase,
+		AMTWiFiPortConfigurationService,
+		methods.GenerateAction(AMTWiFiPortConfigurationService, UpdateWiFiSettings),
+		"",
+		"<h:UpdateWiFiSettings_INPUT xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:WiFiEndpointSettings><a:Address>/wsman</a:Address><a:ReferenceParameters xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\"><c:ResourceURI>http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings</c:ResourceURI><c:SelectorSet xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\"><c:Selector xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\" Name=\"InstanceID\">Intel(r) AMT:WiFi Endpoint Settings home</c:Selector></c:SelectorSet></a:ReferenceParameters></h:WiFiEndpointSettings><h:WiFiEndpointSettingsInput xmlns:q=\"http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings\"><q:ElementName>home</q:ElementName><q:InstanceID>Intel(r) AMT:WiFi Endpoint Settings home</q:InstanceID><q:AuthenticationMethod>6</q:AuthenticationMethod><q:EncryptionMethod>4</q:EncryptionMethod><q:SSID>admin</q:SSID><q:Priority>1</q:Priority><q:PSKPassPhrase>password123</q:PSKPassPhrase></h:WiFiEndpointSettingsInput></h:UpdateWiFiSettings_INPUT>",
+	)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2PSK,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+		PSKPassPhrase:        "password123",
+	}
+
+	response, err := elementUnderTest.UpdateWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedXMLInput, response.XMLInput)
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.UpdateWiFiSettingsOutput.ReturnValue)
+}
+
+func TestUpdateWiFiSettings_OmitsCACredentialWhenEmpty(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "UpdateWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2IEEE8021x,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+	}
+
+	response, err := elementUnderTest.UpdateWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"client-cert-id",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.NotContains(t, response.XMLInput, "<h:CACredential>")
+	assert.Contains(t, response.XMLInput, "<h:ClientCredential ")
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.UpdateWiFiSettingsOutput.ReturnValue)
+}
+
+func TestAddWiFiSettings(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "AddWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+	expectedXMLInput := wsmantesting.ExpectedResponse(
+		0,
+		resourceURIBase,
+		AMTWiFiPortConfigurationService,
+		methods.GenerateAction(AMTWiFiPortConfigurationService, AddWiFiSettings),
+		"",
+		"<h:AddWiFiSettings_INPUT xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:WiFiEndpoint><a:Address>/wsman</a:Address><a:ReferenceParameters xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\"><c:ResourceURI>http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpoint</c:ResourceURI><c:SelectorSet xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\"><c:Selector xmlns:c=\"http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd\" Name=\"Name\">WiFi Endpoint 0</c:Selector></c:SelectorSet></a:ReferenceParameters></h:WiFiEndpoint><h:WiFiEndpointSettingsInput xmlns:q=\"http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings\"><q:ElementName>home</q:ElementName><q:InstanceID>Intel(r) AMT:WiFi Endpoint Settings home</q:InstanceID><q:AuthenticationMethod>6</q:AuthenticationMethod><q:EncryptionMethod>4</q:EncryptionMethod><q:SSID>admin</q:SSID><q:Priority>1</q:Priority><q:PSKPassPhrase>password123</q:PSKPassPhrase></h:WiFiEndpointSettingsInput></h:AddWiFiSettings_INPUT>",
+	)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2PSK,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+		PSKPassPhrase:        "password123",
+	}
+
+	response, err := elementUnderTest.AddWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"WiFi Endpoint 0",
+		"",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedXMLInput, response.XMLInput)
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.AddWiFiSettingsOutput.ReturnValue)
+}
+
+// TestAddWiFiSettings_OmitsCACredentialWhenEmpty is a regression test: AddWiFiSettings used to send
+// an empty <h:CACredential> reference (with a blank InstanceID selector) whenever an IEEE 802.1x
+// profile was added without a CA certificate, even though the CA certificate is optional. AMT
+// firmware rejects the invalid reference, so every "add" of a new 802.1x profile without a CA cert
+// failed. UpdateWiFiSettings already gated this correctly; AddWiFiSettings must match.
+func TestAddWiFiSettings_OmitsCACredentialWhenEmpty(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "AddWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2IEEE8021x,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+	}
+
+	response, err := elementUnderTest.AddWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"WiFi Endpoint 0",
+		"client-cert-id",
+		"",
+	)
+	assert.NoError(t, err)
+	assert.NotContains(t, response.XMLInput, "<h:CACredential>")
+	assert.Contains(t, response.XMLInput, "<h:ClientCredential ")
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.AddWiFiSettingsOutput.ReturnValue)
+}
+
+// TestAddWiFiSettings_IncludesCACredentialWhenProvided guards the other direction: when a CA
+// certificate handle is supplied, it must still be included in the request.
+func TestAddWiFiSettings_IncludesCACredentialWhenProvided(t *testing.T) {
+	resourceURIBase := wsmantesting.AMTResourceURIBase
+	wsmanMessageCreator := message.NewWSManMessageCreator(resourceURIBase)
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/wifiportconfiguration",
+		CurrentMessage:   "AddWiFiSettings",
+	}
+	elementUnderTest := NewWiFiPortConfigurationServiceWithClient(wsmanMessageCreator, &client)
+
+	wifiEndpointSettings := wifi.WiFiEndpointSettingsRequest{
+		ElementName:          "home",
+		InstanceID:           "Intel(r) AMT:WiFi Endpoint Settings home",
+		AuthenticationMethod: wifi.AuthenticationMethodWPA2IEEE8021x,
+		EncryptionMethod:     wifi.EncryptionMethodCCMP,
+		SSID:                 "admin",
+		Priority:             1,
+	}
+
+	response, err := elementUnderTest.AddWiFiSettings(
+		wifiEndpointSettings,
+		models.IEEE8021xSettings{},
+		"WiFi Endpoint 0",
+		"",
+		"ca-cert-id",
+	)
+	assert.NoError(t, err)
+	assert.Contains(t, response.XMLInput, "<h:CACredential ")
+	assert.NotContains(t, response.XMLInput, "<h:ClientCredential>")
+	assert.Equal(t, ReturnValueCompletedNoError, response.Body.AddWiFiSettingsOutput.ReturnValue)
 }
 
 func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
@@ -149,7 +328,7 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 				"should create a valid AMT_WiFiPortConfigurationService Put wsman message",
 				AMTWiFiPortConfigurationService,
 				wsmantesting.Put,
-				"<h:AMT_WiFiPortConfigurationService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:RequestedState>12</h:RequestedState><h:EnabledState>5</h:EnabledState><h:HealthState>5</h:HealthState><h:ElementName>Intel(r) AMT WiFiPort Configuration Service</h:ElementName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName><h:CreationClassName>AMT_WiFiPortConfigurationService</h:CreationClassName><h:Name>Intel(r) AMT WiFi Port Configuration Service</h:Name><h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled></h:AMT_WiFiPortConfigurationService>",
+				"<h:AMT_WiFiPortConfigurationService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:RequestedState>12</h:RequestedState><h:EnabledState>5</h:EnabledState><h:HealthState>5</h:HealthState><h:ElementName>Intel(r) AMT WiFiPort Configuration Service</h:ElementName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName><h:CreationClassName>AMT_WiFiPortConfigurationService</h:CreationClassName><h:Name>Intel(r) AMT WiFi Port Configuration Service</h:Name><h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled><h:UEFIWiFiProfileShareEnabled>false</h:UEFIWiFiProfileShareEnabled></h:AMT_WiFiPortConfigurationService>",
 				"",
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessagePut
@@ -187,23 +366,48 @@ func TestPositiveAMT_WiFiPortConfigurationService(t *testing.T) {
 					},
 				},
 			},
-			// WIFI PORT CONFIGURATION SERVICE
-			// {
-			// 	"should return a valid amt_WiFiPortConfigurationService ADD_WIFI_SETTINGS wsman message",
-			// 	AMT_WiFiPortConfigurationService,
-			// 	`http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService/AddWiFiSettings`, `<h:AddWiFiSettings_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService"><h:WiFiEndpoint><a:Address>/wsman</a:Address><a:ReferenceParameters><w:ResourceURI>http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpoint</w:ResourceURI><w:SelectorSet><w:Selector Name="Name">WiFi Endpoint 0</w:Selector></w:SelectorSet></a:ReferenceParameters></h:WiFiEndpoint><h:WiFiEndpointSettingsInput xmlns:q="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_WiFiEndpointSettings"><q:ElementName>home</q:ElementName><q:InstanceID>Intel(r) AMT:WiFi Endpoint Settings home</q:InstanceID><q:AuthenticationMethod>6</q:AuthenticationMethod><q:EncryptionMethod>4</q:EncryptionMethod><q:SSID>admin</q:SSID><q:Priority>1</q:Priority><q:PSKPassPhrase>p&#39;ass&lt;&gt;&amp;&#34;code</q:PSKPassPhrase></h:WiFiEndpointSettingsInput></h:AddWiFiSettings_INPUT>`,
-			// 	"",
-			// 	func() (Response, error) {
-			// 		client.CurrentMessage = "AddWiFiSettings"
-			// 		wifiEndpointSettings := wifi.WiFiEndpointSettings_INPUT{}
-			// 		ieee8021xSettings := &models.IEEE8021xSettings{}
-			// 		wifiEndpoint := "t"
-			// 		clientCredential := "t"
-			// 		caCredential := "t"
-			// 		return elementUnderTest.AddWiFiSettings(wifiEndpointSettings, ieee8021xSettings, wifiEndpoint, clientCredential, caCredential)
-			// 	},
-			// 	Body{},
-			// },
+			{
+				"should not return error when Put response local profile sync is disabled",
+				AMTWiFiPortConfigurationService,
+				wsmantesting.Put,
+				"<h:AMT_WiFiPortConfigurationService xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_WiFiPortConfigurationService\"><h:RequestedState>12</h:RequestedState><h:EnabledState>5</h:EnabledState><h:HealthState>5</h:HealthState><h:ElementName>Intel(r) AMT WiFiPort Configuration Service</h:ElementName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName><h:CreationClassName>AMT_WiFiPortConfigurationService</h:CreationClassName><h:Name>Intel(r) AMT WiFi Port Configuration Service</h:Name><h:localProfileSynchronizationEnabled>1</h:localProfileSynchronizationEnabled><h:UEFIWiFiProfileShareEnabled>false</h:UEFIWiFiProfileShareEnabled></h:AMT_WiFiPortConfigurationService>",
+				"",
+				func() (Response, error) {
+					client.CurrentMessage = "PutLocalProfileSyncDisabled"
+					wifiConfiguration := WiFiPortConfigurationServiceRequest{
+						RequestedState:                     12,
+						EnabledState:                       5,
+						HealthState:                        5,
+						ElementName:                        "Intel(r) AMT WiFiPort Configuration Service",
+						SystemCreationClassName:            "CIM_ComputerSystem",
+						SystemName:                         "Intel(r) AMT",
+						CreationClassName:                  "AMT_WiFiPortConfigurationService",
+						Name:                               "Intel(r) AMT WiFi Port Configuration Service",
+						LocalProfileSynchronizationEnabled: 1,
+						LastConnectedSsidUnderMeControl:    "",
+						NoHostCsmeSoftwarePolicy:           0,
+					}
+
+					return elementUnderTest.Put(wifiConfiguration)
+				},
+				Body{
+					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
+					WiFiPortConfigurationService: WiFiPortConfigurationServiceResponse{
+						XMLName:                            xml.Name{Space: fmt.Sprintf("%s%s", message.AMTSchema, AMTWiFiPortConfigurationService), Local: AMTWiFiPortConfigurationService},
+						CreationClassName:                  "AMT_WiFiPortConfigurationService",
+						ElementName:                        "Intel(r) AMT WiFiPort Configuration Service",
+						EnabledState:                       5,
+						HealthState:                        5,
+						LastConnectedSsidUnderMeControl:    "",
+						Name:                               "Intel(r) AMT WiFi Port Configuration Service",
+						NoHostCsmeSoftwarePolicy:           0,
+						RequestedState:                     12,
+						SystemCreationClassName:            "CIM_ComputerSystem",
+						SystemName:                         "Intel(r) AMT",
+						LocalProfileSynchronizationEnabled: 0,
+					},
+				},
+			},
 		}
 
 		for _, test := range tests {

@@ -290,12 +290,21 @@ type APF_CHANNEL_OPEN_MESSAGE struct {
 }
 
 type Session struct {
-	SenderChannel      uint32
-	RecipientChannel   uint32
-	TXWindow           uint32
-	RXWindow           uint32
-	Tempdata           []byte
-	DataBuffer         chan []byte
+	SenderChannel    uint32
+	RecipientChannel uint32
+	TXWindow         uint32
+	RXWindow         uint32
+	Tempdata         []byte
+	DataBuffer       chan []byte
+	// StreamDataBuffer, when set, switches ProcessChannelData into streaming
+	// mode: payloads are forwarded to this channel instead of accumulating in
+	// Tempdata. The processor sends non-blockingly, so the consumer must
+	// provide adequate buffering. Closed by ProcessChannelClose when a CLOSE
+	// for the confirmed active channel arrives.
+	StreamDataBuffer chan []byte
+	// CloseAck, when set, receives the RecipientChannel of each inbound
+	// APF_CHANNEL_CLOSE so callers can correlate close acknowledgements.
+	CloseAck           chan uint32
 	ErrorBuffer        chan error
 	Status             chan bool
 	Timer              *time.Timer
