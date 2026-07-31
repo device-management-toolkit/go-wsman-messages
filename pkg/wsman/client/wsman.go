@@ -228,9 +228,9 @@ func (t *Target) GetServerCertificate() (*tls.Certificate, error) {
 
 // Post overrides http.Client's Post method.
 func (t *Target) Post(msg string) (response []byte, err error) {
+	start := time.Now()
 	msgBody := []byte(msg)
 	requestService, requestAction := extractWSMANSummary(msg)
-	logWSMANRequestSummary(requestService, requestAction)
 
 	var auth string
 
@@ -297,7 +297,16 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 	response, err = io.ReadAll(res.Body)
 	responseService, responseAction := extractWSMANSummary(string(response))
-	logWSMANResponseSummary(requestService, requestAction, responseService, responseAction, res.StatusCode)
+	logWSMANTransactionSummary(
+		requestService,
+		requestAction,
+		responseService,
+		responseAction,
+		res.StatusCode,
+		start,
+		time.Since(start),
+		extractEndpointHost(t.endpoint),
+	)
 
 	if t.logAMTMessages {
 		logrus.Trace(string(response))
@@ -322,31 +331,48 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 	return response, nil
 }
 
-func logWSMANRequestSummary(service, action string) {
-	if service == "" && action == "" {
+func logWSMANTransactionSummary(
+	requestService,
+	requestAction,
+	responseService,
+	responseAction string,
+	statusCode int,
+	startTime time.Time,
+	duration time.Duration,
+	deviceIP string,
+) {
+	if requestService == "" && requestAction == "" && responseService == "" && responseAction == "" {
 		return
 	}
 
-	logrus.Debugf("wsman request: service=%s action=%s", fallbackValue(service), fallbackValue(action))
-}
-
-func logWSMANResponseSummary(requestService, requestAction, responseService, responseAction string, statusCode int) {
 	service := responseService
-	action := responseAction
-
 	if service == "" {
 		service = requestService
 	}
 
+	action := requestAction
 	if action == "" {
-		action = requestAction
+		action = strings.TrimSuffix(responseAction, "Response")
 	}
 
-	if service == "" && action == "" {
-		return
+	logrus.Debugf(
+		"[AMT] %s | %3d | %8s | %15s | %-8s %s",
+		startTime.Format("2006/01/02 - 15:04:05"),
+		statusCode,
+		duration.Round(time.Millisecond),
+		fallbackValue(deviceIP),
+		strings.ToUpper(fallbackValue(action)),
+		fallbackValue(service),
+	)
+}
+
+func extractEndpointHost(endpoint string) string {
+	parsedURL, err := url.Parse(endpoint)
+	if err != nil {
+		return ""
 	}
 
-	logrus.Debugf("wsman response: service=%s action=%s http_status=%d", fallbackValue(service), fallbackValue(action), statusCode)
+	return parsedURL.Hostname()
 }
 
 func extractWSMANSummary(message string) (service, action string) {
