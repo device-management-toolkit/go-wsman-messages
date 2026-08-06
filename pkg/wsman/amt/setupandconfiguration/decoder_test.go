@@ -131,6 +131,7 @@ func TestReturnValueString(t *testing.T) {
 		{ReturnValueInvalidParameter, "ReturnValueInvalidParameter"},
 		{ReturnValueFlashWriteLimitExceeded, "ReturnValueFlashWriteLimitExceeded"},
 		{ReturnValueInvalidPassword, "ReturnValueInvalidPassword"},
+		{ReturnValueDataMissing, "ReturnValueDataMissing"},
 		{ReturnValueBlockingComponent, "ReturnValueBlockingComponent"},
 		{ReturnValue(999), "Value not found in map"},
 	}

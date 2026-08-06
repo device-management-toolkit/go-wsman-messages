@@ -380,3 +380,72 @@ func TestNegativeAMT_SetupAndConfigurationService(t *testing.T) {
 		}
 	})
 }
+
+func TestCheckReturnValue(t *testing.T) {
+	const (
+		mebxPassword  = "MEBx Password"
+		commitChanges = "Commit Changes"
+	)
+
+	tests := []struct {
+		name        string
+		rc          int
+		item        string
+		expectedErr string
+	}{
+		{
+			"should return no error on success",
+			int(ReturnValueSuccess),
+			mebxPassword,
+			"",
+		},
+		{
+			"should return a not permitted error",
+			int(ReturnValueNotPermitted),
+			mebxPassword,
+			mebxPassword + " is not permitted",
+		},
+		{
+			"should return an invalid error on an invalid password",
+			int(ReturnValueInvalidPassword),
+			mebxPassword,
+			mebxPassword + " is invalid",
+		},
+		{
+			"should return a data missing error",
+			int(ReturnValueDataMissing),
+			mebxPassword,
+			"required data for " + mebxPassword + " is missing",
+		},
+		{
+			"should include the item in the data missing error",
+			int(ReturnValueDataMissing),
+			commitChanges,
+			"required data for " + commitChanges + " is missing",
+		},
+		{
+			"should return the return code for a blocking component",
+			int(ReturnValueBlockingComponent),
+			commitChanges,
+			commitChanges + " non-zero return code: 2076",
+		},
+		{
+			"should return the return code for an unmapped value",
+			999,
+			commitChanges,
+			commitChanges + " non-zero return code: 999",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := checkReturnValue(test.rc, test.item)
+			if test.expectedErr == "" {
+				assert.NoError(t, err)
+
+				return
+			}
+
+			assert.EqualError(t, err, test.expectedErr)
+		})
+	}
+}
