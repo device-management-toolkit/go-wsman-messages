@@ -161,6 +161,7 @@ const (
 	ReturnValueInvalidParameter        ReturnValue = 36
 	ReturnValueFlashWriteLimitExceeded ReturnValue = 38
 	ReturnValueInvalidPassword         ReturnValue = 2054
+	ReturnValueDataMissing             ReturnValue = 2057
 	ReturnValueBlockingComponent       ReturnValue = 2076
 )
 
@@ -171,6 +172,7 @@ var returnValueToString = map[ReturnValue]string{
 	ReturnValueInvalidParameter:        "ReturnValueInvalidParameter",
 	ReturnValueFlashWriteLimitExceeded: "ReturnValueFlashWriteLimitExceeded",
 	ReturnValueInvalidPassword:         "ReturnValueInvalidPassword",
+	ReturnValueDataMissing:             "ReturnValueDataMissing",
 	ReturnValueBlockingComponent:       "ReturnValueBlockingComponent",
 }
 
