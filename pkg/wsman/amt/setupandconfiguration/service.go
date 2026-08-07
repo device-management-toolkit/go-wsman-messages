@@ -283,6 +283,8 @@ func checkReturnValue(rc int, item string) (err error) {
 			return errors.New(item + " is not permitted")
 		} else if rc == int(ReturnValueInvalidPassword) {
 			return errors.New(item + " is invalid")
+		} else if rc == int(ReturnValueDataMissing) {
+			return errors.New("required data for " + item + " is missing")
 		}
 
 		return errors.New(item + " non-zero return code: " + strconv.Itoa(rc))
