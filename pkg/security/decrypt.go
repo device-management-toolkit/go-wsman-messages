@@ -23,7 +23,7 @@ func (c Crypto) Decrypt(cipherText string) (string, error) {
 		return "", err
 	}
 
-	block, err := aes.NewCipher([]byte(c.EncryptionKey))
+	block, err := aes.NewCipher(keyBytes(c.EncryptionKey))
 	if err != nil {
 		return "", err
 	}

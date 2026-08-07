@@ -9,6 +9,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"io/fs"
+	"os"
+	"path/filepath"
 	"syscall"
 	"testing"
 
@@ -177,6 +179,74 @@ func TestDecrypt(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestReadAndDecryptFileWithGeneratedKey(t *testing.T) {
+	t.Parallel()
+
+	// Mirrors the console → rpc-go flow: a profile is encrypted with a
+	// freshly generated (256-bit) key and decrypted from a file with it.
+	key := Crypto{}.GenerateKey()
+	cryptor := Crypto{EncryptionKey: key}
+
+	yamlData, err := yaml.Marshal(expectedConfigFile)
+	assert.NoError(t, err)
+
+	encrypted, err := cryptor.EncryptWithKey(string(yamlData), key)
+	assert.NoError(t, err)
+
+	filePath := filepath.Join(t.TempDir(), "encryptedConfig.yaml")
+	assert.NoError(t, os.WriteFile(filePath, []byte(encrypted), 0o600))
+
+	decryptedFile, err := cryptor.ReadAndDecryptFile(filePath)
+	assert.NoError(t, err)
+
+	// Compare against the YAML round trip of the same struct so the
+	// assertion checks the crypto path, not yaml nil-vs-empty semantics.
+	var expected config.Configuration
+
+	assert.NoError(t, yaml.Unmarshal(yamlData, &expected))
+	assert.Equal(t, expected, decryptedFile)
+}
+
+func TestReadAndDecryptFileInvalidYAML(t *testing.T) {
+	t.Parallel()
+
+	cryptor := Crypto{EncryptionKey: validKey}
+
+	encrypted, err := cryptor.Encrypt("not: [valid: yaml")
+	assert.NoError(t, err)
+
+	filePath := filepath.Join(t.TempDir(), "invalid.yaml")
+	assert.NoError(t, os.WriteFile(filePath, []byte(encrypted), 0o600))
+
+	_, err = cryptor.ReadAndDecryptFile(filePath)
+	assert.Error(t, err)
+}
+
+func TestDecryptCipherTextTooShort(t *testing.T) {
+	t.Parallel()
+
+	cryptor := Crypto{EncryptionKey: validKey}
+
+	// Valid base64, but decodes to fewer bytes than a GCM nonce.
+	_, err := cryptor.Decrypt(base64.StdEncoding.EncodeToString([]byte("short")))
+	assert.Equal(t, errors.New("cipher text too short"), err)
+}
+
+func TestDecryptLegacyCiphertext(t *testing.T) {
+	t.Parallel()
+
+	// Ciphertext produced by the pre-256-bit scheme, where the 32-char key
+	// string's raw bytes are the AES key. Existing installations hold data
+	// in this form; it must decrypt forever.
+	const legacyCipherText = "PcbvKUlvawmnjE1bzMiVkbirC3NcXmLeYur/yL8yGHEHvEIbq+/QhJU="
+
+	cryptor := Crypto{EncryptionKey: validKey}
+
+	decryptedMessage, err := cryptor.Decrypt(legacyCipherText)
+	assert.NoError(t, err)
+	assert.Equal(t, "Hello, World!", decryptedMessage)
 }
 
 func TestReadAndDecryptFile(t *testing.T) {
