@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"net"
 	"net/http"
+	"time"
 )
 
 // Parameters struct defines the connection settings for wsman client.
@@ -28,4 +29,5 @@ type Parameters struct {
 	AllowInsecureCipherSuites bool
 	IsCIRA                    bool               // Flag to indicate CIRA APF tunnel connection
 	CIRAManager               CIRAChannelManager // Manager for CIRA channel operations
+	Timeout                   time.Duration
 }
