@@ -290,6 +290,9 @@ type APF_CHANNEL_OPEN_MESSAGE struct {
 }
 
 type Session struct {
+	// Authenticated indicates APF_USERAUTH has succeeded for this session and
+	// post-auth message types are eligible for processing.
+	Authenticated    bool
 	SenderChannel    uint32
 	RecipientChannel uint32
 	TXWindow         uint32

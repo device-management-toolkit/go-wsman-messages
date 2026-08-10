@@ -976,7 +976,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 
 		handler := &mockHandler{}
 		p := NewProcessor(handler)
-		session := &Session{}
+		session := &Session{Authenticated: true}
 		// tcpip-forward request
 		data := []byte{
 			APF_GLOBAL_REQUEST,
@@ -1062,7 +1062,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		t.Parallel()
 
 		p := NewProcessor(nil)
-		session := &Session{SenderChannel: 7, HandshakeConfirmed: true}
+		session := &Session{Authenticated: true, SenderChannel: 7, HandshakeConfirmed: true}
 		data := make([]byte, 5)
 		data[0] = APF_CHANNEL_CLOSE
 
@@ -1110,7 +1110,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 
 		p := NewProcessor(nil)
 		stream := make(chan []byte, 1)
-		session := &Session{StreamDataBuffer: stream, RecipientChannel: 0, HandshakeConfirmed: true}
+		session := &Session{Authenticated: true, StreamDataBuffer: stream, RecipientChannel: 0, HandshakeConfirmed: true}
 		data := make([]byte, 5)
 		data[0] = APF_CHANNEL_CLOSE
 
@@ -1133,7 +1133,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		t.Parallel()
 
 		p := NewProcessor(nil)
-		session := &Session{}
+		session := &Session{Authenticated: true}
 		// Valid channel data: type(1) + recipient(4) + len(4) + data
 		data := []byte{APF_CHANNEL_DATA, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0xAB}
 
