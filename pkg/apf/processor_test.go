@@ -5,6 +5,7 @@
 package apf
 
 import (
+	"encoding/binary"
 	"errors"
 	"sync"
 	"testing"
@@ -825,6 +826,66 @@ func TestProcessUserAuthRequest(t *testing.T) {
 		// Should return failure message
 		assert.Equal(t, byte(APF_USERAUTH_FAILURE), result.Bytes()[0])
 	})
+}
+
+func buildOpenConfirmationFrame(recipientChannel, senderChannel, initialWindowSize uint32) []byte {
+	data := make([]byte, 17)
+	data[0] = APF_CHANNEL_OPEN_CONFIRMATION
+	binary.BigEndian.PutUint32(data[1:5], recipientChannel)
+	binary.BigEndian.PutUint32(data[5:9], senderChannel)
+	binary.BigEndian.PutUint32(data[9:13], initialWindowSize)
+
+	return data
+}
+
+func buildChannelCloseFrame(recipientChannel uint32) []byte {
+	data := make([]byte, 5)
+	data[0] = APF_CHANNEL_CLOSE
+	binary.BigEndian.PutUint32(data[1:5], recipientChannel)
+
+	return data
+}
+
+func TestSecurity_PreAuthOpenConfirmationIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+	session := &Session{}
+
+	assert.False(t, session.HandshakeConfirmed)
+
+	openConfirmation := buildOpenConfirmationFrame(41, 7, 1024)
+	result := p.Process(openConfirmation, session)
+
+	assert.Equal(t, 0, result.Len())
+	assert.False(t, session.HandshakeConfirmed, "pre-auth OPEN_CONFIRMATION must not set handshake state")
+	assert.Equal(t, uint32(0), session.RecipientChannel, "pre-auth OPEN_CONFIRMATION must not set recipient channel")
+	assert.Equal(t, uint32(0), session.SenderChannel, "pre-auth OPEN_CONFIRMATION must not set sender channel")
+	assert.Equal(t, uint32(0), session.TXWindow, "pre-auth OPEN_CONFIRMATION must not set TX window")
+}
+
+func TestSecurity_PreAuthConfirmationThenCloseKeepsLiveStream(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+	stream := make(chan []byte, 1)
+	session := &Session{StreamDataBuffer: stream}
+
+	openConfirmation := buildOpenConfirmationFrame(55, 9, 2048)
+	p.Process(openConfirmation, session)
+	assert.False(t, session.HandshakeConfirmed, "pre-auth OPEN_CONFIRMATION must be ignored")
+
+	closeMessage := buildChannelCloseFrame(55)
+	result := p.Process(closeMessage, session)
+
+	assert.Equal(t, 0, result.Len(), "pre-auth CHANNEL_CLOSE must not emit an ack")
+	assert.NotNil(t, session.StreamDataBuffer, "pre-auth forged sequence must not close the stream")
+
+	select {
+	case _, ok := <-stream:
+		assert.True(t, ok, "stream channel must remain open")
+	default:
+	}
 }
 
 func TestProcessAllMessageTypes(t *testing.T) {
