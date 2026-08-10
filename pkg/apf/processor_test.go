@@ -409,6 +409,30 @@ func TestSecurity_PreAuthConfirmationThenCloseKeepsLiveStream(t *testing.T) {
 	}
 }
 
+func TestSecurity_OpenConfirmationRecipientMismatchIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	stream := make(chan []byte, 1)
+	session := &Session{
+		Authenticated:           true,
+		PendingRecipientChannel: 7,
+		StreamDataBuffer:        stream,
+	}
+
+	ProcessChannelOpenConfirmation(buildChannelOpenConfirmationMessage(9, 33, 1024), session)
+
+	assert.False(t, session.HandshakeConfirmed, "mismatched recipient channel must not confirm the handshake")
+	assert.Equal(t, uint32(0), session.RecipientChannel, "mismatched recipient channel must not be recorded")
+	assert.Equal(t, uint32(0), session.SenderChannel, "mismatched recipient channel must not set sender channel")
+	assert.Equal(t, uint32(0), session.TXWindow, "mismatched recipient channel must not set transmit window")
+
+	select {
+	case _, ok := <-stream:
+		assert.True(t, ok, "mismatched confirmation must not close the tunnel stream")
+	default:
+	}
+}
+
 func TestProcessorProcessProtocolVersion(t *testing.T) {
 	t.Parallel()
 
