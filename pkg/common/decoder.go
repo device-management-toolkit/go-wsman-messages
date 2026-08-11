@@ -10,6 +10,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // ReadShort reads a short value from a string at position p.
@@ -53,18 +54,18 @@ func IntToStrX(v int) string {
 }
 
 // MakeToArray attempts to convert an interface to a slice of interfaces.
-func MakeToArray(v interface{}) []interface{} {
-	return []interface{}{v}
+func MakeToArray(v any) []any {
+	return []any{v}
 }
 
 // Rstr2hex converts a raw string to a hex string.
 func Rstr2hex(input string) string {
-	result := ""
+	var result strings.Builder
 	for i := 0; i < len(input); i++ {
-		result += fmt.Sprintf("%02X", input[i])
+		fmt.Fprintf(&result, "%02X", input[i])
 	}
 
-	return result
+	return result.String()
 }
 
 // Hex2rstr converts a hex string to a raw string.
@@ -84,9 +85,9 @@ func Char2hex(i int) string {
 
 // ComputeDigesthash computes the MD5 digest hash for a set of values.
 func ComputeDigesthash(username, password, realm, method, path, qop, nonce, nc, cnonce string) string {
-	ha1 := md5.Sum([]byte(fmt.Sprintf("%s:%s:%s", username, realm, password)))
-	ha2 := md5.Sum([]byte(fmt.Sprintf("%s:%s", method, path)))
-	final := md5.Sum([]byte(fmt.Sprintf("%x:%s:%s:%s:%s:%x", ha1, nonce, nc, cnonce, qop, ha2)))
+	ha1 := md5.Sum(fmt.Appendf(nil, "%s:%s:%s", username, realm, password))
+	ha2 := md5.Sum(fmt.Appendf(nil, "%s:%s", method, path))
+	final := md5.Sum(fmt.Appendf(nil, "%x:%s:%s:%s:%s:%x", ha1, nonce, nc, cnonce, qop, ha2))
 
 	return fmt.Sprintf("%x", final)
 }
@@ -104,7 +105,9 @@ func RandomValueHex(i int) string {
 // GetSidString converts a byte array of SID into string.
 // Note: This function assumes sid is provided as a string for simplicity but should be []byte in a real Go implementation.
 func GetSidString(sid string) string {
-	value := fmt.Sprintf("S-%d-%d", sid[0], sid[7])
+	var value strings.Builder
+
+	fmt.Fprintf(&value, "S-%d-%d", sid[0], sid[7])
 
 	for i := 2; i < len(sid)/4; i++ {
 		substr := sid[i*4 : (i+1)*4]
@@ -114,8 +117,8 @@ func GetSidString(sid string) string {
 			return ""
 		}
 
-		value += fmt.Sprintf("-%d", intValue)
+		fmt.Fprintf(&value, "-%d", intValue)
 	}
 
-	return value
+	return value.String()
 }
