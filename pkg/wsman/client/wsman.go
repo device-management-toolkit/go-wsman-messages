@@ -70,9 +70,8 @@ type Target struct {
 	InsecureSkipVerify bool
 	PinnedCert         string
 	tlsConfig          *tls.Config
+	Timeout            time.Duration
 }
-
-const timeout = 10 * time.Second
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -97,9 +96,10 @@ func NewWsman(cp Parameters) *Target {
 		InsecureSkipVerify: cp.SelfSignedAllowed,
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
+		Timeout:            cp.Timeout,
 	}
-
-	res.Timeout = timeout
+	runTimeout := time.Duration(max(10, cp.Timeout)) * time.Second
+	res.Timeout = runTimeout
 
 	if cp.Transport == nil {
 		// Use CIRATransport for CIRA APF tunnel connections

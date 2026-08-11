@@ -140,7 +140,7 @@ func injectMessage[T any](v *T, msg *client.Message) {
 
 func injectNamespace(request any, resourceURI string) {
 	rv := reflect.ValueOf(request)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 
