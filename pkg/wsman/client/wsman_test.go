@@ -11,6 +11,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 )
 
 const (
@@ -112,6 +113,30 @@ func TestNewClient_WithTLSConfig(t *testing.T) {
 
 	if transport.TLSClientConfig != tlsConfig {
 		t.Errorf("Expected TLSClientConfig to be the provided tlsConfig, but got a different instance")
+	}
+}
+
+// The timeout must land on the embedded http.Client, not on a field that
+// shadows it -- a shadowed Timeout leaves requests with no deadline at all.
+func TestNewClient_Timeout(t *testing.T) {
+	tests := []struct {
+		name     string
+		timeout  time.Duration
+		expected time.Duration
+	}{
+		{"unset falls back to the minimum", 0, minTimeout},
+		{"below the minimum is raised", 3 * time.Second, minTimeout},
+		{"above the minimum is honored", 45 * time.Second, 45 * time.Second},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := NewWsman(Parameters{Target: "example3.com", Timeout: tt.timeout})
+
+			if client.Timeout != tt.expected {
+				t.Errorf("Expected http.Client.Timeout to be %v, but got %v", tt.expected, client.Timeout)
+			}
+		})
 	}
 }
 

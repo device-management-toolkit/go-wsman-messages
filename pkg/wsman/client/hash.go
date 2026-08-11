@@ -141,7 +141,7 @@ func (c *AuthChallenge) authorize(method, uri string) (string, error) {
 		sb.WriteString(`,qop="`)
 		sb.WriteString(c.Qop)
 		sb.WriteString(`",nc="`)
-		sb.WriteString(fmt.Sprintf("%08x", c.NonceCount))
+		fmt.Fprintf(&sb, "%08x", c.NonceCount)
 		sb.WriteString(`",cnonce="`)
 		sb.WriteString(c.CNonce)
 		sb.WriteString(`"`)

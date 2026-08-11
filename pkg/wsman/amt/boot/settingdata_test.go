@@ -194,7 +194,8 @@ func TestPositiveAMT_BootSettingData(t *testing.T) {
 				wsmantesting.Put,
 				fmt.Sprintf(
 					`<h:AMT_BootSettingData xmlns:h="%sAMT_BootSettingData"><h:BIOSPause>false</h:BIOSPause><h:BIOSSetup>false</h:BIOSSetup><h:BootMediaIndex>0</h:BootMediaIndex><h:ConfigurationDataReset>false</h:ConfigurationDataReset><h:ElementName>Intel(r) AMT Boot Configuration Settings</h:ElementName><h:EnforceSecureBoot>false</h:EnforceSecureBoot><h:FirmwareVerbosity>0</h:FirmwareVerbosity><h:ForcedProgressEvents>false</h:ForcedProgressEvents><h:IDERBootDevice>0</h:IDERBootDevice><h:InstanceID>Intel(r) AMT:BootSettingData 0</h:InstanceID><h:LockKeyboard>false</h:LockKeyboard><h:LockPowerButton>false</h:LockPowerButton><h:LockResetButton>false</h:LockResetButton><h:LockSleepButton>false</h:LockSleepButton><h:OwningEntity>Intel(r) AMT</h:OwningEntity><h:PlatformErase>false</h:PlatformErase><h:RSEPassword></h:RSEPassword><h:ReflashBIOS>false</h:ReflashBIOS><h:SecureErase>false</h:SecureErase><h:UefiBootParametersArray></h:UefiBootParametersArray><h:UefiBootNumberOfParams>0</h:UefiBootNumberOfParams><h:UseIDER>false</h:UseIDER><h:UseSOL>false</h:UseSOL><h:UseSafeMode>false</h:UseSafeMode><h:UserPasswordBypass>false</h:UserPasswordBypass></h:AMT_BootSettingData>`,
-					"http://intel.com/wbem/wscim/1/amt-schema/1/"),
+					"http://intel.com/wbem/wscim/1/amt-schema/1/",
+				),
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessagePut
 

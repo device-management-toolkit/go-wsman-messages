@@ -53,7 +53,8 @@ func (settingData SettingData) Put(bootSettingData BootSettingDataRequest) (resp
 		bootSettingData.UseIDER,
 		bootSettingData.UseSOL,
 		bootSettingData.UseSafeMode,
-		bootSettingData.UserPasswordBypass)
+		bootSettingData.UserPasswordBypass,
+	)
 
 	response = Response{
 		Message: &client.Message{

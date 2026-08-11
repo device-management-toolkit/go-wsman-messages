@@ -70,8 +70,12 @@ type Target struct {
 	InsecureSkipVerify bool
 	PinnedCert         string
 	tlsConfig          *tls.Config
-	Timeout            time.Duration
 }
+
+// minTimeout is the floor applied to Parameters.Timeout. Declaring a Timeout
+// field on Target would shadow the embedded http.Client.Timeout and leave
+// requests with no deadline, so the promoted field is set directly.
+const minTimeout = 10 * time.Second
 
 func NewWsman(cp Parameters) *Target {
 	path := WSManPath
@@ -96,10 +100,8 @@ func NewWsman(cp Parameters) *Target {
 		InsecureSkipVerify: cp.SelfSignedAllowed,
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
-		Timeout:            cp.Timeout,
+		Client:             http.Client{Timeout: max(minTimeout, cp.Timeout)},
 	}
-	runTimeout := time.Duration(max(10, cp.Timeout)) * time.Second
-	res.Timeout = runTimeout
 
 	if cp.Transport == nil {
 		// Use CIRATransport for CIRA APF tunnel connections
