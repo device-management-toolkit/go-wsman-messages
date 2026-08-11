@@ -8,7 +8,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/zalando/go-keyring"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/security"
 )
@@ -84,6 +86,40 @@ func TestGetKeyValue_NotFound(t *testing.T) {
 	}
 
 	mockKeyring.AssertExpectations(t)
+}
+
+func TestGetKeyValue_Error(t *testing.T) {
+	mockKeyring := new(MockKeyring)
+	storage := security.NewStorage("testService", mockKeyring)
+
+	keyringErr := errors.New("keyring unavailable")
+	mockKeyring.On("Get", "testService", "testKey").Return("", keyringErr)
+
+	value, err := storage.GetKeyValue("testKey")
+	assert.Equal(t, keyringErr, err)
+	assert.Empty(t, value)
+
+	mockKeyring.AssertExpectations(t)
+}
+
+func TestRealKeyringStorage(t *testing.T) {
+	// MockInit swaps go-keyring's provider for an in-memory one so the
+	// RealKeyring pass-throughs can be exercised without touching the OS
+	// keychain. It is package-global state, so no t.Parallel here.
+	keyring.MockInit()
+
+	storage := security.NewKeyRingStorage("testService")
+
+	assert.NoError(t, storage.SetKeyValue("testKey", "testValue"))
+
+	value, err := storage.GetKeyValue("testKey")
+	assert.NoError(t, err)
+	assert.Equal(t, "testValue", value)
+
+	assert.NoError(t, storage.DeleteKeyValue("testKey"))
+
+	_, err = storage.GetKeyValue("testKey")
+	assert.ErrorIs(t, err, security.ErrKeyNotFound)
 }
 
 func TestDeleteKeyValue(t *testing.T) {
