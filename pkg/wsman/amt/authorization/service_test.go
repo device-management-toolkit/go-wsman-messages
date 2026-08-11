@@ -154,6 +154,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:AddUserAclEntryEx_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:DigestUsername>test</h:DigestUsername><h:DigestPassword>P@ssw0rd</h:DigestPassword><h:AccessPermission>2</h:AccessPermission><h:Realms>3</h:Realms></h:AddUserAclEntryEx_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "AddUserAclEntryEx"
+
 					return elementUnderTest.AddUserAclEntryEx("test", "P@ssw0rd", AccessPermissionLocalAndNetworkAccess, []RealmValues{RealmValuesPTAdministrationRealm})
 				},
 				Body{
@@ -171,6 +172,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:EnumerateUserAclEntries_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:StartIndex>1</h:StartIndex></h:EnumerateUserAclEntries_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "EnumerateUserAclEntries"
+
 					return elementUnderTest.EnumerateUserACLEntries(0)
 				},
 				Body{
@@ -190,6 +192,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:EnumerateUserAclEntries_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:StartIndex>50</h:StartIndex></h:EnumerateUserAclEntries_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "EnumerateUserAclEntries"
+
 					return elementUnderTest.EnumerateUserACLEntries(50)
 				},
 				Body{
@@ -209,6 +212,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:GetUserAclEntryEx_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:Handle>1</h:Handle></h:GetUserAclEntryEx_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "GetUserAclEntryEx"
+
 					return elementUnderTest.GetUserACLEntryEx(1)
 				},
 				Body{
@@ -228,6 +232,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:RemoveUserAclEntry_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:Handle>1</h:Handle></h:RemoveUserAclEntry_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "RemoveUserAclEntry"
+
 					return elementUnderTest.RemoveUserACLEntry(1)
 				},
 				Body{
@@ -244,6 +249,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:GetAdminAclEntry_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"></h:GetAdminAclEntry_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "GetAdminAclEntry"
+
 					return elementUnderTest.GetAdminACLEntry()
 				},
 				Body{
@@ -261,6 +267,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:GetAdminAclEntryStatus_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"></h:GetAdminAclEntryStatus_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "GetAdminAclEntryStatus"
+
 					return elementUnderTest.GetAdminACLEntryStatus()
 				},
 				Body{
@@ -278,6 +285,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:GetAdminNetAclEntryStatus_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"></h:GetAdminNetAclEntryStatus_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "GetAdminNetAclEntryStatus"
+
 					return elementUnderTest.GetAdminNetACLEntryStatus()
 				},
 				Body{
@@ -295,6 +303,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:GetAclEnabledState_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:Handle>1</h:Handle></h:GetAclEnabledState_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "GetAclEnabledState"
+
 					return elementUnderTest.GetACLEnabledState(1)
 				},
 				Body{
@@ -312,6 +321,7 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 				`<h:SetAclEnabledState_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:Handle>1</h:Handle><h:Enabled>true</h:Enabled></h:SetAclEnabledState_INPUT>`,
 				func() (Response, error) {
 					client.CurrentMessage = "SetAclEnabledState"
+
 					return elementUnderTest.SetACLEnabledState(1, true)
 				},
 				Body{

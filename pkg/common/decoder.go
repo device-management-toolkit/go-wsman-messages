@@ -62,7 +62,7 @@ func MakeToArray(v any) []any {
 func Rstr2hex(input string) string {
 	var result strings.Builder
 	for i := 0; i < len(input); i++ {
-		result.WriteString(fmt.Sprintf("%02X", input[i]))
+		fmt.Fprintf(&result, "%02X", input[i])
 	}
 
 	return result.String()
@@ -106,7 +106,8 @@ func RandomValueHex(i int) string {
 // Note: This function assumes sid is provided as a string for simplicity but should be []byte in a real Go implementation.
 func GetSidString(sid string) string {
 	var value strings.Builder
-	value.WriteString(fmt.Sprintf("S-%d-%d", sid[0], sid[7]))
+
+	fmt.Fprintf(&value, "S-%d-%d", sid[0], sid[7])
 
 	for i := 2; i < len(sid)/4; i++ {
 		substr := sid[i*4 : (i+1)*4]
@@ -116,7 +117,7 @@ func GetSidString(sid string) string {
 			return ""
 		}
 
-		value.WriteString(fmt.Sprintf("-%d", intValue))
+		fmt.Fprintf(&value, "-%d", intValue)
 	}
 
 	return value.String()
