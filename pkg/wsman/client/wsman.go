@@ -165,10 +165,13 @@ func (t *Target) GetServerCertificate() (*tls.Certificate, error) {
 		return nil, errors.New("transport does not support TLSClientConfig")
 	}
 
-	tlsConfig := httpTransport.TLSClientConfig
-	if tlsConfig == nil {
+	if httpTransport.TLSClientConfig == nil {
 		return nil, errors.New("TLSClientConfig is nil")
 	}
+
+	// Clone the transport's TLS config so the capture callback below is scoped
+	// to this one throwaway dial.
+	tlsConfig := httpTransport.TLSClientConfig.Clone()
 
 	// Create a custom DialTLS to capture the server certificate
 	capturedCert := &tls.Certificate{}
