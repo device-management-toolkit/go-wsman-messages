@@ -6,10 +6,7 @@
 package client
 
 import (
-	"crypto/sha256"
 	"crypto/tls"
-	"crypto/x509"
-	"encoding/hex"
 	"fmt"
 	"net"
 	"sync"
@@ -68,22 +65,8 @@ func (t *Target) Connect() error {
 		var config *tls.Config
 		if len(t.PinnedCert) > 0 {
 			config = &tls.Config{
-				InsecureSkipVerify: t.InsecureSkipVerify,
-				VerifyPeerCertificate: func(rawCerts [][]byte, _ [][]*x509.Certificate) error {
-					for _, rawCert := range rawCerts {
-						cert, err := x509.ParseCertificate(rawCert)
-						if err != nil {
-							return err
-						}
-						// Compare the current certificate with the pinned certificate
-						sha256Fingerprint := sha256.Sum256(cert.Raw)
-						if hex.EncodeToString(sha256Fingerprint[:]) == t.PinnedCert {
-							return nil // Success: The certificate matches the pinned certificate
-						}
-					}
-
-					return fmt.Errorf("certificate pinning failed")
-				},
+				InsecureSkipVerify:    t.InsecureSkipVerify,
+				VerifyPeerCertificate: pinnedCertVerifier(t.PinnedCert),
 			}
 		} else {
 			config = &tls.Config{InsecureSkipVerify: t.InsecureSkipVerify}
