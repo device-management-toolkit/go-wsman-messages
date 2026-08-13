@@ -7,10 +7,8 @@ package client
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -113,23 +111,8 @@ func NewWsman(cp Parameters) *Target {
 			if len(cp.PinnedCert) > 0 {
 				// check if pinnedCert is not null and not empty
 				config = &tls.Config{
-					InsecureSkipVerify: cp.SelfSignedAllowed,
-					VerifyPeerCertificate: func(rawCerts [][]byte, verifiedChains [][]*x509.Certificate) error {
-						for _, rawCert := range rawCerts {
-							cert, err := x509.ParseCertificate(rawCert)
-							if err != nil {
-								return err
-							}
-
-							// Compare the current certificate with the pinned certificate
-							sha256Fingerprint := sha256.Sum256(cert.Raw)
-							if hex.EncodeToString(sha256Fingerprint[:]) == cp.PinnedCert {
-								return nil // Success: The certificate matches the pinned certificate
-							}
-						}
-
-						return fmt.Errorf("certificate pinning failed")
-					},
+					InsecureSkipVerify:    cp.SelfSignedAllowed,
+					VerifyPeerCertificate: pinnedCertVerifier(cp.PinnedCert),
 				}
 			} else {
 				if res.tlsConfig != nil {
@@ -182,10 +165,13 @@ func (t *Target) GetServerCertificate() (*tls.Certificate, error) {
 		return nil, errors.New("transport does not support TLSClientConfig")
 	}
 
-	tlsConfig := httpTransport.TLSClientConfig
-	if tlsConfig == nil {
+	if httpTransport.TLSClientConfig == nil {
 		return nil, errors.New("TLSClientConfig is nil")
 	}
+
+	// Clone the transport's TLS config so the capture callback below is scoped
+	// to this one throwaway dial.
+	tlsConfig := httpTransport.TLSClientConfig.Clone()
 
 	// Create a custom DialTLS to capture the server certificate
 	capturedCert := &tls.Certificate{}

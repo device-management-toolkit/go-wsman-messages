@@ -509,3 +509,43 @@ func TestClient_GetServerCertificate(t *testing.T) {
 		t.Error("Expected a server certificate, but none was captured")
 	}
 }
+
+// TestClient_GetServerCertificate_LeavesTransportConfigUnchanged - certificate capture is scoped to a cloned config and does not mutate the Target's shared TLS config.
+func TestClient_GetServerCertificate_LeavesTransportConfigUnchanged(t *testing.T) {
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer ts.Close()
+
+	cp := Parameters{
+		Target:            ts.URL,
+		Username:          "user",
+		Password:          "password",
+		UseTLS:            true,
+		SelfSignedAllowed: true,
+	}
+
+	client := NewWsman(cp)
+	client.endpoint = ts.URL
+
+	httpTransport, ok := client.Transport.(*http.Transport)
+	if !ok {
+		t.Fatal("expected *http.Transport")
+	}
+
+	// Baseline: the freshly-built transport has no per-certificate callback.
+	if httpTransport.TLSClientConfig.VerifyPeerCertificate != nil {
+		t.Fatal("precondition failed: transport already has a VerifyPeerCertificate")
+	}
+
+	if _, err := client.GetServerCertificate(); err != nil {
+		t.Fatalf("Unexpected error during GetServerCertificate: %v", err)
+	}
+
+	// The capture callback must have been scoped to the throwaway dial only;
+	// the shared transport config must be unchanged.
+	if httpTransport.TLSClientConfig.VerifyPeerCertificate != nil {
+		t.Error("GetServerCertificate modified the shared transport TLS config; " +
+			"VerifyPeerCertificate should remain unset")
+	}
+}
