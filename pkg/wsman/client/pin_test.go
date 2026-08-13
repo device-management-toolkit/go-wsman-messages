@@ -14,6 +14,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"math/big"
+	"strings"
 	"testing"
 )
 
@@ -55,6 +56,13 @@ func TestPinnedCertVerifier(t *testing.T) {
 		{
 			name:     "leaf matches pin",
 			pin:      pin,
+			rawCerts: [][]byte{pinnedDER},
+			wantErr:  false,
+		},
+		{
+			// The pin is compared case-insensitively.
+			name:     "uppercase pin matches leaf",
+			pin:      strings.ToUpper(pin),
 			rawCerts: [][]byte{pinnedDER},
 			wantErr:  false,
 		},

@@ -11,6 +11,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // errCertificatePinning is returned when the peer's leaf certificate does not
@@ -34,10 +35,10 @@ func pinnedCertVerifier(pinnedCert string) func(rawCerts [][]byte, verifiedChain
 			return err
 		}
 
-		// Compare the leaf certificate with the pinned certificate.
+		// Match the leaf's fingerprint against the pin. Hex is case-insensitive.
 		sha256Fingerprint := sha256.Sum256(cert.Raw)
-		if hex.EncodeToString(sha256Fingerprint[:]) == pinnedCert {
-			return nil // Success: the leaf certificate matches the pinned certificate
+		if strings.EqualFold(hex.EncodeToString(sha256Fingerprint[:]), pinnedCert) {
+			return nil // leaf matches the pin
 		}
 
 		return errCertificatePinning
