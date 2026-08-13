@@ -7,6 +7,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -17,6 +18,7 @@ import (
 	"net/url"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -33,10 +35,17 @@ const (
 	RedirectionTLSPort    = "16995"
 	RedirectionNonTLSPort = "16994"
 	WSManPath             = "/wsman"
-	timeout               = 30 * time.Second
 	idleConnTimeout       = 90 * time.Second // keeps sockets warm as long as AMT holds them open
-	maxConcurrentPosts    = 2                // caps simultaneous WSMAN Posts to match AMT firmware capacity
-	maxTransientRetries   = 3
+	// Keep at 2 to avoid overload during powered-off wake paths;
+	// higher concurrency caused transient auth/transport failures.
+	maxConcurrentPosts  = 2
+	maxTransientRetries = 3
+	retryDelay          = 500 * time.Millisecond // pause before each retry, lets the ME recover
+	// Windows socket errors. Their text differs from the POSIX wording (and is
+	// localized), so match on the numeric code. Declared here rather than using
+	// syscall.WSAE*, which only exists on Windows builds.
+	wsaeConnAborted syscall.Errno = 10053 // WSAECONNABORTED
+	wsaeConnReset   syscall.Errno = 10054 // WSAECONNRESET
 )
 
 type Message struct {
@@ -68,7 +77,7 @@ type Target struct {
 	challenge          *AuthChallenge
 	challengeMu        sync.Mutex // serializes access to challenge digest state
 	primeMu            sync.Mutex // single-flights the initial cold-wake auth handshake
-	sem                chan struct{}
+	hostKey            string     // target:port, keys the shared per-device limiter
 	conn               net.Conn
 	bufferPool         sync.Pool
 	UseTLS             bool
@@ -80,27 +89,53 @@ type Target struct {
 // minTimeout is the floor applied to Parameters.Timeout. Declaring a Timeout
 // field on Target would shadow the embedded http.Client.Timeout and leave
 // requests with no deadline, so the promoted field is set directly.
-const minTimeout = 10 * time.Second
+const minTimeout = 30 * time.Second
 
-// hostSems limits concurrency per device, shared across all Targets for a host.
+// hostSems stores process-wide semaphores keyed by endpoint host:port.
+// Each semaphore caps concurrent WSMAN Posts to that endpoint.
 var (
 	hostSemsMu sync.Mutex
-	hostSems   = make(map[string]chan struct{})
+	hostSems   = make(map[string]*hostLimiter)
 )
 
-// hostSemaphore returns the shared concurrency limiter for an endpoint.
-func hostSemaphore(endpoint string) chan struct{} {
+// hostLimiter is a per-endpoint semaphore with a count of the Posts using it.
+type hostLimiter struct {
+	sem  chan struct{}
+	refs int
+}
+
+// acquireHostSem returns the shared per-endpoint concurrency limiter.
+// The same host:port gets the same semaphore across all Target instances.
+func acquireHostSem(endpoint string) chan struct{} {
 	hostSemsMu.Lock()
 	defer hostSemsMu.Unlock()
 
-	if sem, ok := hostSems[endpoint]; ok {
-		return sem
+	limiter, ok := hostSems[endpoint]
+	if !ok {
+		limiter = &hostLimiter{sem: make(chan struct{}, maxConcurrentPosts)}
+		hostSems[endpoint] = limiter
 	}
 
-	sem := make(chan struct{}, maxConcurrentPosts)
-	hostSems[endpoint] = sem
+	limiter.refs++
 
-	return sem
+	return limiter.sem
+}
+
+// releaseHostSem drops the entry once no Post is using the endpoint, so the map
+// does not keep stale addresses (for example after a DHCP address change).
+func releaseHostSem(endpoint string) {
+	hostSemsMu.Lock()
+	defer hostSemsMu.Unlock()
+
+	limiter, ok := hostSems[endpoint]
+	if !ok {
+		return
+	}
+
+	limiter.refs--
+	if limiter.refs <= 0 {
+		delete(hostSems, endpoint)
+	}
 }
 
 // isTransientTransportError reports whether err is a recoverable transport error.
@@ -109,7 +144,15 @@ func isTransientTransportError(err error) bool {
 		return false
 	}
 
-	if errors.Is(err, io.EOF) {
+	if errors.Is(err, io.EOF) ||
+		errors.Is(err, syscall.ECONNRESET) ||
+		errors.Is(err, syscall.ECONNABORTED) ||
+		errors.Is(err, syscall.EPIPE) {
+		return true
+	}
+
+	var errno syscall.Errno
+	if errors.As(err, &errno) && (errno == wsaeConnReset || errno == wsaeConnAborted) {
 		return true
 	}
 
@@ -121,8 +164,8 @@ func isTransientTransportError(err error) bool {
 		strings.Contains(errText, "broken pipe")
 }
 
-// retryOnTransient retries req on transient transport errors until deadline.
-func (t *Target) retryOnTransient(msgBody []byte, origReq *http.Request, origErr error, deadline time.Time) (*http.Response, error) {
+// retryOnTransient retries req on transient transport errors until ctx expires.
+func (t *Target) retryOnTransient(ctx context.Context, msgBody []byte, origReq *http.Request, origErr error) (*http.Response, error) {
 	if !isTransientTransportError(origErr) {
 		return nil, origErr
 	}
@@ -132,17 +175,16 @@ func (t *Target) retryOnTransient(msgBody []byte, origReq *http.Request, origErr
 	lastErr := origErr
 
 	for attempt := 1; attempt <= maxTransientRetries; attempt++ {
-		// All attempts share one budget so a Post cannot hold its slot for
-		// maxTransientRetries * timeout.
-		if time.Now().After(deadline) {
+		// Give the ME a moment to recover; retrying immediately usually fails again.
+		time.Sleep(retryDelay)
+
+		// Overall budget guard: the shared context caps the whole Post, so stop here
+		// once it has expired instead of starting another attempt.
+		if ctx.Err() != nil {
 			return nil, lastErr
 		}
 
-		if tr, ok := t.Transport.(*http.Transport); ok {
-			tr.CloseIdleConnections()
-		}
-
-		retryReq, reqErr := t.newPostRequest(msgBody)
+		retryReq, reqErr := t.newPostRequest(ctx, msgBody)
 		if reqErr != nil {
 			return nil, reqErr
 		}
@@ -152,7 +194,7 @@ func (t *Target) retryOnTransient(msgBody []byte, origReq *http.Request, origErr
 		if authenticated {
 			auth, ok, authErr := t.digestAuthHeader()
 			if authErr != nil {
-				return nil, fmt.Errorf("failed digest auth %w", authErr)
+				return nil, fmt.Errorf("failed digest auth: %w", authErr)
 			}
 
 			if ok {
@@ -201,7 +243,7 @@ func NewWsman(cp Parameters) *Target {
 		conn:               cp.Connection,
 		tlsConfig:          cp.TlsConfig,
 		Client:             http.Client{Timeout: max(minTimeout, cp.Timeout)},
-		sem:                hostSemaphore(cp.Target + ":" + port),
+		hostKey:            cp.Target + ":" + port,
 	}
 
 	if cp.Transport == nil {
@@ -239,7 +281,7 @@ func NewWsman(cp Parameters) *Target {
 					}
 				}
 			}
-
+			// keep DisableKeepAlives false to reuse connections; true makes every request log in again.
 			res.Transport = &http.Transport{
 				MaxIdleConns:      maxConcurrentPosts,
 				IdleConnTimeout:   idleConnTimeout,
@@ -349,8 +391,8 @@ func (t *Target) primeChallenge(header string) error {
 	return nil
 }
 
-func (t *Target) newPostRequest(msgBody []byte) (*http.Request, error) {
-	req, err := http.NewRequest("POST", t.endpoint, bytes.NewReader(msgBody))
+func (t *Target) newPostRequest(ctx context.Context, msgBody []byte) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, "POST", t.endpoint, bytes.NewReader(msgBody))
 	if err != nil {
 		return nil, err
 	}
@@ -366,10 +408,33 @@ func (t *Target) newPostRequest(msgBody []byte) (*http.Request, error) {
 
 // Post overrides http.Client's Post method.
 func (t *Target) Post(msg string) (response []byte, err error) {
+	// Cap the whole Post, queue wait and retries included. Targets built outside
+	// NewWsman carry no timeout, so fall back to the same floor it applies.
+	budget := t.Timeout
+	if budget <= 0 {
+		budget = minTimeout
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), budget)
+	defer cancel()
+
 	// Bound concurrent Posts to match AMT firmware connection capacity.
-	if t.sem != nil {
-		t.sem <- struct{}{}
-		defer func() { <-t.sem }()
+	// hostKey is empty for redirection targets from NewWsmanTCP, which do not Post.
+	if t.hostKey != "" {
+		sem := acquireHostSem(t.hostKey)
+
+		select {
+		case sem <- struct{}{}:
+			defer func() {
+				<-sem
+				releaseHostSem(t.hostKey)
+			}()
+		case <-ctx.Done():
+			// Give up instead of queueing forever; the caller has likely gone away.
+			releaseHostSem(t.hostKey)
+
+			return nil, fmt.Errorf("timed out waiting for a connection slot to %s: %w", t.hostKey, ctx.Err())
+		}
 	}
 
 	// Single-flight the first authentication handshake when digest is enabled.
@@ -382,12 +447,9 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 		}
 	}
 
-	// Cap the whole Post, retries included, so a slot is never held for longer.
-	deadline := time.Now().Add(timeout)
-
 	msgBody := []byte(msg)
 
-	req, err := t.newPostRequest(msgBody)
+	req, err := t.newPostRequest(ctx, msgBody)
 	if err != nil {
 		return nil, err
 	}
@@ -396,7 +458,7 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 		if t.useDigest {
 			auth, ok, authErr := t.digestAuthHeader()
 			if authErr != nil {
-				return nil, fmt.Errorf("failed digest auth %w", authErr)
+				return nil, fmt.Errorf("failed digest auth: %w", authErr)
 			}
 
 			if ok {
@@ -413,7 +475,7 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 	res, err := t.Do(req)
 	if err != nil {
-		res, err = t.retryOnTransient(msgBody, req, err, deadline)
+		res, err = t.retryOnTransient(ctx, msgBody, req, err)
 		if err != nil {
 			return nil, err
 		}
@@ -429,10 +491,10 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 		auth, _, authErr := t.digestAuthHeader()
 		if authErr != nil {
-			return nil, fmt.Errorf("failed digest auth %w", authErr)
+			return nil, fmt.Errorf("failed digest auth: %w", authErr)
 		}
 
-		req, err = t.newPostRequest(msgBody)
+		req, err = t.newPostRequest(ctx, msgBody)
 		if err != nil {
 			return nil, err
 		}
@@ -441,7 +503,7 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 
 		res, err = t.Do(req)
 		if err != nil {
-			res, err = t.retryOnTransient(msgBody, req, err, deadline)
+			res, err = t.retryOnTransient(ctx, msgBody, req, err)
 			if err != nil {
 				return nil, err
 			}

@@ -6,10 +6,18 @@
 package client
 
 import (
+	"context"
 	"crypto/tls"
+	"errors"
+	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
+	"sync"
+	"sync/atomic"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -547,5 +555,262 @@ func TestClient_GetServerCertificate_LeavesTransportConfigUnchanged(t *testing.T
 	if httpTransport.TLSClientConfig.VerifyPeerCertificate != nil {
 		t.Error("GetServerCertificate modified the shared transport TLS config; " +
 			"VerifyPeerCertificate should remain unset")
+	}
+}
+
+const testHostKey = "10.0.0.1:16992"
+
+var errNotTransient = errors.New("wsman: not a transport problem")
+
+// wsaError builds the error shape a Windows socket read failure arrives in:
+// net.OpError wrapping os.SyscallError wrapping the raw WSA code.
+func wsaError(code syscall.Errno) error {
+	return &net.OpError{
+		Op:  "read",
+		Err: &os.SyscallError{Syscall: "wsarecv", Err: code},
+	}
+}
+
+func TestIsTransientTransportError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		expected bool
+	}{
+		{"nil", nil, false},
+		{"unrelated", errNotTransient, false},
+		{"io.EOF", io.EOF, true},
+		{"ECONNRESET", syscall.ECONNRESET, true},
+		{"ECONNABORTED", syscall.ECONNABORTED, true},
+		{"EPIPE", syscall.EPIPE, true},
+		{"wrapped EOF", &net.OpError{Op: "read", Err: io.EOF}, true},
+		{"WSAECONNRESET", wsaError(wsaeConnReset), true},
+		{"WSAECONNABORTED", wsaError(wsaeConnAborted), true},
+		{"other errno", wsaError(syscall.Errno(10061)), false},
+		{"reset text", errors.New("read tcp: connection reset by peer"), true},
+		{"bad record mac text", errors.New("local error: tls: bad record MAC"), true},
+		{"tls internal text", errors.New("remote error: tls: internal error"), true},
+		{"broken pipe text", errors.New("write tcp: broken pipe"), true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isTransientTransportError(tt.err); got != tt.expected {
+				t.Errorf("isTransientTransportError(%v) = %v, want %v", tt.err, got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestAcquireHostSemIsSharedAndReleased(t *testing.T) {
+	first := acquireHostSem(testHostKey)
+	second := acquireHostSem(testHostKey)
+
+	if first != second {
+		t.Error("expected both callers to share one semaphore for the same host")
+	}
+
+	if cap(first) != maxConcurrentPosts {
+		t.Errorf("expected semaphore cap %d, got %d", maxConcurrentPosts, cap(first))
+	}
+
+	hostSemsMu.Lock()
+	refs := hostSems[testHostKey].refs
+	hostSemsMu.Unlock()
+
+	if refs != 2 {
+		t.Errorf("expected 2 refs, got %d", refs)
+	}
+
+	releaseHostSem(testHostKey)
+	releaseHostSem(testHostKey)
+
+	hostSemsMu.Lock()
+	_, stillThere := hostSems[testHostKey]
+	hostSemsMu.Unlock()
+
+	if stillThere {
+		t.Error("expected the entry to be dropped once no Post is using it")
+	}
+}
+
+func TestReleaseHostSemUnknownKeyIsSafe(t *testing.T) {
+	releaseHostSem("never-acquired:16992")
+}
+
+func TestPostConcurrencyIsCapped(t *testing.T) {
+	var (
+		inFlight int32
+		peak     int32
+	)
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		now := atomic.AddInt32(&inFlight, 1)
+
+		for {
+			old := atomic.LoadInt32(&peak)
+			if now <= old || atomic.CompareAndSwapInt32(&peak, old, now) {
+				break
+			}
+		}
+
+		time.Sleep(20 * time.Millisecond)
+		atomic.AddInt32(&inFlight, -1)
+
+		_, _ = w.Write([]byte(testResponse))
+	}))
+
+	defer ts.Close()
+
+	client := NewWsman(Parameters{Target: ts.URL})
+	client.endpoint = ts.URL
+
+	var wg sync.WaitGroup
+
+	for range 8 {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			if _, err := client.Post(testMsg); err != nil {
+				t.Errorf("unexpected error during POST: %v", err)
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	if got := atomic.LoadInt32(&peak); got > maxConcurrentPosts {
+		t.Errorf("expected at most %d concurrent posts, saw %d", maxConcurrentPosts, got)
+	}
+
+	hostSemsMu.Lock()
+	remaining := len(hostSems)
+	hostSemsMu.Unlock()
+
+	if remaining != 0 {
+		t.Errorf("expected hostSems to be empty after all posts finished, got %d entries", remaining)
+	}
+}
+
+func TestRetryOnTransientRecovers(t *testing.T) {
+	var calls int32
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+
+		_, _ = w.Write([]byte(testResponse))
+	}))
+
+	defer ts.Close()
+
+	client := NewWsman(Parameters{Target: ts.URL})
+	client.endpoint = ts.URL
+
+	ctx, cancel := context.WithTimeout(context.Background(), minTimeout)
+	defer cancel()
+
+	req, err := client.newPostRequest(ctx, []byte(testMsg))
+	if err != nil {
+		t.Fatalf("unexpected error building request: %v", err)
+	}
+
+	res, err := client.retryOnTransient(ctx, []byte(testMsg), req, io.EOF)
+	if err != nil {
+		t.Fatalf("expected the retry to recover, got %v", err)
+	}
+
+	defer res.Body.Close()
+
+	if atomic.LoadInt32(&calls) != 1 {
+		t.Errorf("expected 1 retry attempt, got %d", atomic.LoadInt32(&calls))
+	}
+}
+
+func TestRetryOnTransientGivesUpAfterMaxAttempts(t *testing.T) {
+	var calls int32
+
+	// Hijack and close without answering, so every attempt sees a dropped connection.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+
+		conn, _, err := w.(http.Hijacker).Hijack()
+		if err == nil {
+			_ = conn.Close()
+		}
+	}))
+
+	defer ts.Close()
+
+	client := NewWsman(Parameters{Target: ts.URL})
+	client.endpoint = ts.URL
+
+	ctx, cancel := context.WithTimeout(context.Background(), minTimeout)
+	defer cancel()
+
+	req, err := client.newPostRequest(ctx, []byte(testMsg))
+	if err != nil {
+		t.Fatalf("unexpected error building request: %v", err)
+	}
+
+	if _, err = client.retryOnTransient(ctx, []byte(testMsg), req, io.EOF); err == nil {
+		t.Fatal("expected an error once every attempt failed")
+	}
+
+	if atomic.LoadInt32(&calls) != maxTransientRetries {
+		t.Errorf("expected %d attempts, got %d", maxTransientRetries, atomic.LoadInt32(&calls))
+	}
+}
+
+func TestRetryOnTransientSkipsOtherErrors(t *testing.T) {
+	client := NewWsman(Parameters{Target: "10.0.0.1"})
+
+	ctx, cancel := context.WithTimeout(context.Background(), minTimeout)
+	defer cancel()
+
+	req, err := client.newPostRequest(ctx, []byte(testMsg))
+	if err != nil {
+		t.Fatalf("unexpected error building request: %v", err)
+	}
+
+	_, err = client.retryOnTransient(ctx, []byte(testMsg), req, errNotTransient)
+	if !errors.Is(err, errNotTransient) {
+		t.Errorf("expected the original error back, got %v", err)
+	}
+}
+
+// The deadline must cover the whole Post, so an expired context stops the retry
+// loop instead of starting another attempt.
+func TestRetryOnTransientStopsWhenContextExpired(t *testing.T) {
+	var calls int32
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&calls, 1)
+
+		_, _ = w.Write([]byte(testResponse))
+	}))
+
+	defer ts.Close()
+
+	client := NewWsman(Parameters{Target: ts.URL})
+	client.endpoint = ts.URL
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	req, err := client.newPostRequest(ctx, []byte(testMsg))
+	if err != nil {
+		t.Fatalf("unexpected error building request: %v", err)
+	}
+
+	cancel()
+
+	_, err = client.retryOnTransient(ctx, []byte(testMsg), req, io.EOF)
+	if !errors.Is(err, io.EOF) {
+		t.Errorf("expected the last error back, got %v", err)
+	}
+
+	if atomic.LoadInt32(&calls) != 0 {
+		t.Errorf("expected no attempt after the deadline passed, got %d", atomic.LoadInt32(&calls))
 	}
 }
