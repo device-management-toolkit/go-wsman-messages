@@ -184,6 +184,8 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 
 	var dataToSend interface{}
 
+	isAuthenticated := session != nil && session.Authenticated
+
 	switch data[0] {
 	case APF_KEEPALIVE_REQUEST:
 		log.Debug("received APF_KEEPALIVE_REQUEST")
@@ -199,6 +201,12 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 		ProcessKeepAliveOptionsReply(data, session)
 	case APF_GLOBAL_REQUEST: // 80
 		log.Debug("received APF_GLOBAL_REQUEST")
+
+		if !isAuthenticated {
+			log.Debug("ignoring APF_GLOBAL_REQUEST before authentication")
+
+			break
+		}
 
 		if ValidateGlobalRequest(data) {
 			// Decode once - get both the request info and the reply
@@ -222,17 +230,35 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 	case APF_CHANNEL_OPEN_CONFIRMATION: // (91) Intel AMT confirmation to an APF_CHANNEL_OPEN request.
 		log.Debug("received APF_CHANNEL_OPEN_CONFIRMATION")
 
+		if !isAuthenticated {
+			log.Debug("ignoring APF_CHANNEL_OPEN_CONFIRMATION before authentication")
+
+			break
+		}
+
 		if ValidateChannelOpenConfirmation(data) {
 			ProcessChannelOpenConfirmation(data, session)
 		}
 	case APF_CHANNEL_OPEN_FAILURE: // (92) Intel AMT rejected our connection attempt.
 		log.Debug("received APF_CHANNEL_OPEN_FAILURE")
 
+		if !isAuthenticated {
+			log.Debug("ignoring APF_CHANNEL_OPEN_FAILURE before authentication")
+
+			break
+		}
+
 		if ValidateChannelOpenFailure(data) {
 			ProcessChannelOpenFailure(data, session)
 		}
 	case APF_CHANNEL_CLOSE: // (97) Intel AMT is closing this channel, we need to disconnect the LMS TCP connection
 		log.Debug("received APF_CHANNEL_CLOSE")
+
+		if !isAuthenticated {
+			log.Debug("ignoring APF_CHANNEL_CLOSE before authentication")
+
+			break
+		}
 
 		if ValidateChannelClose(data) {
 			reply := ProcessChannelClose(data, session)
@@ -246,6 +272,12 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 	case APF_CHANNEL_DATA: // (94) Intel AMT is sending data that we must relay into an LMS TCP connection.
 		log.Debug("received APF_CHANNEL_DATA")
 
+		if !isAuthenticated {
+			log.Debug("ignoring APF_CHANNEL_DATA before authentication")
+
+			break
+		}
+
 		if ValidateChannelData(data) {
 			if reply := ProcessChannelData(data, session); reply != nil {
 				dataToSend = reply
@@ -254,6 +286,12 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 	case APF_CHANNEL_WINDOW_ADJUST: // 93
 		log.Debug("received APF_CHANNEL_WINDOW_ADJUST")
 
+		if !isAuthenticated {
+			log.Debug("ignoring APF_CHANNEL_WINDOW_ADJUST before authentication")
+
+			break
+		}
+
 		if ValidateChannelWindowAdjust(data) {
 			ProcessChannelWindowAdjust(data, session)
 		}
@@ -261,12 +299,22 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 		log.Debug("received APF PROTOCOL VERSION")
 
 		if ValidateProtocolVersion(data) {
+			if session != nil && !session.Authenticated && session.ProtocolVersionSeen {
+				log.Debug("ignoring duplicate APF_PROTOCOLVERSION before authentication")
+
+				break
+			}
+
 			info := p.decodeProtocolVersion(data)
 
 			if err := p.handler.OnProtocolVersion(info); err != nil {
 				log.Errorf("Protocol version rejected: %v", err)
 
 				return bin_buf
+			}
+
+			if session != nil {
+				session.ProtocolVersionSeen = true
 			}
 
 			dataToSend = ProcessProtocolVersion(data)
@@ -284,6 +332,10 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 
 			response := p.handler.OnAuthRequest(request)
 			if response.Authenticated {
+				if session != nil {
+					session.Authenticated = true
+				}
+
 				dataToSend = &APF_USERAUTH_SUCCESS_MESSAGE{MessageType: APF_USERAUTH_SUCCESS}
 			} else {
 				dataToSend = p.createAuthFailureMessage()

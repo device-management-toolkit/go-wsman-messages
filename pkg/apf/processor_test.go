@@ -323,12 +323,14 @@ type mockHandler struct {
 	onProtocolVersionCalled bool
 	onAuthRequestCalled     bool
 	onGlobalRequestCalled   bool
+	protocolVersions        []ProtocolVersionInfo
 	authResponse            AuthResponse
 	protocolVersionErr      error
 }
 
 func (m *mockHandler) OnProtocolVersion(info ProtocolVersionInfo) error {
 	m.onProtocolVersionCalled = true
+	m.protocolVersions = append(m.protocolVersions, info)
 
 	return m.protocolVersionErr
 }
@@ -343,6 +345,62 @@ func (m *mockHandler) OnGlobalRequest(request GlobalRequest) bool {
 	m.onGlobalRequestCalled = true
 
 	return false
+}
+
+func buildProtocolVersionMessageWithUUID(uuid [16]byte) []byte {
+	data := make([]byte, 93)
+	data[0] = APF_PROTOCOLVERSION
+	// Major version = 1
+	data[4] = 1
+	// Trigger reason = 1
+	data[12] = 1
+	copy(data[13:29], uuid[:])
+
+	return data
+}
+
+func buildGlobalRequestTCPIPForward() []byte {
+	return []byte{
+		APF_GLOBAL_REQUEST,
+		0x00, 0x00, 0x00, 0x0D,
+		0x74, 0x63, 0x70, 0x69, 0x70, 0x2d, 0x66, 0x6f, 0x72, 0x77, 0x61, 0x72, 0x64,
+		0x00,
+		0x00, 0x00, 0x00, 0x03,
+		0x00, 0x00, 0x00,
+		0x00, 0x00, 0x42, 0x60,
+	}
+}
+
+func TestSecurity_PreAuthProtocolVersionThenGlobalRequestIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	handler := &mockHandler{}
+	p := NewProcessor(handler)
+	session := &Session{}
+
+	protocolVersion := buildProtocolVersionMessageWithUUID([16]byte{0x10})
+	_ = p.Process(protocolVersion, session)
+
+	result := p.Process(buildGlobalRequestTCPIPForward(), session)
+
+	assert.False(t, handler.onGlobalRequestCalled, "pre-auth APF_GLOBAL_REQUEST should be ignored")
+	assert.Equal(t, 0, result.Len(), "pre-auth APF_GLOBAL_REQUEST should not emit success reply")
+}
+
+func TestSecurity_PreAuthProtocolVersionReplayDoesNotRebind(t *testing.T) {
+	t.Parallel()
+
+	handler := &mockHandler{}
+	p := NewProcessor(handler)
+	session := &Session{}
+
+	firstUUID := [16]byte{0xAA}
+	secondUUID := [16]byte{0xBB}
+
+	_ = p.Process(buildProtocolVersionMessageWithUUID(firstUUID), session)
+	_ = p.Process(buildProtocolVersionMessageWithUUID(secondUUID), session)
+
+	assert.Len(t, handler.protocolVersions, 1, "pre-auth APF_PROTOCOLVERSION replay should not rebind identity")
 }
 
 func TestProcessorProcessProtocolVersion(t *testing.T) {
@@ -915,7 +973,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 
 		handler := &mockHandler{}
 		p := NewProcessor(handler)
-		session := &Session{}
+		session := &Session{Authenticated: true}
 		// tcpip-forward request
 		data := []byte{
 			APF_GLOBAL_REQUEST,
@@ -1001,7 +1059,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		t.Parallel()
 
 		p := NewProcessor(nil)
-		session := &Session{SenderChannel: 7, HandshakeConfirmed: true}
+		session := &Session{Authenticated: true, SenderChannel: 7, HandshakeConfirmed: true}
 		data := make([]byte, 5)
 		data[0] = APF_CHANNEL_CLOSE
 
@@ -1049,7 +1107,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 
 		p := NewProcessor(nil)
 		stream := make(chan []byte, 1)
-		session := &Session{StreamDataBuffer: stream, RecipientChannel: 0, HandshakeConfirmed: true}
+		session := &Session{Authenticated: true, StreamDataBuffer: stream, RecipientChannel: 0, HandshakeConfirmed: true}
 		data := make([]byte, 5)
 		data[0] = APF_CHANNEL_CLOSE
 
@@ -1072,7 +1130,7 @@ func TestProcessAllMessageTypes(t *testing.T) {
 		t.Parallel()
 
 		p := NewProcessor(nil)
-		session := &Session{}
+		session := &Session{Authenticated: true}
 		// Valid channel data: type(1) + recipient(4) + len(4) + data
 		data := []byte{APF_CHANNEL_DATA, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0xAB}
 
