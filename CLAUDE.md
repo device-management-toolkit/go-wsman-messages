@@ -25,7 +25,7 @@ Public surface is the `wsman.Messages` struct (`pkg/wsman/messages.go`), which e
 - `go vet ./...` — runs in CI under the `formatting` job alongside the gofmt check.
 - `go install github.com/jstemmer/go-junit-report/v2@latest` — required only if you want to reproduce the CI's JUnit-formatted test output locally; not needed for normal development.
 
-Toolchain: Go **1.25** (`go.mod`). CI builds on `windows-2019`, `windows-2022`, `ubuntu-22.04`, `ubuntu-20.04` — write platform-agnostic code.
+Toolchain: Go **1.27** (`go.mod`). CI builds on `windows-2019`, `windows-2022`, `ubuntu-22.04`, `ubuntu-20.04` — write platform-agnostic code.
 
 ### Test coverage policy
 
