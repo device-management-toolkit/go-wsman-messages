@@ -283,7 +283,12 @@ func (p *Processor) Process(data []byte, session *Session) bytes.Buffer {
 			log.Debugf("username=%s serviceName=%s methodName=%s", request.Username, request.ServiceName, request.MethodName)
 
 			response := p.handler.OnAuthRequest(request)
+
 			if response.Authenticated {
+				if session != nil {
+					session.Authenticated = true
+				}
+
 				dataToSend = &APF_USERAUTH_SUCCESS_MESSAGE{MessageType: APF_USERAUTH_SUCCESS}
 			} else {
 				dataToSend = p.createAuthFailureMessage()
@@ -609,12 +614,29 @@ func ProcessChannelOpenConfirmation(data []byte, session *Session) {
 	log.Tracef("%+v", confirmationMessage)
 	// replySuccess := ChannelOpenReplySuccess(confirmationMessage.RecipientChannel, confirmationMessage.SenderChannel)
 
+	if session == nil {
+		return
+	}
+
+	if !session.Authenticated {
+		log.Debug("APF_CHANNEL_OPEN_CONFIRMATION received before authentication; ignoring")
+
+		return
+	}
+
+	if session.PendingRecipientChannel != 0 && confirmationMessage.RecipientChannel != session.PendingRecipientChannel {
+		log.Debugf("APF_CHANNEL_OPEN_CONFIRMATION recipient mismatch: expected=%d got=%d", session.PendingRecipientChannel, confirmationMessage.RecipientChannel)
+
+		return
+	}
+
 	log.Trace("our channel: "+fmt.Sprint(confirmationMessage.RecipientChannel), " AMT's channel: "+fmt.Sprint(confirmationMessage.SenderChannel))
 	log.Trace("initial window: " + fmt.Sprint(confirmationMessage.InitialWindowSize))
 	session.SenderChannel = confirmationMessage.SenderChannel
 	session.RecipientChannel = confirmationMessage.RecipientChannel
 	session.TXWindow = confirmationMessage.InitialWindowSize
 	session.HandshakeConfirmed = true
+	session.PendingRecipientChannel = 0
 
 	if session.WaitGroup != nil {
 		session.WaitGroup.Done()
