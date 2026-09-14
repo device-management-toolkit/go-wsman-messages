@@ -290,12 +290,16 @@ type APF_CHANNEL_OPEN_MESSAGE struct {
 }
 
 type Session struct {
-	SenderChannel    uint32
-	RecipientChannel uint32
-	TXWindow         uint32
-	RXWindow         uint32
-	Tempdata         []byte
-	DataBuffer       chan []byte
+	// Authenticated indicates APF_USERAUTH has succeeded for this session and
+	// post-auth message types are eligible for processing.
+	Authenticated       bool
+	ProtocolVersionSeen bool
+	SenderChannel       uint32
+	RecipientChannel    uint32
+	TXWindow            uint32
+	RXWindow            uint32
+	Tempdata            []byte
+	DataBuffer          chan []byte
 	// StreamDataBuffer, when set, switches ProcessChannelData into streaming
 	// mode: payloads are forwarded to this channel instead of accumulating in
 	// Tempdata. The processor sends non-blockingly, so the consumer must
