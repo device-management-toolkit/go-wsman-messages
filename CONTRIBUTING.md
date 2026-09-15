@@ -6,7 +6,7 @@ Thank you for your interest in contributing. This document covers the local work
 
 ### Prerequisites
 
-- Go **1.27** (see `go.mod`). The CI matrix exercises Linux and Windows; write platform-agnostic code.
+- Go **1.25.0** or newer (see `go.mod`). CI, integration, and release workflows use Go **1.27**. CI toolchain updates do not by themselves require raising the module's minimum Go version. Write platform-agnostic code.
 - `gofumpt` — `go install mvdan.cc/gofumpt@latest`. **Must be run before `golangci-lint --fix`** (see workflow below); otherwise `golangci-lint --fix` and `gofumpt` produce conflicting edits that corrupt formatting.
 - `golangci-lint` v2 — either install locally per the [official instructions](https://golangci-lint.run/welcome/install/) or invoke via Docker (`docker run --rm -v "$(pwd):/app" -w /app golangci/golangci-lint:latest golangci-lint run -v`). The repo's `.golangci.yml` registers `gofmt`, `gofumpt`, `goimports`, and `gci` under `formatters`, so a verification-only `golangci-lint run` enforces formatting **and** linting in one shot.
 
