@@ -72,6 +72,15 @@ func TestProcessChannelClose(t *testing.T) {
 	assert.NotNil(t, result)
 }
 
+func TestProcessChannelCloseNilSession(t *testing.T) {
+	t.Parallel()
+
+	data := []byte{0x01}
+	result := ProcessChannelClose(data, nil)
+
+	assert.Nil(t, result)
+}
+
 func TestProcessChannelCloseFlushesTempdata(t *testing.T) {
 	t.Parallel()
 
