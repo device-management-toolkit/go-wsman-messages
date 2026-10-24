@@ -345,6 +345,94 @@ func (m *mockHandler) OnGlobalRequest(request GlobalRequest) bool {
 	return false
 }
 
+func buildChannelOpenConfirmationMessage(recipientChannel, senderChannel, initialWindowSize uint32) []byte {
+	data := make([]byte, 17)
+	data[0] = APF_CHANNEL_OPEN_CONFIRMATION
+	data[1] = byte(recipientChannel >> 24)
+	data[2] = byte(recipientChannel >> 16)
+	data[3] = byte(recipientChannel >> 8)
+	data[4] = byte(recipientChannel)
+	data[5] = byte(senderChannel >> 24)
+	data[6] = byte(senderChannel >> 16)
+	data[7] = byte(senderChannel >> 8)
+	data[8] = byte(senderChannel)
+	data[9] = byte(initialWindowSize >> 24)
+	data[10] = byte(initialWindowSize >> 16)
+	data[11] = byte(initialWindowSize >> 8)
+	data[12] = byte(initialWindowSize)
+
+	return data
+}
+
+func buildChannelCloseMessage(recipientChannel uint32) []byte {
+	data := make([]byte, 5)
+	data[0] = APF_CHANNEL_CLOSE
+	data[1] = byte(recipientChannel >> 24)
+	data[2] = byte(recipientChannel >> 16)
+	data[3] = byte(recipientChannel >> 8)
+	data[4] = byte(recipientChannel)
+
+	return data
+}
+
+func TestSecurity_PreAuthOpenConfirmationIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+	session := &Session{}
+
+	result := p.Process(buildChannelOpenConfirmationMessage(9, 33, 1024), session)
+
+	assert.Equal(t, 0, result.Len(), "pre-auth APF_CHANNEL_OPEN_CONFIRMATION should not produce a response")
+	assert.False(t, session.HandshakeConfirmed, "pre-auth APF_CHANNEL_OPEN_CONFIRMATION should not confirm handshake")
+	assert.Equal(t, uint32(0), session.RecipientChannel, "pre-auth APF_CHANNEL_OPEN_CONFIRMATION should not set recipient channel")
+	assert.Equal(t, uint32(0), session.SenderChannel, "pre-auth APF_CHANNEL_OPEN_CONFIRMATION should not set sender channel")
+	assert.Equal(t, uint32(0), session.TXWindow, "pre-auth APF_CHANNEL_OPEN_CONFIRMATION should not set transmit window")
+}
+
+func TestSecurity_PreAuthConfirmationThenCloseKeepsLiveStream(t *testing.T) {
+	t.Parallel()
+
+	p := NewProcessor(nil)
+	stream := make(chan []byte, 1)
+	session := &Session{StreamDataBuffer: stream}
+
+	_ = p.Process(buildChannelOpenConfirmationMessage(9, 33, 1024), session)
+	_ = p.Process(buildChannelCloseMessage(9), session)
+
+	assert.NotNil(t, session.StreamDataBuffer, "pre-auth forged OPEN_CONFIRMATION + CLOSE must not tear down stream buffer")
+
+	select {
+	case _, ok := <-stream:
+		assert.True(t, ok, "stream channel must remain open after pre-auth forged sequence")
+	default:
+	}
+}
+
+func TestSecurity_OpenConfirmationRecipientMismatchIsIgnored(t *testing.T) {
+	t.Parallel()
+
+	stream := make(chan []byte, 1)
+	session := &Session{
+		Authenticated:           true,
+		PendingRecipientChannel: 7,
+		StreamDataBuffer:        stream,
+	}
+
+	ProcessChannelOpenConfirmation(buildChannelOpenConfirmationMessage(9, 33, 1024), session)
+
+	assert.False(t, session.HandshakeConfirmed, "mismatched recipient channel must not confirm the handshake")
+	assert.Equal(t, uint32(0), session.RecipientChannel, "mismatched recipient channel must not be recorded")
+	assert.Equal(t, uint32(0), session.SenderChannel, "mismatched recipient channel must not set sender channel")
+	assert.Equal(t, uint32(0), session.TXWindow, "mismatched recipient channel must not set transmit window")
+
+	select {
+	case _, ok := <-stream:
+		assert.True(t, ok, "mismatched confirmation must not close the tunnel stream")
+	default:
+	}
+}
+
 func TestProcessorProcessProtocolVersion(t *testing.T) {
 	t.Parallel()
 
