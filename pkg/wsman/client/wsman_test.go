@@ -186,6 +186,42 @@ func TestClient_Post(t *testing.T) {
 	}
 }
 
+func TestClient_PostReturnsTypedHTTPStatusError(t *testing.T) {
+	const responseBody = "unauthorized"
+
+	server := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
+		writer.WriteHeader(http.StatusUnauthorized)
+		_, _ = writer.Write([]byte(responseBody))
+	}))
+
+	defer server.Close()
+
+	client := NewWsman(Parameters{Target: server.URL})
+	client.endpoint = server.URL
+	_, err := client.Post(testMsg)
+
+	var statusErr *HTTPStatusError
+	if !errors.As(err, &statusErr) {
+		t.Fatalf("expected *HTTPStatusError, got %T: %v", err, err)
+	}
+
+	if statusErr.StatusCode != http.StatusUnauthorized {
+		t.Errorf("expected status code %d, got %d", http.StatusUnauthorized, statusErr.StatusCode)
+	}
+
+	if statusErr.Status != "401 Unauthorized" {
+		t.Errorf("expected status %q, got %q", "401 Unauthorized", statusErr.Status)
+	}
+
+	if statusErr.Body != responseBody {
+		t.Errorf("expected body %q, got %q", responseBody, statusErr.Body)
+	}
+
+	if err.Error() != "wsman.Client post received: 401 Unauthorized\n"+responseBody {
+		t.Errorf("unexpected error string: %q", err.Error())
+	}
+}
+
 func newMockDigestAuthHandler(username, password string, handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")

@@ -53,6 +53,17 @@ type Message struct {
 	XMLOutput string
 }
 
+// HTTPStatusError reports a non-success HTTP response from a WSMAN request.
+type HTTPStatusError struct {
+	StatusCode int
+	Status     string
+	Body       string
+}
+
+func (e *HTTPStatusError) Error() string {
+	return fmt.Sprintf("wsman.Client post received: %s\n%s", e.Status, e.Body)
+}
+
 // WSMan is an interface for the wsman.Client.
 type WSMan interface {
 	// HTTP Methods
@@ -529,9 +540,7 @@ func (t *Target) Post(msg string) (response []byte, err error) {
 	}
 
 	if res.StatusCode >= 401 {
-		errPostResponse := errors.New("wsman.Client post received")
-
-		return nil, fmt.Errorf("%w: %v\n%v", errPostResponse, res.Status, string(response))
+		return nil, &HTTPStatusError{StatusCode: res.StatusCode, Status: res.Status, Body: string(response)}
 	}
 
 	return response, nil
