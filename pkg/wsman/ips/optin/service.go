@@ -101,12 +101,17 @@ func (service Service) CancelOptIn() (response Response, err error) {
 	return response, err
 }
 
-// Put will change properties of the selected instance.
+// Put changes properties of the instance identified by request.Name.
+// Populate the request from Get, preserving the instance keys and other properties.
 func (service Service) Put(request OptInServiceRequest) (response Response, err error) {
 	request.H = fmt.Sprintf("%s%s", message.IPSSchema, IPSOptInService)
+	selectors := []message.Selector{{
+		Name:  "Name",
+		Value: request.Name,
+	}}
 	response = Response{
 		Message: &client.Message{
-			XMLInput: service.Base.Put(request, false, nil),
+			XMLInput: service.Base.Put(request, true, selectors),
 		},
 	}
 

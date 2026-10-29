@@ -7,15 +7,79 @@ package optin
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/device-management-toolkit/go-wsman-messages/v2/internal/message"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/common"
 	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/wsman/wsmantesting"
 )
+
+func TestOptInServicePut(t *testing.T) {
+	for _, policy := range []int{0, 1} {
+		t.Run(fmt.Sprintf("OptInRequired=%d", policy), func(t *testing.T) {
+			creator := message.NewWSManMessageCreator(wsmantesting.IPSResourceURIBase)
+			mockClient := wsmantesting.MockClient{
+				PackageUnderTest: "ips/optin",
+				CurrentMessage:   wsmantesting.CurrentMessageGet,
+			}
+			service := NewOptInServiceWithClient(creator, &mockClient)
+			getResponse, err := service.Get()
+			require.NoError(t, err)
+
+			instance := getResponse.Body.GetAndPutResponse
+			request := OptInServiceRequest{
+				H:                       "incorrect namespace",
+				CanModifyOptInPolicy:    instance.CanModifyOptInPolicy,
+				CreationClassName:       instance.CreationClassName,
+				ElementName:             instance.ElementName,
+				Name:                    instance.Name,
+				OptInCodeTimeout:        900,
+				OptInDisplayTimeout:     4095,
+				OptInRequired:           policy,
+				OptInState:              instance.OptInState,
+				SystemCreationClassName: instance.SystemCreationClassName,
+				SystemName:              instance.SystemName,
+			}
+			mockClient.CurrentMessage = wsmantesting.CurrentMessagePut
+			response, err := service.Put(request)
+			require.NoError(t, err)
+
+			body := fmt.Sprintf(`<h:IPS_OptInService xmlns:h="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_OptInService"><h:CanModifyOptInPolicy>1</h:CanModifyOptInPolicy><h:CreationClassName>IPS_OptInService</h:CreationClassName><h:ElementName>Intel(r) AMT OptIn Service</h:ElementName><h:Name>Intel(r) AMT OptIn Service</h:Name><h:OptInCodeTimeout>900</h:OptInCodeTimeout><h:OptInDisplayTimeout>4095</h:OptInDisplayTimeout><h:OptInRequired>%d</h:OptInRequired><h:OptInState>0</h:OptInState><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName></h:IPS_OptInService>`, policy)
+			header := `<w:SelectorSet><w:Selector Name="Name">Intel(r) AMT OptIn Service</w:Selector></w:SelectorSet>`
+			expected := wsmantesting.ExpectedResponse(1, wsmantesting.IPSResourceURIBase, IPSOptInService, wsmantesting.Put, header, body)
+			assert.Equal(t, expected, response.XMLInput)
+			assert.Equal(t, instance.Name, response.Body.GetAndPutResponse.Name)
+			assert.Equal(t, 900, response.Body.GetAndPutResponse.OptInCodeTimeout)
+			assert.Equal(t, 4095, response.Body.GetAndPutResponse.OptInDisplayTimeout)
+			assert.Equal(t, "incorrect namespace", request.H)
+		})
+	}
+}
+
+type putErrorClient struct {
+	wsmantesting.MockClient
+	err error
+}
+
+func (c *putErrorClient) Post(string) ([]byte, error) {
+	return nil, c.err
+}
+
+func TestOptInServicePutTransportError(t *testing.T) {
+	expectedErr := errors.New("transport failed")
+	mockClient := putErrorClient{err: expectedErr}
+	service := NewOptInServiceWithClient(message.NewWSManMessageCreator(wsmantesting.IPSResourceURIBase), &mockClient)
+
+	response, err := service.Put(OptInServiceRequest{Name: "selected service"})
+	require.ErrorIs(t, err, expectedErr)
+	require.NotNil(t, response.Message)
+	assert.Contains(t, response.XMLInput, `<w:SelectorSet><w:Selector Name="Name">selected service</w:Selector></w:SelectorSet>`)
+}
 
 func TestJson(t *testing.T) {
 	response := Response{
@@ -384,8 +448,8 @@ func TestNegativeIPS_OptInService(t *testing.T) {
 				"should create a valid IPS_OptInService Put wsman message",
 				IPSOptInService,
 				wsmantesting.Put,
-				`<h:IPS_OptInService xmlns:h="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_OptInService"><h:CanModifyOptInPolicy>1</h:CanModifyOptInPolicy><h:CreationClassName>IPS_OptInService</h:CreationClassName><h:ElementName>Intel(r) AMT OptIn Service</h:ElementName><h:Name>Intel(r) AMT OptIn Service</h:Name><h:OptInCodeTimeout>120</h:OptInCodeTimeout><h:OptInDisplayTimeout>300</h:OptInDisplayTimeout><h:OptInRequired>0</h:OptInRequired><h:OptInState>0</h:OptInState><h:SystemName>Intel(r) AMT</h:SystemName><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName></h:IPS_OptInService>`,
-				"",
+				`<h:IPS_OptInService xmlns:h="http://intel.com/wbem/wscim/1/ips-schema/1/IPS_OptInService"><h:CanModifyOptInPolicy>1</h:CanModifyOptInPolicy><h:CreationClassName>IPS_OptInService</h:CreationClassName><h:ElementName>Intel(r) AMT OptIn Service</h:ElementName><h:Name>Intel(r) AMT OptIn Service</h:Name><h:OptInCodeTimeout>120</h:OptInCodeTimeout><h:OptInDisplayTimeout>300</h:OptInDisplayTimeout><h:OptInRequired>0</h:OptInRequired><h:OptInState>0</h:OptInState><h:SystemCreationClassName>CIM_ComputerSystem</h:SystemCreationClassName><h:SystemName>Intel(r) AMT</h:SystemName></h:IPS_OptInService>`,
+				`<w:SelectorSet><w:Selector Name="Name">Intel(r) AMT OptIn Service</w:Selector></w:SelectorSet>`,
 				func() (Response, error) {
 					client.CurrentMessage = wsmantesting.CurrentMessageError
 					request := OptInServiceRequest{
@@ -425,7 +489,7 @@ func TestNegativeIPS_OptInService(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				expectedXMLInput := wsmantesting.ExpectedResponse(messageID, resourceURIBase, test.method, test.action, "", test.body)
+				expectedXMLInput := wsmantesting.ExpectedResponse(messageID, resourceURIBase, test.method, test.action, test.extraHeader, test.body)
 				messageID++
 				response, err := test.responseFunc()
 				assert.Error(t, err)
