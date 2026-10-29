@@ -95,7 +95,7 @@ type (
 		OptInDisplayTimeout     int      `xml:"h:OptInDisplayTimeout,omitempty"`
 		OptInRequired           int      `xml:"h:OptInRequired"`
 		OptInState              int      `xml:"h:OptInState"`
-		SystemName              string   `xml:"h:SystemName,omitempty"`
 		SystemCreationClassName string   `xml:"h:SystemCreationClassName,omitempty"`
+		SystemName              string   `xml:"h:SystemName,omitempty"`
 	}
 )
