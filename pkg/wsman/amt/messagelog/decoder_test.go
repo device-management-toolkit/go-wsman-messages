@@ -6,6 +6,7 @@
 package messagelog
 
 import (
+	"encoding/base64"
 	"fmt"
 	"testing"
 	"time"
@@ -352,4 +353,33 @@ func TestDecodeEventDetailString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseEventLogResultSkipsInvalidRecord(t *testing.T) {
+	records := []string{"Y8iYZf8GbwVoEP8mYaoKAAAAAAAA", "not base64!", "IgYBZf8PbwJoAf8iAEAHAAAAAAAA"}
+
+	result, err := parseEventLogResult(records)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, uint32(0x6598c863), result[0].TimeStamp)
+	assert.Equal(t, uint32(0x65010622), result[1].TimeStamp)
+}
+
+func TestParseEventLogResultSkipsTruncatedRecord(t *testing.T) {
+	valid := "Y8iYZf8GbwVoEP8mYaoKAAAAAAAA"
+	raw, _ := base64.StdEncoding.DecodeString(valid)
+
+	records := []string{""}
+	for i := 1; i < len(raw); i++ {
+		records = append(records, base64.StdEncoding.EncodeToString(raw[:i]))
+	}
+
+	records = append(records, valid)
+
+	result, err := parseEventLogResult(records)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, uint32(0x6598c863), result[0].TimeStamp)
 }
