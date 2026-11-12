@@ -37,6 +37,7 @@ type (
 		GetAdminNetStatusResponse  GetAdminNetAclEntryStatus_OUTPUT `xml:"GetAdminNetAclEntryStatus_OUTPUT"`
 		SetACLEnabledStateResponse SetAclEnabledState_OUTPUT        `xml:"SetAclEnabledState_OUTPUT"`
 		EnumerateUserResponse      EnumerateUserAclEntries_OUTPUT   `xml:"EnumerateUserAclEntries_OUTPUT"`
+		UpdateUserResponse         UpdateUserAclEntryEx_OUTPUT      `xml:"UpdateUserAclEntryEx_OUTPUT"`
 	}
 	SetAdminAclEntryEx_OUTPUT struct {
 		ReturnValue ReturnValue `xml:"ReturnValue"`
@@ -47,6 +48,9 @@ type (
 	AddUserAclEntryEx_OUTPUT struct {
 		ReturnValue ReturnValue `xml:"ReturnValue"`
 		Handle      int         `xml:"Handle"`
+	}
+	UpdateUserAclEntryEx_OUTPUT struct {
+		ReturnValue ReturnValue `xml:"ReturnValue"`
 	}
 	RemoveUserAclEntry_OUTPUT struct {
 		ReturnValue ReturnValue `xml:"ReturnValue"`

@@ -285,3 +285,27 @@ func (as Service) AddUserAclEntryEx(digestUsername, digestPassword string, acces
 
 	return response, err
 }
+
+// UpdateUserAclEntryEx updates the user ACL entry identified by handle.
+func (as Service) UpdateUserAclEntryEx(handle int, digestUsername, digestPassword string, accessPermission AccessPermission, realms []RealmValues) (response Response, err error) {
+	header := as.Base.WSManMessageCreator.CreateHeader(methods.GenerateAction(AMTAuthorizationService, UpdateUserACLEntryEx), AMTAuthorizationService, nil, "", "")
+	body := as.Base.WSManMessageCreator.CreateBody(methods.GenerateInputMethod(UpdateUserACLEntryEx), AMTAuthorizationService, &UpdateUserAclEntryEx_INPUT{Handle: handle, DigestUsername: digestUsername, DigestPassword: digestPassword, AccessPermission: accessPermission, Realms: realms})
+	response = Response{
+		Message: &client.Message{
+			XMLInput: as.Base.WSManMessageCreator.CreateXML(header, body),
+		},
+	}
+
+	err = as.Base.Execute(response.Message)
+	if err != nil {
+		return response, err
+	}
+
+	// put the xml response into the go struct
+	err = xml.Unmarshal([]byte(response.XMLOutput), &response)
+	if err != nil {
+		return response, err
+	}
+
+	return response, err
+}
