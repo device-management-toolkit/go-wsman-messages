@@ -312,3 +312,15 @@ func TestNegativeAMT_GeneralSettings(t *testing.T) {
 		}
 	})
 }
+
+func TestGeneralSettingsRequestMarshalsFalseBooleans(t *testing.T) {
+	request := GeneralSettingsRequest{H: "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_GeneralSettings"}
+
+	result, err := xml.Marshal(request)
+
+	assert.NoError(t, err)
+
+	for _, field := range []string{"PingResponseEnabled", "WsmanOnlyMode", "DDNSUpdateEnabled", "DDNSUpdateByDHCPServerEnabled", "SharedFQDN", "RmcpPingResponseEnabled"} {
+		assert.Contains(t, string(result), "<h:"+field+">false</h:"+field+">")
+	}
+}
