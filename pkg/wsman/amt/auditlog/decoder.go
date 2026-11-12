@@ -359,6 +359,12 @@ func convertToAuditLogResult(auditlogdata []string) []AuditLogRecord {
 		}
 
 		decodedEventRecordStr := string(decodedEventRecord)
+
+		// skip a truncated record: app ID, event ID and initiator type must be present
+		if len(decodedEventRecordStr) < 5 {
+			continue
+		}
+
 		auditLogRecord := AuditLogRecord{}
 
 		auditLogRecord.AuditAppID = common.ReadShort(decodedEventRecordStr, 0)
@@ -366,10 +372,19 @@ func convertToAuditLogResult(auditlogdata []string) []AuditLogRecord {
 		auditLogRecord.AuditApp = AMTAppIDToString[auditLogRecord.AuditAppID]
 		auditLogRecord.Event = AMTAuditLogEventToString[(auditLogRecord.AuditAppID*100)+auditLogRecord.EventID]
 
-		initiatorType, initiator, pointer := getInitiatorInfo(decodedEventRecordStr)
+		initiatorType, initiator, pointer, ok := getInitiatorInfo(decodedEventRecordStr)
+		if !ok {
+			continue
+		}
+
 		auditLogRecord.InitiatorType = initiatorType
 		auditLogRecord.Initiator = initiator
 		ptr = pointer
+
+		// skip a truncated record: timestamp, location type and address length must be present
+		if len(decodedEventRecordStr) < ptr+6 {
+			continue
+		}
 
 		// Read timestamp
 		timeStamp := common.ReadInt(decodedEventRecordStr, ptr)
@@ -384,6 +399,10 @@ func convertToAuditLogResult(auditlogdata []string) []AuditLogRecord {
 		netlen := []byte(decodedEventRecordStr[ptr : ptr+1])[0]
 		ptr++
 
+		if len(decodedEventRecordStr) < ptr+int(netlen)+1 {
+			continue
+		}
+
 		auditLogRecord.NetAddress = strings.ReplaceAll(decodedEventRecordStr[ptr:ptr+int(netlen)], "0000:0000:0000:0000:0000:0000:0000:0001", "::1")
 
 		// Read extended data
@@ -391,6 +410,10 @@ func convertToAuditLogResult(auditlogdata []string) []AuditLogRecord {
 
 		exlen := []byte(decodedEventRecordStr[ptr : ptr+1])[0]
 		ptr++
+
+		if len(decodedEventRecordStr) < ptr+int(exlen) {
+			continue
+		}
 
 		auditLogRecord.Ex = decodedEventRecordStr[ptr : ptr+int(exlen)]
 		auditLogRecord.ExStr = GetAuditLogExtendedDataString(auditLogRecord.AuditAppID, auditLogRecord.EventID, auditLogRecord.Ex)
@@ -1766,17 +1789,26 @@ func convertUINT32ToIPv4(intIP uint32) net.IP {
 }
 
 // [initiatorType: number, initiator: string, ptr: number] need to type it.
-func getInitiatorInfo(decodedEventRecord string) (initatorType byte, initiator string, ptr int) {
+// ok is false when the record is too short for the initiator it declares.
+func getInitiatorInfo(decodedEventRecord string) (initatorType byte, initiator string, ptr int, ok bool) {
 	var userlen uint8
 
 	initiatorType := []byte(decodedEventRecord[4:5])[0]
 
 	switch initiatorType {
 	case HTTPDigest:
+		if len(decodedEventRecord) < 6 || len(decodedEventRecord) < 6+int(decodedEventRecord[5]) {
+			return initiatorType, "", 0, false
+		}
+
 		userlen = []byte(decodedEventRecord[5:6])[0]
 		initiator = decodedEventRecord[6 : 6+userlen]
 		ptr = 6 + int(userlen)
 	case Kerberos:
+		if len(decodedEventRecord) < 10 || len(decodedEventRecord) < 10+int(decodedEventRecord[9]) {
+			return initiatorType, "", 0, false
+		}
+
 		userlen = []byte(decodedEventRecord[9:10])[0]
 		initiator = common.GetSidString(decodedEventRecord[10 : 10+userlen])
 		ptr = 10 + int(userlen)
@@ -1791,5 +1823,5 @@ func getInitiatorInfo(decodedEventRecord string) (initatorType byte, initiator s
 		ptr = 0
 	}
 
-	return initiatorType, initiator, ptr
+	return initiatorType, initiator, ptr, true
 }

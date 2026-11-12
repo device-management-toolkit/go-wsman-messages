@@ -6,7 +6,10 @@
 package auditlog
 
 import (
+	"encoding/base64"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestOverwritePolicy_String(t *testing.T) {
@@ -263,4 +266,24 @@ func TestGetAuditLogExtendedDataString(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestConvertToAuditLogResultSkipsTruncatedRecords(t *testing.T) {
+	valid := "ABMAAAI/9M1uAgAQAAwAAAAoBZkADAAAACQFlA=="
+	raw, _ := base64.StdEncoding.DecodeString(valid)
+
+	// a Kerberos initiator whose SID length points past the end of the record
+	kerberos := base64.StdEncoding.EncodeToString([]byte{0x00, 0x10, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01})
+
+	records := []string{kerberos}
+	for i := 1; i < len(raw); i++ {
+		records = append(records, base64.StdEncoding.EncodeToString(raw[:i]))
+	}
+
+	records = append(records, valid)
+
+	assert.NotPanics(t, func() {
+		result := convertToAuditLogResult(records)
+		assert.Len(t, result, 1)
+	})
 }

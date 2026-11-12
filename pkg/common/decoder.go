@@ -105,6 +105,10 @@ func RandomValueHex(i int) string {
 // GetSidString converts a byte array of SID into string.
 // Note: This function assumes sid is provided as a string for simplicity but should be []byte in a real Go implementation.
 func GetSidString(sid string) string {
+	if len(sid) < 8 {
+		return ""
+	}
+
 	var value strings.Builder
 
 	fmt.Fprintf(&value, "S-%d-%d", sid[0], sid[7])

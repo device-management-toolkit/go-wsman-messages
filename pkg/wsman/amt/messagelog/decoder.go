@@ -419,12 +419,13 @@ func (p PositionToFirstRecordReturnValue) String() string {
 }
 
 func parseEventLogResult(eventlogdata []string) (records []RawEventData, err error) {
-	records = make([]RawEventData, len(eventlogdata))
+	records = make([]RawEventData, 0, len(eventlogdata))
 
-	for idx, eventRecord := range eventlogdata {
-		decodedEventRecord, err := base64.StdEncoding.DecodeString(eventRecord)
-		if err != nil {
-			return records, err
+	for _, eventRecord := range eventlogdata {
+		// skip a malformed record instead of failing the whole page
+		decodedEventRecord, decodeErr := base64.StdEncoding.DecodeString(eventRecord)
+		if decodeErr != nil {
+			continue
 		}
 
 		eventData := RawEventData{}
@@ -450,7 +451,7 @@ func parseEventLogResult(eventlogdata []string) (records []RawEventData, err err
 			eventData.EventData = append(eventData.EventData, b)
 		}
 
-		records[idx] = eventData
+		records = append(records, eventData)
 	}
 
 	return records, err
