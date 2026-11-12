@@ -415,13 +415,13 @@ func TestCheckReturnValue(t *testing.T) {
 			"should return a data missing error",
 			int(ReturnValueDataMissing),
 			mebxPassword,
-			"required data for " + mebxPassword + " is missing",
+			"required data for " + mebxPassword + " is missing (2057)",
 		},
 		{
 			"should include the item in the data missing error",
 			int(ReturnValueDataMissing),
 			commitChanges,
-			"required data for " + commitChanges + " is missing",
+			"required data for " + commitChanges + " is missing (2057)",
 		},
 		{
 			"should return the return code for a blocking component",
@@ -448,4 +448,17 @@ func TestCheckReturnValue(t *testing.T) {
 			assert.EqualError(t, err, test.expectedErr)
 		})
 	}
+}
+
+func TestNegativeCommitChangesReturnValue(t *testing.T) {
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/setupandconfiguration",
+		CurrentMessage:   "CommitChangesInternalError",
+	}
+	elementUnderTest := NewSetupAndConfigurationServiceWithClient(message.NewWSManMessageCreator(wsmantesting.AMTResourceURIBase), &client)
+
+	response, err := elementUnderTest.CommitChanges()
+
+	assert.Equal(t, ReturnValue(1), response.Body.CommitChanges_OUTPUT.ReturnValue)
+	assert.EqualError(t, err, "Commit Changes non-zero return code: 1")
 }

@@ -451,3 +451,16 @@ func TestCreateMD5Hash(t *testing.T) {
 		})
 	}
 }
+
+func TestNegativeAddNextCertInChainReturnValue(t *testing.T) {
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "ips/hostbasedsetup",
+		CurrentMessage:   "AddNextCertInChainInvalidParam",
+	}
+	elementUnderTest := NewHostBasedSetupServiceWithClient(message.NewWSManMessageCreator(wsmantesting.IPSResourceURIBase), &client)
+
+	response, err := elementUnderTest.AddNextCertInChain(wsmantesting.ClientCertificate, true, false)
+
+	assert.Equal(t, SetupReturnValue(1), response.Body.AddNextCertInChain_OUTPUT.ReturnValue)
+	assert.EqualError(t, err, "addnextcertinchain failed: returned 1")
+}
