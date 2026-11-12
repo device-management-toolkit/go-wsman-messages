@@ -449,3 +449,16 @@ func TestCheckReturnValue(t *testing.T) {
 		})
 	}
 }
+
+func TestNegativeCommitChangesReturnValue(t *testing.T) {
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/setupandconfiguration",
+		CurrentMessage:   "CommitChangesInternalError",
+	}
+	elementUnderTest := NewSetupAndConfigurationServiceWithClient(message.NewWSManMessageCreator(wsmantesting.AMTResourceURIBase), &client)
+
+	response, err := elementUnderTest.CommitChanges()
+
+	assert.Equal(t, ReturnValue(1), response.Body.CommitChanges_OUTPUT.ReturnValue)
+	assert.EqualError(t, err, "Commit Changes non-zero return code: 1")
+}
