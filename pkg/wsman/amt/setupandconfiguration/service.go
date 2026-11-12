@@ -103,7 +103,7 @@ func (s Service) CommitChanges() (response Response, err error) {
 		return response, err
 	}
 
-	err = checkReturnValue(int(response.Body.SetMEBxPassword_OUTPUT.ReturnValue), "Commit Changes")
+	err = checkReturnValue(int(response.Body.CommitChanges_OUTPUT.ReturnValue), "Commit Changes")
 
 	return response, err
 }
