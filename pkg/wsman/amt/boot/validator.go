@@ -183,6 +183,67 @@ func CreateTLVBuffer(parameters []TLVParameter) ([]byte, error) {
 	return buffer, nil
 }
 
+// CreateRPETLVBuffer creates a Remote Platform Erase TLV buffer.
+// RPE_DEVICE_BITMASK values must contain exactly four bytes.
+func CreateRPETLVBuffer(parameters []RPEParameter) ([]byte, error) {
+	buffer := []byte{}
+
+	for _, param := range parameters {
+		if _, ok := RPEMaxSizes[param.Type]; !ok {
+			return nil, fmt.Errorf("invalid RPE parameter type: %d", param.Type)
+		}
+
+		if len(param.Value) > RPEMaxSizes[param.Type] {
+			return nil, fmt.Errorf("parameter %s exceeds maximum size: %d > %d",
+				RPEParameterNames[param.Type], len(param.Value), RPEMaxSizes[param.Type])
+		}
+
+		if param.Type == RPE_DEVICE_BITMASK && len(param.Value) != 4 {
+			return nil, fmt.Errorf("expected 4 bytes for RPE device bitmask, got %d", len(param.Value))
+		}
+
+		buffer = binary.LittleEndian.AppendUint16(buffer, 0x8086)
+		buffer = binary.LittleEndian.AppendUint16(buffer, uint16(param.Type))
+		buffer = binary.LittleEndian.AppendUint32(buffer, uint32(len(param.Value)))
+		buffer = append(buffer, param.Value...)
+	}
+
+	return buffer, nil
+}
+
+// BuildRPEParameters creates Remote Platform Erase parameters from a device
+// bitmask and optional credentials.
+func BuildRPEParameters(deviceBitmask uint32, credentials map[ParameterType]string) ([]RPEParameter, error) {
+	bitmask := make([]byte, 4)
+	binary.LittleEndian.PutUint32(bitmask, deviceBitmask)
+	parameters := []RPEParameter{{Type: RPE_DEVICE_BITMASK, Value: bitmask}}
+	credentialTypes := []ParameterType{RPE_PSID, RPE_SSD_MASTER_PASSWORD, RPE_OEM_PARAMETER}
+
+	for _, paramType := range credentialTypes {
+		value := credentials[paramType]
+		if value == "" {
+			continue
+		}
+
+		valueBytes := []byte(value)
+		if len(valueBytes) > RPEMaxSizes[paramType] {
+			return nil, fmt.Errorf("parameter %s exceeds maximum size: %d > %d",
+				RPEParameterNames[paramType], len(valueBytes), RPEMaxSizes[paramType])
+		}
+
+		parameters = append(parameters, RPEParameter{Type: paramType, Value: valueBytes})
+	}
+
+	for paramType, value := range credentials {
+		if value != "" && paramType != RPE_PSID &&
+			paramType != RPE_SSD_MASTER_PASSWORD && paramType != RPE_OEM_PARAMETER {
+			return nil, fmt.Errorf("invalid RPE credential parameter type: %d", paramType)
+		}
+	}
+
+	return parameters, nil
+}
+
 // GetUint16Value retrieves a uint16 from a parameter value (little-endian).
 func GetUint16Value(param TLVParameter) (uint16, error) {
 	if len(param.Value) != 2 {
