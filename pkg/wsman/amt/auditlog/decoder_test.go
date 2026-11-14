@@ -103,6 +103,71 @@ func TestRequestedState_String(t *testing.T) {
 	}
 }
 
+func TestGetAuditLogExtendedDataStringMalformed(t *testing.T) {
+	tests := []struct {
+		name     string
+		appId    int
+		eventId  int
+		data     string
+		expected string
+	}{
+		{"Security Admin - Invalid credentials out of range", SecurityAdmin, 5, "\x02", "User attempted to access Unknown with invalid credentials."},
+		{"Security Admin - ACL State change out of range", SecurityAdmin, 6, "\x02", "ACL entry state was changed.\nEntry State: Unknown\nInitiator Type: Unknown\nSID: 0"},
+		{"Security Admin - TLS State change remote out of range", SecurityAdmin, 7, "\x03\x01", "TLS state changed.\nRemote: Unknown\nLocal: Server Auth"},
+		{"Security Admin - TLS State change local out of range", SecurityAdmin, 7, "\x00\x03", "TLS state changed.\nRemote: No Auth\nLocal: Unknown"},
+		{"Security Admin - TLS State change short", SecurityAdmin, 7, "\x01", "TLS state changed."},
+		{"Security Admin - Set Realm Authentication Mode realm out of range", SecurityAdmin, 17, "\xff\x00\x00\x00\x01", "Realm authentication mode changed.\nUnknown, Auth"},
+		{"Security Admin - Set Realm Authentication Mode mode out of range", SecurityAdmin, 17, "\x01\x00\x00\x00\x03", "Realm authentication mode changed.\nPT Administration, Unknown"},
+		{"Security Admin - Set Realm Authentication Mode short", SecurityAdmin, 17, "\x01", "Realm authentication mode changed."},
+		{"Security Admin - AMT UnProvisioning Started out of range", SecurityAdmin, 19, "\x05", "Intel AMT UnProvisioned Started.\nInitiator: Unknown"},
+		{"Security Audit Log - Log recovery out of range", SecurityAuditLog, 5, "\x03", "Internal check of audit log resulted in a recovery action.\nReason: Unknown"},
+		{"Network Time - short", NetworkTime, 0, "\x01\x02\x03", "Command received to set Intel AMT local time."},
+		{"Network Administration - TCP/IP Parameters Set DHCP out of range", NetworkAdministration, 0, "\x00\x00\x00\x00\x02", "TCP/IP parameters were set.\nDHCP Enabled: Unknown\nStatic IP: 0.0.0.0\nSubnet Mask: 0.0.0.0\nGateway: 0.0.0.0"},
+		{"Network Administration - IPv6 Parameters Set IPv6 out of range", NetworkAdministration, 5, "\x00\x00\x00\x00\x02\x01", "IPv6 parameters were set.\nIPv6: Unknown\nInterface Gen Type: Intel ID\nIPv6 Address: ::\nIPv6 Gateway: ::\nIPv6 Primary DNS: ::\nIPv6 Secondary DNS: ::"},
+		{"Event Manager - Alert Subscribed address type out of range", EventManager, 0, "\x01\x00\x02", "An alert subscription was created successfully.\nPolicy ID: 1\nIP Address Type: Unknown\nAlert Target IP Address: <nil>"},
+		{"Event Manager - Event Log Frozen out of range", EventManager, 3, "\x02", "Event log was Unknown"},
+		{"Wireless Configuration - Wireless Profile Modified out of range", WirelessConfiguration, 3, "\x04\x00\x00\x00", "An existing profile sync was modified.\nProfile sync Unknown"},
+		{"Wireless Configuration - Wireless Link Preference Changed out of range", WirelessConfiguration, 4, "\x03\x00\x00\x00\x03\x00\x00\x00", "An existing profile link preference was changed.\nTimeout: 3\nLink Preference: Unknown"},
+		{"Wireless Configuration - Wireless Profile Share with UEFI out of range", WirelessConfiguration, 5, "\x02", "Wireless profile share with UEFI was set to Unknown."},
+		{"Wireless Configuration - Wireless Profile Share with UEFI without data", WirelessConfiguration, 5, "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Errorf("GetAuditLogExtendedDataString(%d, %d, %q) panicked: %v", tt.appId, tt.eventId, tt.data, r)
+				}
+			}()
+
+			result := GetAuditLogExtendedDataString(tt.appId, tt.eventId, tt.data)
+			if result != tt.expected {
+				t.Errorf("GetAuditLogExtendedDataString(%d, %d, %q) = %q; want %q", tt.appId, tt.eventId, tt.data, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestConvertToAuditLogResultWithoutExtendedData(t *testing.T) {
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("convertToAuditLogResult panicked: %v", r)
+		}
+	}()
+
+	// Wireless profile share with UEFI changed, local initiator, no network
+	// address and no extended data: 00 1b 00 05 02 00 00 00 00 00 00 00.
+	records := convertToAuditLogResult([]string{"ABsABQIAAAAAAAAA"})
+	if len(records) != 1 {
+		t.Fatalf("got %d records; want 1", len(records))
+	}
+
+	record := records[0]
+	if record.AuditAppID != WirelessConfiguration || record.EventID != 5 || record.Ex != "" || record.ExStr != "" {
+		t.Errorf("got AuditAppID %d, EventID %d, Ex %q, ExStr %q; want %d, 5, \"\", \"\"", record.AuditAppID, record.EventID, record.Ex, record.ExStr, WirelessConfiguration)
+	}
+}
+
 func TestGetAuditLogExtendedDataString(t *testing.T) {
 	tests := []struct {
 		name     string
