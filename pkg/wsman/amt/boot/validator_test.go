@@ -7,6 +7,7 @@ package boot
 
 import (
 	"bytes"
+	"encoding/binary"
 	"testing"
 )
 
@@ -259,6 +260,142 @@ func TestCreateTLVBuffer(t *testing.T) {
 	// Due to the custom format in CreateTLVBuffer, we need to verify the structure accordingly
 	if len(buffer) == 0 {
 		t.Errorf("CreateTLVBuffer() returned empty buffer")
+	}
+}
+
+func TestBuildRPEParameters(t *testing.T) {
+	tests := []struct {
+		name        string
+		bitmask     uint32
+		credentials map[ParameterType]string
+		expected    []RPEParameter
+		expectError bool
+	}{
+		{
+			name:    "bitmask and nonempty credentials",
+			bitmask: 0x12345678,
+			credentials: map[ParameterType]string{
+				RPE_PSID:                "psid",
+				RPE_SSD_MASTER_PASSWORD: "password",
+				RPE_OEM_PARAMETER:       "oem",
+			},
+			expected: []RPEParameter{
+				{Type: RPE_DEVICE_BITMASK, Value: []byte{0x78, 0x56, 0x34, 0x12}},
+				{Type: RPE_PSID, Value: []byte("psid")},
+				{Type: RPE_SSD_MASTER_PASSWORD, Value: []byte("password")},
+				{Type: RPE_OEM_PARAMETER, Value: []byte("oem")},
+			},
+		},
+		{
+			name:    "empty credentials are omitted",
+			bitmask: 1,
+			credentials: map[ParameterType]string{
+				RPE_PSID: "",
+			},
+			expected: []RPEParameter{
+				{Type: RPE_DEVICE_BITMASK, Value: []byte{1, 0, 0, 0}},
+			},
+		},
+		{
+			name: "credential exceeds maximum size",
+			credentials: map[ParameterType]string{
+				RPE_SSD_MASTER_PASSWORD: string(bytes.Repeat([]byte{'x'}, RPEMaxSizes[RPE_SSD_MASTER_PASSWORD]+1)),
+			},
+			expectError: true,
+		},
+		{
+			name: "unsupported credential type",
+			credentials: map[ParameterType]string{
+				OCR_HTTPS_PASSWORD: "password",
+			},
+			expectError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			parameters, err := BuildRPEParameters(tt.bitmask, tt.credentials)
+			if (err != nil) != tt.expectError {
+				t.Fatalf("BuildRPEParameters() error = %v, want error %v", err, tt.expectError)
+			}
+
+			if tt.expectError {
+				return
+			}
+
+			if len(parameters) != len(tt.expected) {
+				t.Fatalf("BuildRPEParameters() returned %d parameters, want %d", len(parameters), len(tt.expected))
+			}
+
+			for i, parameter := range parameters {
+				expected := tt.expected[i]
+				if parameter.Type != expected.Type || !bytes.Equal(parameter.Value, expected.Value) {
+					t.Errorf("BuildRPEParameters()[%d] = %+v, want %+v", i, parameter, expected)
+				}
+			}
+		})
+	}
+}
+
+func TestCreateRPETLVBuffer(t *testing.T) {
+	params := []RPEParameter{
+		{Type: RPE_DEVICE_BITMASK, Value: []byte{0x78, 0x56, 0x34, 0x12}},
+		{Type: RPE_SSD_MASTER_PASSWORD, Value: []byte("secret")},
+		{Type: RPE_OEM_PARAMETER, Value: bytes.Repeat([]byte{'x'}, RPEMaxSizes[RPE_OEM_PARAMETER])},
+	}
+
+	buffer, err := CreateRPETLVBuffer(params)
+	if err != nil {
+		t.Fatalf("CreateRPETLVBuffer() error = %v", err)
+	}
+
+	expectedPrefix := []byte{
+		0x86, 0x80, 0x01, 0x00, 0x04, 0x00, 0x00, 0x00,
+		0x78, 0x56, 0x34, 0x12,
+		0x86, 0x80, 0x14, 0x00, 0x06, 0x00, 0x00, 0x00,
+		's', 'e', 'c', 'r', 'e', 't',
+	}
+	if !bytes.Equal(buffer[:len(expectedPrefix)], expectedPrefix) {
+		t.Errorf("CreateRPETLVBuffer() bitmask and SSD password entries = %v, want %v",
+			buffer[:len(expectedPrefix)], expectedPrefix)
+	}
+
+	oemLengthOffset := len(expectedPrefix) + 4
+	oemLength := binary.LittleEndian.Uint32(buffer[oemLengthOffset : oemLengthOffset+4])
+
+	if oemLength != uint32(RPEMaxSizes[RPE_OEM_PARAMETER]) {
+		t.Errorf("CreateRPETLVBuffer() OEM parameter length = %d, want %d",
+			oemLength, RPEMaxSizes[RPE_OEM_PARAMETER])
+	}
+}
+
+func TestCreateRPETLVBufferInvalidBitmaskLength(t *testing.T) {
+	tests := []struct {
+		name  string
+		value []byte
+	}{
+		{name: "nil"},
+		{name: "empty", value: []byte{}},
+		{name: "one byte", value: []byte{1}},
+		{name: "two bytes", value: []byte{1, 2}},
+		{name: "three bytes", value: []byte{1, 2, 3}},
+		{name: "five bytes", value: []byte{1, 2, 3, 4, 5}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			buffer, err := CreateRPETLVBuffer([]RPEParameter{
+				{Type: RPE_PSID, Value: []byte("psid")},
+				{Type: RPE_DEVICE_BITMASK, Value: tt.value},
+			})
+			if err == nil {
+				t.Fatal("CreateRPETLVBuffer() expected an error for invalid bitmask length")
+			}
+
+			if buffer != nil {
+				t.Errorf("CreateRPETLVBuffer() buffer = %v, want nil", buffer)
+			}
+		})
 	}
 }
 
