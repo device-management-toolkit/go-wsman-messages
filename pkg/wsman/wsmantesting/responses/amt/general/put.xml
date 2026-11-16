@@ -1,0 +1,39 @@
+<?xml version= "1.0" encoding= "UTF-8"?>
+<a:Envelope xmlns:a= "http://www.w3.org/2003/05/soap-envelope" xmlns:b= "http://schemas.xmlsoap.org/ws/2004/08/addressing" xmlns:c= "http://schemas.dmtf.org/wbem/wsman/1/wsman.xsd" xmlns:d= "http://schemas.xmlsoap.org/ws/2005/02/trust" xmlns:e= "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:f= "http://schemas.dmtf.org/wbem/wsman/1/cimbinding.xsd" xmlns:g= "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_GeneralSettings"
+    xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance">
+    <a:Header>
+        <b:To>http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous</b:To>
+        <b:RelatesTo>3</b:RelatesTo>
+        <b:Action a:mustUnderstand= "true">http://schemas.xmlsoap.org/ws/2004/09/transfer/PutResponse</b:Action>
+        <b:MessageID>uuid:00000000-8086-8086-8086-0000000002E5</b:MessageID>
+        <c:ResourceURI>http://intel.com/wbem/wscim/1/amt-schema/1/AMT_GeneralSettings</c:ResourceURI>
+    </a:Header>
+    <a:Body>
+        <g:AMT_GeneralSettings>
+            <g:AMTNetworkEnabled>1</g:AMTNetworkEnabled>
+            <g:DDNSPeriodicUpdateInterval>1440</g:DDNSPeriodicUpdateInterval>
+            <g:DDNSTTL>900</g:DDNSTTL>
+            <g:DDNSUpdateByDHCPServerEnabled>false</g:DDNSUpdateByDHCPServerEnabled>
+            <g:DDNSUpdateEnabled>false</g:DDNSUpdateEnabled>
+            <g:DHCPSyncRequiresHostname>1</g:DHCPSyncRequiresHostname>
+            <g:DHCPv6ConfigurationTimeout>0</g:DHCPv6ConfigurationTimeout>
+            <g:DigestRealm>Digest:F3EB554784E729164447A89F60B641C5</g:DigestRealm>
+            <g:DomainName>Test Domain Name</g:DomainName>
+            <g:ElementName>Intel(r) AMT: General Settings</g:ElementName>
+            <g:HostName>Test Host Name</g:HostName>
+            <g:HostOSFQDN>Test Host OS FQDN</g:HostOSFQDN>
+            <g:IdleWakeTimeout>1</g:IdleWakeTimeout>
+            <g:InstanceID>Intel(r) AMT: General Settings</g:InstanceID>
+            <g:NetworkInterfaceEnabled>true</g:NetworkInterfaceEnabled>
+            <g:PingResponseEnabled>false</g:PingResponseEnabled>
+            <g:PowerSource>0</g:PowerSource>
+            <g:PreferredAddressFamily>0</g:PreferredAddressFamily>
+            <g:PresenceNotificationInterval>0</g:PresenceNotificationInterval>
+            <g:PrivacyLevel>0</g:PrivacyLevel>
+            <g:RmcpPingResponseEnabled>false</g:RmcpPingResponseEnabled>
+            <g:SharedFQDN>false</g:SharedFQDN>
+            <g:ThunderboltDockEnabled>0</g:ThunderboltDockEnabled>
+            <g:WsmanOnlyMode>false</g:WsmanOnlyMode>
+        </g:AMT_GeneralSettings>
+    </a:Body>
+</a:Envelope>
