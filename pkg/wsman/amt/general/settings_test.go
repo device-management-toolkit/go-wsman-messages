@@ -162,6 +162,66 @@ func TestPositiveAMT_GeneralSettings(t *testing.T) {
 					},
 				},
 			},
+			// PUTS
+			{
+				"should create a valid AMT_GeneralSettings Put wsman message",
+				AMTGeneralSettings,
+				wsmantesting.Put,
+				"<h:AMT_GeneralSettings xmlns:h=\"http://intel.com/wbem/wscim/1/amt-schema/1/AMT_GeneralSettings\"><h:ElementName>Intel(r) AMT: General Settings</h:ElementName><h:InstanceID>Intel(r) AMT: General Settings</h:InstanceID><h:IdleWakeTimeout>1</h:IdleWakeTimeout><h:HostName>Test Host Name</h:HostName><h:DomainName>Test Domain Name</h:DomainName><h:PingResponseEnabled>false</h:PingResponseEnabled><h:WsmanOnlyMode>false</h:WsmanOnlyMode><h:DDNSUpdateEnabled>false</h:DDNSUpdateEnabled><h:DDNSUpdateByDHCPServerEnabled>false</h:DDNSUpdateByDHCPServerEnabled><h:SharedFQDN>false</h:SharedFQDN><h:HostOSFQDN>Test Host OS FQDN</h:HostOSFQDN><h:DDNSTTL>900</h:DDNSTTL><h:AMTNetworkEnabled>1</h:AMTNetworkEnabled><h:RmcpPingResponseEnabled>false</h:RmcpPingResponseEnabled><h:DDNSPeriodicUpdateInterval>1440</h:DDNSPeriodicUpdateInterval><h:DHCPSyncRequiresHostname>1</h:DHCPSyncRequiresHostname></h:AMT_GeneralSettings>",
+				func() (Response, error) {
+					client.CurrentMessage = wsmantesting.CurrentMessagePut
+					request := &GeneralSettingsRequest{
+						ElementName:                   "Intel(r) AMT: General Settings",
+						InstanceID:                    "Intel(r) AMT: General Settings",
+						IdleWakeTimeout:               1,
+						HostName:                      "Test Host Name",
+						DomainName:                    "Test Domain Name",
+						PingResponseEnabled:           false,
+						WsmanOnlyMode:                 false,
+						DDNSUpdateEnabled:             false,
+						DDNSUpdateByDHCPServerEnabled: false,
+						SharedFQDN:                    false,
+						HostOSFQDN:                    "Test Host OS FQDN",
+						DDNSTTL:                       900,
+						AMTNetworkEnabled:             1,
+						RmcpPingResponseEnabled:       false,
+						DDNSPeriodicUpdateInterval:    1440,
+						DHCPSyncRequiresHostname:      1,
+					}
+
+					return elementUnderTest.Put(request)
+				},
+				Body{
+					XMLName: xml.Name{Space: message.XMLBodySpace, Local: "Body"},
+					GetResponse: GeneralSettingsResponse{
+						XMLName:                       xml.Name{Space: "http://intel.com/wbem/wscim/1/amt-schema/1/AMT_GeneralSettings", Local: AMTGeneralSettings},
+						ElementName:                   "Intel(r) AMT: General Settings",
+						InstanceID:                    "Intel(r) AMT: General Settings",
+						AMTNetworkEnabled:             1,
+						DDNSPeriodicUpdateInterval:    1440,
+						DDNSTTL:                       900,
+						DDNSUpdateByDHCPServerEnabled: false,
+						DDNSUpdateEnabled:             false,
+						DHCPSyncRequiresHostname:      1,
+						DHCPv6ConfigurationTimeout:    0,
+						DigestRealm:                   "Digest:F3EB554784E729164447A89F60B641C5",
+						DomainName:                    "Test Domain Name",
+						HostName:                      "Test Host Name",
+						HostOSFQDN:                    "Test Host OS FQDN",
+						IdleWakeTimeout:               1,
+						NetworkInterfaceEnabled:       true,
+						PingResponseEnabled:           false,
+						PowerSource:                   0,
+						PreferredAddressFamily:        0,
+						PresenceNotificationInterval:  0,
+						PrivacyLevel:                  0,
+						RmcpPingResponseEnabled:       false,
+						SharedFQDN:                    false,
+						ThunderboltDockEnabled:        0,
+						WsmanOnlyMode:                 false,
+					},
+				},
+			},
 		}
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
