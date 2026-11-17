@@ -180,7 +180,7 @@ func (managementService ManagementService) GenerateKeyPair(keyAlgorithm KeyAlgor
 		return response, err
 	}
 
-	err = checkReturnValue(int(response.Body.AddKey_OUTPUT.ReturnValue), "Private Key")
+	err = checkReturnValue(int(response.Body.GenerateKeyPair_OUTPUT.ReturnValue), "Private Key")
 
 	return response, err
 }

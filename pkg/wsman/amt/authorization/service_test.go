@@ -22,7 +22,7 @@ func TestJson(t *testing.T) {
 			GetResponse: AuthorizationOccurrence{},
 		},
 	}
-	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"GetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"AllowHttpQopAuthOnly\":0,\"CreationClassName\":\"\",\"ElementName\":\"\",\"EnabledState\":0,\"Name\":\"\",\"RequestedState\":0,\"SystemCreationClassName\":\"\",\"SystemName\":\"\"},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"AuthorizationOccurrenceItems\":null},\"SetAdminResponse\":{\"ReturnValue\":0},\"AddUserResponse\":{\"ReturnValue\":0,\"Handle\":0},\"RemoveUserResponse\":{\"ReturnValue\":0},\"GetUserResponse\":{\"DigestUsername\":\"\",\"KerberosUserSid\":\"\",\"AccessPermission\":0,\"Realms\":null,\"ReturnValue\":0},\"GetACLEnabledStateResponse\":{\"Enabled\":false,\"ReturnValue\":0},\"GetAdminResponse\":{\"Username\":\"\",\"ReturnValue\":0},\"GetAdminStatusResponse\":{\"IsDefault\":false,\"ReturnValue\":0},\"GetAdminNetStatusResponse\":{\"IsDefault\":false,\"ReturnValue\":0},\"SetACLEnabledStateResponse\":{\"ReturnValue\":0},\"EnumerateUserResponse\":{\"TotalCount\":0,\"HandlesCount\":0,\"Handles\":null,\"ReturnValue\":0}}"
+	expectedResult := "{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"GetResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"AllowHttpQopAuthOnly\":0,\"CreationClassName\":\"\",\"ElementName\":\"\",\"EnabledState\":0,\"Name\":\"\",\"RequestedState\":0,\"SystemCreationClassName\":\"\",\"SystemName\":\"\"},\"EnumerateResponse\":{\"EnumerationContext\":\"\"},\"PullResponse\":{\"XMLName\":{\"Space\":\"\",\"Local\":\"\"},\"AuthorizationOccurrenceItems\":null},\"SetAdminResponse\":{\"ReturnValue\":0},\"AddUserResponse\":{\"ReturnValue\":0,\"Handle\":0},\"RemoveUserResponse\":{\"ReturnValue\":0},\"GetUserResponse\":{\"DigestUsername\":\"\",\"KerberosUserSid\":\"\",\"AccessPermission\":0,\"Realms\":null,\"ReturnValue\":0},\"GetACLEnabledStateResponse\":{\"Enabled\":false,\"ReturnValue\":0},\"GetAdminResponse\":{\"Username\":\"\",\"ReturnValue\":0},\"GetAdminStatusResponse\":{\"IsDefault\":false,\"ReturnValue\":0},\"GetAdminNetStatusResponse\":{\"IsDefault\":false,\"ReturnValue\":0},\"SetACLEnabledStateResponse\":{\"ReturnValue\":0},\"EnumerateUserResponse\":{\"TotalCount\":0,\"HandlesCount\":0,\"Handles\":null,\"ReturnValue\":0},\"UpdateUserResponse\":{\"ReturnValue\":0}}"
 	result := response.JSON()
 	assert.Equal(t, expectedResult, result)
 }
@@ -33,7 +33,7 @@ func TestYaml(t *testing.T) {
 			GetResponse: AuthorizationOccurrence{},
 		},
 	}
-	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\ngetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    allowhttpqopauthonly: 0\n    creationclassname: \"\"\n    elementname: \"\"\n    enabledstate: 0\n    name: \"\"\n    requestedstate: 0\n    systemcreationclassname: \"\"\n    systemname: \"\"\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    authorizationoccurrenceitems: []\nsetadminresponse:\n    returnvalue: 0\nadduserresponse:\n    returnvalue: 0\n    handle: 0\nremoveuserresponse:\n    returnvalue: 0\ngetuserresponse:\n    digestusername: \"\"\n    kerberosusersid: \"\"\n    accesspermission: 0\n    realms: []\n    returnvalue: 0\ngetaclenabledstateresponse:\n    enabled: false\n    returnvalue: 0\ngetadminresponse:\n    username: \"\"\n    returnvalue: 0\ngetadminstatusresponse:\n    isdefault: false\n    returnvalue: 0\ngetadminnetstatusresponse:\n    isdefault: false\n    returnvalue: 0\nsetaclenabledstateresponse:\n    returnvalue: 0\nenumerateuserresponse:\n    totalcount: 0\n    handlescount: 0\n    handles: []\n    returnvalue: 0\n"
+	expectedResult := "xmlname:\n    space: \"\"\n    local: \"\"\ngetresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    allowhttpqopauthonly: 0\n    creationclassname: \"\"\n    elementname: \"\"\n    enabledstate: 0\n    name: \"\"\n    requestedstate: 0\n    systemcreationclassname: \"\"\n    systemname: \"\"\nenumerateresponse:\n    enumerationcontext: \"\"\npullresponse:\n    xmlname:\n        space: \"\"\n        local: \"\"\n    authorizationoccurrenceitems: []\nsetadminresponse:\n    returnvalue: 0\nadduserresponse:\n    returnvalue: 0\n    handle: 0\nremoveuserresponse:\n    returnvalue: 0\ngetuserresponse:\n    digestusername: \"\"\n    kerberosusersid: \"\"\n    accesspermission: 0\n    realms: []\n    returnvalue: 0\ngetaclenabledstateresponse:\n    enabled: false\n    returnvalue: 0\ngetadminresponse:\n    username: \"\"\n    returnvalue: 0\ngetadminstatusresponse:\n    isdefault: false\n    returnvalue: 0\ngetadminnetstatusresponse:\n    isdefault: false\n    returnvalue: 0\nsetaclenabledstateresponse:\n    returnvalue: 0\nenumerateuserresponse:\n    totalcount: 0\n    handlescount: 0\n    handles: []\n    returnvalue: 0\nupdateuserresponse:\n    returnvalue: 0\n"
 	result := response.YAML()
 	assert.Equal(t, expectedResult, result)
 }
@@ -162,6 +162,23 @@ func TestPositiveAMT_AuthorizationService(t *testing.T) {
 					AddUserResponse: AddUserAclEntryEx_OUTPUT{
 						ReturnValue: 0,
 						Handle:      1,
+					},
+				},
+			},
+			{
+				"should create a valid amt_AuthorizationService UpdateUserAclEntryEx wsman message using digest",
+				AMTAuthorizationService,
+				`http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService/UpdateUserAclEntryEx`,
+				`<h:UpdateUserAclEntryEx_INPUT xmlns:h="http://intel.com/wbem/wscim/1/amt-schema/1/AMT_AuthorizationService"><h:Handle>1</h:Handle><h:DigestUsername>test</h:DigestUsername><h:DigestPassword>P@ssw0rd</h:DigestPassword><h:AccessPermission>2</h:AccessPermission><h:Realms>3</h:Realms></h:UpdateUserAclEntryEx_INPUT>`,
+				func() (Response, error) {
+					client.CurrentMessage = "UpdateUserAclEntryEx"
+
+					return elementUnderTest.UpdateUserAclEntryEx(1, "test", "P@ssw0rd", AccessPermissionLocalAndNetworkAccess, []RealmValues{RealmValuesPTAdministrationRealm})
+				},
+				Body{
+					XMLName: xml.Name{Space: "http://www.w3.org/2003/05/soap-envelope", Local: "Body"},
+					UpdateUserResponse: UpdateUserAclEntryEx_OUTPUT{
+						ReturnValue: 0,
 					},
 				},
 			},
@@ -451,4 +468,16 @@ func TestNegativeAMT_AuthorizationService(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestNegativeUpdateUserAclEntryEx(t *testing.T) {
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/authorization",
+		CurrentMessage:   wsmantesting.CurrentMessageError,
+	}
+	elementUnderTest := NewServiceWithClient(message.NewWSManMessageCreator(wsmantesting.AMTResourceURIBase), &client)
+
+	_, err := elementUnderTest.UpdateUserAclEntryEx(1, "test", "P@ssw0rd", AccessPermissionLocalAndNetworkAccess, nil)
+
+	assert.Error(t, err)
 }

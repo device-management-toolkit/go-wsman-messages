@@ -103,7 +103,7 @@ func (s Service) CommitChanges() (response Response, err error) {
 		return response, err
 	}
 
-	err = checkReturnValue(int(response.Body.SetMEBxPassword_OUTPUT.ReturnValue), "Commit Changes")
+	err = checkReturnValue(int(response.Body.CommitChanges_OUTPUT.ReturnValue), "Commit Changes")
 
 	return response, err
 }
@@ -284,7 +284,7 @@ func checkReturnValue(rc int, item string) (err error) {
 		} else if rc == int(ReturnValueInvalidPassword) {
 			return errors.New(item + " is invalid")
 		} else if rc == int(ReturnValueDataMissing) {
-			return errors.New("required data for " + item + " is missing")
+			return errors.New("required data for " + item + " is missing (" + strconv.Itoa(rc) + ")")
 		}
 
 		return errors.New(item + " non-zero return code: " + strconv.Itoa(rc))
