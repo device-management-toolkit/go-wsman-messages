@@ -37,7 +37,7 @@ type (
 		GetResponse            AuditLog
 		PullResponse           PullResponse
 		ReadRecordsResponse    ReadRecords_OUTPUT
-		DecodedRecordsResponse []AuditLogRecord
+		DecodedRecordsResponse []AuditLogRecord // Decoded EventRecords; can be shorter than RecordsReturned: records that are not valid base64 or are truncated are skipped
 	}
 	PullResponse struct {
 		XMLName       xml.Name   `xml:"PullResponse"`
