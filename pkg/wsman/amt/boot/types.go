@@ -361,6 +361,12 @@ type TLVParameter struct {
 	Valid  bool
 }
 
+// RPEParameter represents a Remote Platform Erase parameter.
+type RPEParameter struct {
+	Type  ParameterType
+	Value []byte
+}
+
 // ValidationResult contains the results of TLV validation.
 type ValidationResult struct {
 	Valid      bool
