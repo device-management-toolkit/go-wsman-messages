@@ -6,7 +6,15 @@
 package auditlog
 
 import (
+	"encoding/base64"
+	"fmt"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/device-management-toolkit/go-wsman-messages/v2/pkg/common"
 )
 
 func TestOverwritePolicy_String(t *testing.T) {
@@ -325,6 +333,72 @@ func TestGetAuditLogExtendedDataString(t *testing.T) {
 			result := GetAuditLogExtendedDataString(tt.appId, tt.eventId, tt.data)
 			if result != tt.expected {
 				t.Errorf("GetAuditLogExtendedDataString(%d, %d, %q) = %v; want %v", tt.appId, tt.eventId, tt.data, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestConvertToAuditLogResultSkipsTruncatedRecords(t *testing.T) {
+	valid := "ABMAAAI/9M1uAgAQAAwAAAAoBZkADAAAACQFlA=="
+	raw, _ := base64.StdEncoding.DecodeString(valid)
+
+	// a Kerberos initiator whose SID length points past the end of the record
+	kerberos := base64.StdEncoding.EncodeToString([]byte{0x00, 0x10, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x04, 0x01})
+
+	records := []string{kerberos}
+	for i := 1; i < len(raw); i++ {
+		records = append(records, base64.StdEncoding.EncodeToString(raw[:i]))
+	}
+
+	records = append(records, valid)
+
+	assert.NotPanics(t, func() {
+		result := convertToAuditLogResult(records)
+		assert.Len(t, result, 1)
+	})
+}
+
+func TestConvertToAuditLogResultLongInitiator(t *testing.T) {
+	// trailer: timestamp, location type, address length 0, extended data length 0
+	trailer := []byte{0x65, 0x01, 0x06, 0x22, 0x00, 0x00, 0x00}
+
+	for _, userlen := range []int{245, 246, 250, 255} {
+		t.Run(fmt.Sprintf("HTTPDigest/%d", userlen), func(t *testing.T) {
+			user := strings.Repeat("u", userlen)
+
+			record := append([]byte{0x00, 0x10, 0x00, 0x00, HTTPDigest, byte(userlen)}, user...)
+			record = append(record, trailer...)
+
+			var result []AuditLogRecord
+
+			assert.NotPanics(t, func() {
+				result = convertToAuditLogResult([]string{base64.StdEncoding.EncodeToString(record)})
+			})
+			assert.Len(t, result, 1)
+
+			if len(result) == 1 {
+				assert.Equal(t, user, result[0].Initiator)
+				assert.Equal(t, time.Unix(0x65010622, 0), result[0].Time)
+			}
+		})
+
+		t.Run(fmt.Sprintf("Kerberos/%d", userlen), func(t *testing.T) {
+			sid := make([]byte, userlen)
+			sid[0], sid[7] = 1, 5
+
+			record := append([]byte{0x00, 0x10, 0x00, 0x00, Kerberos, 0x00, 0x00, 0x00, 0x00, byte(userlen)}, sid...)
+			record = append(record, trailer...)
+
+			var result []AuditLogRecord
+
+			assert.NotPanics(t, func() {
+				result = convertToAuditLogResult([]string{base64.StdEncoding.EncodeToString(record)})
+			})
+			assert.Len(t, result, 1)
+
+			if len(result) == 1 {
+				assert.Equal(t, common.GetSidString(string(sid)), result[0].Initiator)
+				assert.Equal(t, time.Unix(0x65010622, 0), result[0].Time)
 			}
 		})
 	}

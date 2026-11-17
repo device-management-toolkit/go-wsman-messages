@@ -418,13 +418,23 @@ func (p PositionToFirstRecordReturnValue) String() string {
 	return ValueNotFound
 }
 
-func parseEventLogResult(eventlogdata []string) (records []RawEventData, err error) {
-	records = make([]RawEventData, len(eventlogdata))
+// eventRecordLength is the size of an encoded event record: timestamp (4 bytes),
+// nine single-byte fields and 8 bytes of event data.
+const eventRecordLength = 21
 
-	for idx, eventRecord := range eventlogdata {
-		decodedEventRecord, err := base64.StdEncoding.DecodeString(eventRecord)
-		if err != nil {
-			return records, err
+func parseEventLogResult(eventlogdata []string) (records []RawEventData, err error) {
+	records = make([]RawEventData, 0, len(eventlogdata))
+
+	for _, eventRecord := range eventlogdata {
+		// skip a malformed record instead of failing the whole page
+		decodedEventRecord, decodeErr := base64.StdEncoding.DecodeString(eventRecord)
+		if decodeErr != nil {
+			continue
+		}
+
+		// skip a truncated record instead of returning it with zeroed fields
+		if len(decodedEventRecord) < eventRecordLength {
+			continue
 		}
 
 		eventData := RawEventData{}
@@ -442,7 +452,7 @@ func parseEventLogResult(eventlogdata []string) (records []RawEventData, err err
 		_ = binary.Read(buf, binary.LittleEndian, &eventData.Entity)
 		_ = binary.Read(buf, binary.LittleEndian, &eventData.EntityInstance)
 
-		for i := 13; i < 21; i++ {
+		for i := 13; i < eventRecordLength; i++ {
 			var b uint8
 
 			_ = binary.Read(buf, binary.LittleEndian, &b)
@@ -450,7 +460,7 @@ func parseEventLogResult(eventlogdata []string) (records []RawEventData, err err
 			eventData.EventData = append(eventData.EventData, b)
 		}
 
-		records[idx] = eventData
+		records = append(records, eventData)
 	}
 
 	return records, err

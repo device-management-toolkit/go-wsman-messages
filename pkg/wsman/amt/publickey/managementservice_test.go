@@ -628,3 +628,16 @@ func TestNegativeAMT_PublicKeyManagementService(t *testing.T) {
 		}
 	})
 }
+
+func TestNegativeGenerateKeyPairReturnValue(t *testing.T) {
+	client := wsmantesting.MockClient{
+		PackageUnderTest: "amt/publickey/management",
+		CurrentMessage:   "GenerateKeyPairInternalError",
+	}
+	elementUnderTest := NewPublicKeyManagementServiceWithClient(message.NewWSManMessageCreator(wsmantesting.AMTResourceURIBase), &client)
+
+	response, err := elementUnderTest.GenerateKeyPair(RSA, KeyLength2048)
+
+	assert.Equal(t, ReturnValue(1), response.Body.GenerateKeyPair_OUTPUT.ReturnValue)
+	assert.EqualError(t, err, "Private Key non-zero return code: 1")
+}

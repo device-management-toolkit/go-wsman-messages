@@ -69,7 +69,7 @@ type (
 		IterationIdentifier int                   `xml:"IterationIdentifier"` // An identifier for the iterator.
 		NoMoreRecords       bool                  `xml:"NoMoreRecords"`       // Indicates that there are no more records to read
 		RecordArray         []string              `xml:"RecordArray"`         // Array of records encoded as Base64
-		RawEventData        []RawEventData        `xml:"RawEventData"`        // Slice of raw event data
+		RawEventData        []RawEventData        `xml:"RawEventData"`        // Slice of raw event data; can be shorter than RecordArray: records that are not valid base64 or shorter than 21 bytes are skipped
 		RefinedEventData    []RefinedEventData    `xml:"RefinedEventData"`    // Slice of refined event data
 		ReturnValue         GetRecordsReturnValue `xml:"ReturnValue"`         // ValueMap={0, 1, 2, 3} Values={Completed with No Error, Not Supported, Invalid record pointed, No record exists in log}
 	}
