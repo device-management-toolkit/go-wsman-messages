@@ -58,7 +58,7 @@ func (service Service) AddNextCertInChain(cert string, isLeaf, isRoot bool) (res
 	}
 
 	if response.Body.AddNextCertInChain_OUTPUT.ReturnValue != 0 {
-		err = generateErrorMessage("addnextcertinchain", response.Body.AdminSetup_OUTPUT.ReturnValue)
+		err = generateErrorMessage("addnextcertinchain", response.Body.AddNextCertInChain_OUTPUT.ReturnValue)
 	}
 
 	return response, err
