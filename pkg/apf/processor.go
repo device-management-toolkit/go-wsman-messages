@@ -364,7 +364,7 @@ func ProcessChannelWindowAdjust(data []byte, session *Session) {
 	log.Tracef("%+v", adjustMessage)
 }
 
-func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAGE {
+func ProcessChannelClose(data []byte, session *Session) *APF_CHANNEL_CLOSE_MESSAGE {
 	closeMessage := APF_CHANNEL_CLOSE_MESSAGE{}
 	dataBuffer := bytes.NewBuffer(data)
 
@@ -407,7 +407,15 @@ func ProcessChannelClose(data []byte, session *Session) APF_CHANNEL_CLOSE_MESSAG
 		session.Timer.Stop()
 	}
 
-	return ChannelClose(session.SenderChannel)
+	if session == nil {
+		log.Warn("received APF_CHANNEL_CLOSE with nil session; skipping ACK")
+
+		return nil
+	}
+
+	message := ChannelClose(session.SenderChannel)
+
+	return &message
 }
 
 // ProcessGlobalRequest decodes the global request and returns both the decoded info and the reply.
