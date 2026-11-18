@@ -133,6 +133,7 @@ func TestGetAuditLogExtendedDataStringMalformed(t *testing.T) {
 		{"Network Administration - TCP/IP Parameters Set DHCP out of range", NetworkAdministration, 0, "\x00\x00\x00\x00\x02", "TCP/IP parameters were set.\nDHCP Enabled: Unknown\nStatic IP: 0.0.0.0\nSubnet Mask: 0.0.0.0\nGateway: 0.0.0.0"},
 		{"Network Administration - IPv6 Parameters Set IPv6 out of range", NetworkAdministration, 5, "\x00\x00\x00\x00\x02\x01", "IPv6 parameters were set.\nIPv6: Unknown\nInterface Gen Type: Intel ID\nIPv6 Address: ::\nIPv6 Gateway: ::\nIPv6 Primary DNS: ::\nIPv6 Secondary DNS: ::"},
 		{"Event Manager - Alert Subscribed address type out of range", EventManager, 0, "\x01\x00\x02", "An alert subscription was created successfully.\nPolicy ID: 1\nIP Address Type: Unknown\nAlert Target IP Address: <nil>"},
+		{"Event Manager - Alert Unsubscribed address type out of range", EventManager, 1, "\x01\x00\x02", "An existing alert subscription was cancelled.\nPolicy ID: 1\nIP Address Type: Unknown\nAlert Target IP Address: <nil>"},
 		{"Event Manager - Event Log Frozen out of range", EventManager, 3, "\x02", "Event log was Unknown"},
 		{"Wireless Configuration - Wireless Profile Modified out of range", WirelessConfiguration, 3, "\x04\x00\x00\x00", "An existing profile sync was modified.\nProfile sync Unknown"},
 		{"Wireless Configuration - Wireless Link Preference Changed out of range", WirelessConfiguration, 4, "\x03\x00\x00\x00\x03\x00\x00\x00", "An existing profile link preference was changed.\nTimeout: 3\nLink Preference: Unknown"},
