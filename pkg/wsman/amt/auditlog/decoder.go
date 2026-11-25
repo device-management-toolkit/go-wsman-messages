@@ -535,7 +535,7 @@ func parseSecurityAdminEvents(eventId int, data string) string {
 		}
 	case ACLAccessWithInvalidCredentials:
 		if len(data) > 0 {
-			extendedDataString = "User attempted to access " + []string{"Intel AMT", "MEBx"}[data[0]] + " with invalid credentials."
+			extendedDataString = "User attempted to access " + nameOrUnknown([]string{"Intel AMT", "MEBx"}, int(data[0])) + " with invalid credentials."
 		}
 	case ACLEntryEnabled:
 		extendedDataString = "ACL entry state was changed."
@@ -548,11 +548,11 @@ func parseSecurityAdminEvents(eventId int, data string) string {
 	case TLSStateChanged:
 		extendedDataString = "TLS state changed."
 
-		if len(byteData) > 0 {
+		if len(byteData) >= 2 {
 			extendedDataString += "\nRemote: " +
-				[]string{"No Auth", "Server Auth", "Mutual Auth"}[byteData[0]] +
+				nameOrUnknown([]string{"No Auth", "Server Auth", "Mutual Auth"}, int(byteData[0])) +
 				"\nLocal: " +
-				[]string{"No Auth", "Server Auth", "Mutual Auth"}[byteData[1]]
+				nameOrUnknown([]string{"No Auth", "Server Auth", "Mutual Auth"}, int(byteData[1]))
 		}
 	case TLSServerCertificateSet:
 		extendedDataString = "TLS server certificate was defined."
@@ -599,9 +599,9 @@ func parseSecurityAdminEvents(eventId int, data string) string {
 	case SetRealmAuthenticationMode:
 		extendedDataString = "Realm authentication mode changed."
 
-		if len(data) > 0 {
+		if len(data) >= 5 {
 			byteData := []byte(data)
-			extendedDataString += "\n" + RealmNames[byteData[0]] + ", " + []string{"NoAuth", "Auth", "Disabled"}[byteData[4]]
+			extendedDataString += "\n" + nameOrUnknown(RealmNames, int(byteData[0])) + ", " + nameOrUnknown([]string{"NoAuth", "Auth", "Disabled"}, int(byteData[4]))
 		}
 	case UpgradeClientToAdmin:
 		extendedDataString = "The control mode of the Intel AMT was changed from Client control to Admin control."
@@ -610,7 +610,7 @@ func parseSecurityAdminEvents(eventId int, data string) string {
 
 		if len(data) > 0 {
 			byteData := []byte(data)
-			extendedDataString += "\nInitiator: " + []string{"BIOS", "MEBx", "Local MEI", "Local WSMAN", "Remote WSMAN"}[byteData[0]]
+			extendedDataString += "\nInitiator: " + nameOrUnknown([]string{"BIOS", "MEBx", "Local MEI", "Local WSMAN", "Remote WSMAN"}, int(byteData[0]))
 		}
 	default:
 		extendedDataString = UnknownEventID
@@ -811,7 +811,7 @@ func parseSecurityAuditLog(eventId int, data string) string {
 	case SecurityAuditLogRecovered:
 		if len(data) > 0 {
 			extendedDataString = "Internal check of audit log resulted in a recovery action.\nReason: " +
-				[]string{"Unknown", "Migration failure", "Initialization failure"}[data[0]]
+				nameOrUnknown([]string{"Unknown", "Migration failure", "Initialization failure"}, int(data[0]))
 		}
 	}
 
@@ -829,7 +829,7 @@ func parseNetworkTimeEvents(eventId int, data string) string {
 	case IntelMETimeSet:
 		extendedDataString = "Command received to set Intel AMT local time."
 
-		if len(data) > 0 {
+		if len(data) >= 4 {
 			extendedDataString += "\nTime: " + time.Unix(int64(common.ReadInt(data, 0)), 0).String()
 		}
 	}
@@ -862,7 +862,7 @@ func parseNetworkAdministrationEvents(eventId int, data string) string {
 
 		if len(data) > 0 {
 			event := readNetworkAdministrationEventData(TCPIPParametersSet, []byte(data))
-			extendedDataString += "\nDHCP Enabled: " + []string{"Disabled", "Enabled"}[event.DHCPEnabled] +
+			extendedDataString += "\nDHCP Enabled: " + nameOrUnknown([]string{"Disabled", "Enabled"}, int(event.DHCPEnabled)) +
 				"\nStatic IP: " + convertUINT32ToIPv4(event.IPV4Address).String() +
 				"\nSubnet Mask: " + convertUINT32ToIPv4(event.SubnetMask).String() +
 				"\nGateway: " + convertUINT32ToIPv4(event.Gateway).String()
@@ -905,7 +905,7 @@ func parseNetworkAdministrationEvents(eventId int, data string) string {
 
 		if len(data) > 0 {
 			event := readNetworkAdministrationEventData(IPv6ParametersSet, []byte(data))
-			extendedDataString += "\nIPv6: " + []string{"Disabled", "Enabled"}[event.IPV6Enabled] +
+			extendedDataString += "\nIPv6: " + nameOrUnknown([]string{"Disabled", "Enabled"}, int(event.IPV6Enabled)) +
 				"\nInterface Gen Type: " + InterfaceIDGenType[int(event.InterfaceIDGenType)]
 
 			if event.InterfaceIDGenType == 2 {
@@ -989,7 +989,7 @@ func parseEventManagerEvents(eventId int, data string) string {
 	case EventLogFrozen:
 		if len(data) > 0 {
 			event := readEventManagerEventData(EventLogFrozen, []byte(data))
-			extendedDataString = "Event log was " + []string{"unfrozen", "frozen"}[event.Freeze]
+			extendedDataString = "Event log was " + nameOrUnknown([]string{"unfrozen", "frozen"}, int(event.Freeze))
 		}
 	}
 
@@ -1157,7 +1157,7 @@ func parseWirelessConfigurationEvents(eventId int, data string) string {
 
 		if len(data) > 0 {
 			event := readWirelessConfigurationEventData(WirelessProfileModified, []byte(data))
-			extendedDataString += "\nProfile sync " + []string{"is disabled", "user", "admin", "is unrestricted"}[event.ProfileSync]
+			extendedDataString += "\nProfile sync " + nameOrUnknown([]string{"is disabled", "user", "admin", "is unrestricted"}, int(event.ProfileSync))
 		}
 	case WirelessLinkPreferenceChanged:
 		extendedDataString = "An existing profile link preference was changed."
@@ -1165,10 +1165,12 @@ func parseWirelessConfigurationEvents(eventId int, data string) string {
 		if len(data) > 0 {
 			event := readWirelessConfigurationEventData(WirelessLinkPreferenceChanged, []byte(data))
 			extendedDataString += "\nTimeout: " + fmt.Sprint(event.Timeout)
-			extendedDataString += "\nLink Preference: " + []string{"none", "ME", "Host"}[int(event.LinkPreference)]
+			extendedDataString += "\nLink Preference: " + nameOrUnknown([]string{"none", "ME", "Host"}, int(event.LinkPreference))
 		}
 	case WirelessProfileShareWithUEFIEnabledSettingChanged:
-		extendedDataString = fmt.Sprintf("Wireless profile share with UEFI was set to %s.", []string{"Disabled", "Enabled"}[data[0]])
+		if len(data) > 0 {
+			extendedDataString = fmt.Sprintf("Wireless profile share with UEFI was set to %s.", nameOrUnknown([]string{"Disabled", "Enabled"}, int(data[0])))
+		}
 	}
 
 	return extendedDataString
@@ -1444,7 +1446,7 @@ func aclEntryModifiedToString(entry *ACLEntry) string {
 }
 
 func aclEntryEnabledToString(entry *ACLEntry) string {
-	s := fmt.Sprintf("\nEntry State: %s\nInitiator Type: %s", []string{"Disabled", "Enabled"}[int(entry.EntryState)], initiatorTypeToString[int(entry.InitiatorType)])
+	s := fmt.Sprintf("\nEntry State: %s\nInitiator Type: %s", nameOrUnknown([]string{"Disabled", "Enabled"}, int(entry.EntryState)), initiatorTypeToString[int(entry.InitiatorType)])
 	if entry.UsernameLength == 0 {
 		s += fmt.Sprintf("\nSID: %d", entry.SID)
 		if entry.DomainLength > 0 {
@@ -1691,7 +1693,7 @@ func eventManagerEventDataToString(event EventManagerEvent) string {
 		s += "\nSubscription Alert Type: SNMP"
 	}
 
-	s += "\nIP Address Type: " + []string{"IPv4", "IPv6"}[event.IPAddrType] +
+	s += "\nIP Address Type: " + nameOrUnknown([]string{"IPv4", "IPv6"}, int(event.IPAddrType)) +
 		"\nAlert Target IP Address: " + net.IP(event.AlertTargetIPAddress).String()
 
 	return s
@@ -1779,6 +1781,15 @@ func readUserOptInEventData(id int, data []byte) UserOptInEvent {
 	}
 
 	return event
+}
+
+// nameOrUnknown returns names[i], or "Unknown" if i is out of range.
+func nameOrUnknown(names []string, i int) string {
+	if i < 0 || i >= len(names) {
+		return "Unknown"
+	}
+
+	return names[i]
 }
 
 func convertUINT32ToIPv4(intIP uint32) net.IP {
